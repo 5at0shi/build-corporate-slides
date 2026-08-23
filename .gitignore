@@ -1,0 +1,17 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+
+# Generated deliverables — regenerate via work/generate_pptx.py
+output/
+work/render/
+
+# Skill package builds — use GitHub Releases if these need to be kept
+skill-packages/
+
+# Historical test scratch from earlier skill versions
+test-results/

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+  <rect width="960" height="540" fill="#FFFFFF"/>
+  <text x="42" y="48" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#102C49">Performance overview</text>
+  <rect x="42" y="66" width="876" height="2" fill="#2574D9"/>
+  <rect x="42" y="96" width="5" height="28" rx="2" fill="#2574D9"/>
+  <text x="58" y="116" font-family="Arial, sans-serif" font-size="17" font-weight="700" fill="#20354B">The highlighted segment drives the overall improvement</text>
+  <line x1="82" y1="438" x2="878" y2="438" stroke="#D7DEE6"/>
+  <line x1="82" y1="348" x2="878" y2="348" stroke="#E7ECF1"/>
+  <line x1="82" y1="258" x2="878" y2="258" stroke="#E7ECF1"/>
+  <rect x="142" y="324" width="58" height="114" rx="4" fill="#CFE1F3"/>
+  <rect x="275" y="278" width="58" height="160" rx="4" fill="#CFE1F3"/>
+  <rect x="408" y="232" width="58" height="206" rx="4" fill="#2574D9"/>
+  <rect x="541" y="190" width="58" height="248" rx="4" fill="#CFE1F3"/>
+  <rect x="674" y="154" width="58" height="284" rx="4" fill="#102C49"/>
+</svg>
+

@@ -1,0 +1,28 @@
+python:
+  executable: "./.venv/bin/python" # Windows: ./.venv/Scripts/python.exe
+
+paths:
+  input_dir: "./input"
+  work_dir: "./work"
+  output_dir: "./output"
+
+organization:
+  department: "企画部"
+  classification: "部外秘"
+
+deck:
+  # 個人PC・事前配布・画面共有を標準とする。
+  mode: "business"
+
+typography:
+  # 利用端末に導入済みの日本語フォントを指定する。
+  headline_font: "Hiragino Sans"
+  body_font: "Hiragino Sans"
+  editorial_font: "Hiragino Mincho ProN"
+
+branding:
+  logo:
+    enabled: true
+    # 未指定時はSkill同梱の assets/logo-placeholder.png を使用する。
+    # 正式ロゴを使う場合: "./input/company-logo.png"
+    path:

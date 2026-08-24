@@ -60,11 +60,18 @@ def inspect_content(content):
         if slide_type == "org_layers":
             if not slide.get("layers") or not slide.get("execution"):
                 errors.append(f"{label}: layersとexecutionが必要です")
+            elif len(slide["layers"]) > 3:
+                warnings.append(
+                    f"{label}: layersが多く({len(slide['layers'])}件)、各層の"
+                    "本文がはみ出す可能性があります。3件以下に抑えるか、"
+                    "階層を統合してください")
         if slide_type == "priority_actions":
             if not slide.get("issues") or not slide.get("actions"):
                 errors.append(f"{label}: issuesとactionsが必要です")
         if slide_type == "stage_track" and not slide.get("stages"):
             errors.append(f"{label}: stagesが必要です")
+        if slide_type == "process_with_gates" and not slide.get("phases"):
+            errors.append(f"{label}: phasesが必要です")
         if slide_type == "numbered_list" and not slide.get("items"):
             errors.append(f"{label}: itemsが必要です")
         if slide_type == "matrix_2x2":

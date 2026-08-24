@@ -184,8 +184,8 @@ def render_process_with_gates(builder, spec, page):
     phase_row, work_row, gate_row, conclusion = area.rows(
         [0.72, 2.35, 1.1, 0.62], gap=Inches(0.19))
     phases = spec.get("phases", [])
-    columns = phase_row.columns([phase.get("weight", 1) for phase in phases],
-                                gap="tight")
+    phase_weights = [phase.get("weight", 1) for phase in phases] or [1]
+    columns = phase_row.columns(phase_weights, gap="tight")
     tones = ["brand-soft", "neutral", "teal-soft"]
     for index, (phase, region) in enumerate(zip(phases, columns)):
         add_background_zone(slide, region.x, region.y, region.w, region.h,
@@ -195,8 +195,7 @@ def render_process_with_gates(builder, spec, page):
                     size=_type(slide).body, color=PALETTE.text_primary,
                     bold=True, align=PP_ALIGN.CENTER)
 
-    work_columns = work_row.columns(
-        [phase.get("weight", 1) for phase in phases], gap="tight")
+    work_columns = work_row.columns(phase_weights, gap="tight")
     for index, (phase, region) in enumerate(zip(phases, work_columns)):
         add_textbox(slide, region.x, region.y + Inches(0.18), region.w,
                     Inches(0.28), phase.get("label", f"{index + 1:02}"),
@@ -307,8 +306,13 @@ def render_org_layers(builder, spec, page):
         inner = region.inset(Inches(0.3), Inches(0.14))
         add_section_lead(slide, inner.x, inner.y, inner.w,
                          layer.get("heading", ""))
-        add_paragraph_textbox(slide, inner.x, inner.y + Inches(0.46),
-                              inner.w, inner.h - Inches(0.46), [
+        # 見出し分のオフセットは固定0.46inだと、layers数が増えて行の高さが
+        # 縮んだ際に本文用の残りスペースをほぼ食い潰してしまう。行の高さに
+        # 対する上限付き割合にし、行が低いほど見出し側を圧縮して本文に
+        # 余地を残す。
+        header_offset = min(Inches(0.46), max(Inches(0.22), int(inner.h * 0.42)))
+        add_paragraph_textbox(slide, inner.x, inner.y + header_offset,
+                              inner.w, inner.h - header_offset, [
             {"segments": [(layer.get("title", ""), {
                 "size": typography.body, "color": PALETTE.text_primary,
                 "bold": True, "font": typography.body_font,
@@ -454,7 +458,6 @@ def render_numbered_list(builder, spec, page):
     position = spec.get("message_position", "top")
     default_style = "plain" if position == "top" else "solid"
     style = spec.get("message_style", default_style)
-    row_h = Inches(0.9)
 
     if position == "top":
         add_key_message(slide, area.x, area.y, area.w,
@@ -465,8 +468,11 @@ def render_numbered_list(builder, spec, page):
         list_top = area.y
         list_bottom = area.y + area.h - Inches(1.1)
 
-    block_h = row_h * max(0, len(items))
     available = max(0, list_bottom - list_top)
+    # 項目数が多いとrow_h固定(0.9in)ではブロックがスライド外へはみ出すため、
+    # 利用可能な高さに収まるよう縮める（項目数が少ない通常時は0.9inのまま）。
+    row_h = Inches(0.9) if not items else min(Inches(0.9), available // len(items))
+    block_h = row_h * max(0, len(items))
     y = list_top + max(0, (available - block_h) // 2)
     for index, item in enumerate(items, 1):
         add_numbered_row(slide, area.x, y, area.w, index,

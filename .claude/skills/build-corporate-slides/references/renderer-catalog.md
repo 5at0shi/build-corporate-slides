@@ -10,7 +10,7 @@ rendererは完成テンプレートではなく、頻出する意味構造を編
 | `scope_and_exclusions` | 対象範囲と対象外を同時に示す | 標準 | 対象の意味単位＋対象外の一括リスト |
 | `process_with_gates` | フェーズ、作業、判断時点 | 標準 | フェーズとゲートを別レイヤーにする |
 | `table_with_conclusion` | 条件、比較、評価を表で読む | 標準 | ネイティブPowerPoint table＋結論 |
-| `chart_with_insight` | PNGグラフと読み取りを示す | `standard`, `conclusion-led` | 画像を保持し、洞察はPowerPointテキスト |
+| `chart_with_insight` | グラフと読み取りを示す | `standard`, `conclusion-led` | `chart`指定でネイティブPowerPointグラフ（数値・系列名を編集可）、`image`指定でPNG画像 |
 | `org_layers` | 意思決定・運営など縦の責任階層と、横に並ぶ実行部門 | 標準 | 階層バンド＋実行部門ごとのCard |
 | `priority_actions` | 優先度付きの課題と、対応する方針 | 標準 | 優先度付きリスト＋淡色の対応方針パネル |
 | `stage_track` | 現在から将来への段階的な進行（ロードマップ等） | 標準 | 同格のステージCard群 |
@@ -27,6 +27,7 @@ rendererは完成テンプレートではなく、頻出する意味構造を編
 - 順番だけでなく承認時点が重要なら `process_with_gates`。
 - セル編集と行追加が想定される情報は `table_with_conclusion`。
 - グラフ全体を公平に読むなら `chart_with_insight: standard`、一つの主張が主役なら `conclusion-led`。
+  - 実データから作る棒・折れ線・円グラフは`chart`（`type: column|bar|line|pie`、`categories`、`series`）を使い、ネイティブPowerPointグラフにする（数値をPowerPoint上で直接編集できる）。パワーポイント生成側で用意したPNGしかない場合だけ`image`を使う。原則として`chart`を優先する。
 - 縦の責任階層と横の実行部門を両方示すなら `org_layers`。
 - 課題と対応策を優先度付きで左右に並べるなら `priority_actions`。
 - 現在から将来への段階的な広がりを示すなら `stage_track`。

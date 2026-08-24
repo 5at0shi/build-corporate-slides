@@ -2,9 +2,9 @@ python:
   executable: "./.venv/bin/python" # Windows: ./.venv/Scripts/python.exe
 
 paths:
-  input_dir: "./input"
-  work_dir: "./work"
-  output_dir: "./output"
+  input_dir: "./slides/input"
+  work_dir: "./slides/work"
+  output_dir: "./slides/output"
 
 organization:
   department: "企画部"
@@ -24,5 +24,5 @@ branding:
   logo:
     enabled: true
     # 未指定時はSkill同梱の assets/logo-placeholder.png を使用する。
-    # 正式ロゴを使う場合: "./input/company-logo.png"
+    # 正式ロゴを使う場合: "./slides/input/company-logo.png"
     path:

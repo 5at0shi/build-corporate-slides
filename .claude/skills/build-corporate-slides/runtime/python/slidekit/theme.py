@@ -16,7 +16,7 @@ class Palette:
     line_neutral: RGBColor = rgb("D7DEE6")
     line_brand: RGBColor = rgb("2574D9")
     surface_base: RGBColor = rgb("FFFFFF")
-    surface_subtle: RGBColor = rgb("F3F6F9")
+    surface_subtle: RGBColor = rgb("E7EBF0")
     surface_brand_soft: RGBColor = rgb("E1EDFC")
     surface_teal_soft: RGBColor = rgb("E2F2F0")
     focus_primary: RGBColor = rgb("102C49")
@@ -30,28 +30,34 @@ class Palette:
     grey_700: RGBColor = rgb("53657A")
     grey_500: RGBColor = rgb("738296")
     grey_300: RGBColor = rgb("D7DEE6")
-    grey_100: RGBColor = rgb("F3F6F9")
+    grey_100: RGBColor = rgb("E7EBF0")
 
 
 @dataclass(frozen=True)
 class BusinessTypography:
+    """本文（body）は基本サイズ12ptを基準に、比率を保って設計する。
+
+    注釈・キャプション（small）は元々12pt未満が前提の階層なので対象外。
+    表紙・章扉などポスター的な大見出しはこのtitleを使わず、別途固定値を持つ
+    （add_cover, add_section_divider参照）。
+    """
     headline_font: str = "Yu Gothic"
     editorial_font: str = "Yu Mincho"
     body_font: str = "Yu Gothic"
-    title: Pt = Pt(28)
-    section: Pt = Pt(16)
-    body: Pt = Pt(14)
+    title: Pt = Pt(22)
+    section: Pt = Pt(15)
+    body: Pt = Pt(12)
     small: Pt = Pt(10)
-    metric: Pt = Pt(26)
+    metric: Pt = Pt(20)
 
 
 @dataclass(frozen=True)
 class DenseTypography(BusinessTypography):
-    title: Pt = Pt(26)
-    section: Pt = Pt(16)
-    body: Pt = Pt(12.5)
+    title: Pt = Pt(20)
+    section: Pt = Pt(15)
+    body: Pt = Pt(11.5)
     small: Pt = Pt(9)
-    metric: Pt = Pt(24)
+    metric: Pt = Pt(18)
 
 
 @dataclass(frozen=True)

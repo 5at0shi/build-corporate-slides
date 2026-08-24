@@ -6,12 +6,23 @@ __pycache__/
 # OS
 .DS_Store
 
-# Generated deliverables — regenerate via work/generate_pptx.py
-output/
-work/render/
+# Generated deliverables — regenerate via slides/work/generate_pptx.py
+slides/output/
+slides/work/render/
+slides/work/*/render/
+
+# Human-provided input material (photos, maps, etc.) — workspace-specific,
+# often third-party copyrighted content not meant for the skill repo
+slides/input/
+
+# Session-local runtime state (Claude Code scheduled wakeups)
+.claude/scheduled_tasks.lock
 
 # Skill package builds — use GitHub Releases if these need to be kept
 skill-packages/
 
 # Historical test scratch from earlier skill versions
 test-results/
+
+# One-off skill vs. freeform comparison experiment
+compare/

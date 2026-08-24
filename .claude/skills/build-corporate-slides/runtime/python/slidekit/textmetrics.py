@@ -47,6 +47,21 @@ def adaptive_gap_pt(content_pt: float, item_count: int, available_pt: float, *,
     return base_gap + extra
 
 
+def estimate_icon_list_height_pt(typography, items, width_pt, *, icon_size_pt,
+                                 text_gap_pt, body_gap=14) -> float:
+    """add_icon_listが自然な（引き伸ばさない）高さで描いた場合の概算高さ(pt)。
+
+    見出し＋リストを一つのブロックとして領域内で中央寄せしたい場合など、
+    add_icon_list呼び出し前に高さを知るために使う。
+    """
+    text_w_pt = max(1.0, width_pt - icon_size_pt - text_gap_pt)
+    total = sum(estimate_paragraph_height_pt(item, typography.body.pt, text_w_pt,
+                                             line_spacing=1.15) for item in items)
+    if len(items) > 1:
+        total += body_gap * (len(items) - 1)
+    return total
+
+
 def estimate_item_list_height_pt(typography, items, width_pt, *, body_gap=3) -> float:
     """add_item_listが描く内容のおおよその高さ(pt)。レイアウト判断用の概算。"""
     total = 0.0
@@ -58,8 +73,11 @@ def estimate_item_list_height_pt(typography, items, width_pt, *, body_gap=3) -> 
         total += estimate_paragraph_height_pt(
             title, typography.body.pt, width_pt, line_spacing=1.08)
         if body:
+            # add_item_listは実際には本文の前に "    "（4スペース）の字下げを
+            # 付けて描画するため、折り返し推定もそれを含めないと実際より
+            # 過小評価し、はみ出しの原因になる。
             total += estimate_paragraph_height_pt(
-                body, typography.small.pt, width_pt, line_spacing=1.08)
+                "    " + body, typography.small.pt, width_pt, line_spacing=1.08)
         if index < len(items) - 1:
             total += body_gap
     return total

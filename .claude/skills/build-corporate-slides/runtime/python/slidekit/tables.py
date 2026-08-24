@@ -55,7 +55,7 @@ def add_data_table(slide, region, columns, rows, *, highlight_key="_highlight"):
                                    else PP_ALIGN.LEFT)
             run = paragraph.add_run(); run.text = value
             set_run(run,
-                    size=typography.small if row_index else typography.small,
+                    size=typography.body,
                     color=(PALETTE.blue if highlighted and row_index else
                            PALETTE.text_primary),
                     bold=(row_index == 0 or highlighted),

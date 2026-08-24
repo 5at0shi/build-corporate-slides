@@ -3,13 +3,14 @@ from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Inches, Pt
 
 from .builder import DeckBuilder
+from .charts import add_native_chart
 from .components import (add_background_zone, add_card, add_hairline,
                          add_item_list, add_key_message, add_numbered_row,
-                         add_section_lead)
+                         add_panel, add_section_lead)
 from .preflight import require_valid_content
 from .images import add_image_contain
 from .tables import add_data_table
-from .textmetrics import adaptive_gap_pt
+from .textmetrics import adaptive_gap_pt, estimate_item_list_height_pt
 from .theme import PALETTE
 from .typography import add_paragraph_textbox, add_textbox
 
@@ -88,14 +89,26 @@ def render_evidence_and_decision(builder, spec, page):
     typography = _type(slide)
     left, right = area.columns([1.55, 1], gap="wide")
     evidence = spec.get("evidence", [])
-    add_section_lead(slide, left.x, left.y, left.w,
-                     spec.get("evidence_heading", "判断の根拠"))
-    add_item_list(slide, left.x, left.y + HEADING_BLOCK_H, left.w,
-                  left.h - HEADING_BLOCK_H - Inches(0.1), evidence)
 
-    add_background_zone(slide, right.x, right.y, right.w, right.h,
-                        tone="brand-soft", rounded=True)
-    inner = right.inset(Inches(0.34), Inches(0.3))
+    # 右の推奨パネルと同じ「意図的な余白を持つ面」に見せるため、左も淡色の
+    # 面で包み、見出し+リストのブロックをその中で釣り合わせる。背景のない
+    # 剥き出しの文字のまま下部が空くと、右のパネルとの対比で「欠けている」
+    # ように見えるため。
+    left_inner = add_panel(slide, left.x - Inches(0.12), left.y - Inches(0.06),
+                           left.w + Inches(0.24), left.h + Inches(0.12),
+                           tone="neutral")
+    list_pt = estimate_item_list_height_pt(
+        typography, evidence, left_inner.w / 12700)
+    block_h = HEADING_BLOCK_H + int(list_pt * 12700)
+    top = left_inner.y + max(0, (left_inner.h - block_h) // 2)
+    add_section_lead(slide, left_inner.x, top, left_inner.w,
+                     spec.get("evidence_heading", "判断の根拠"))
+    add_item_list(slide, left_inner.x, top + HEADING_BLOCK_H, left_inner.w,
+                  left_inner.y + left_inner.h - (top + HEADING_BLOCK_H), evidence,
+                  adaptive=False)
+
+    inner = add_panel(slide, right.x, right.y, right.w, right.h,
+                      tone="brand-soft", inset_x=Inches(0.34), inset_y=Inches(0.3))
     paragraphs = [
         {"segments": [(spec.get("decision_heading", "推奨方針"), {
             "size": typography.small, "color": PALETTE.blue, "bold": True,
@@ -226,11 +239,26 @@ def render_table_with_conclusion(builder, spec, page):
                     style=spec.get("conclusion_style", "subtle"))
 
 
+def _render_chart_visual(builder, slide, spec, region):
+    """imageが指定されればPNGを、chartが指定されればネイティブグラフを描く。"""
+    chart_spec = spec.get("chart")
+    if chart_spec:
+        add_native_chart(
+            slide, region.x, region.y, region.w, region.h,
+            chart_type=chart_spec.get("type", "column"),
+            categories=chart_spec.get("categories", []),
+            series=chart_spec.get("series", []),
+            typography=_type(slide),
+            value_format=chart_spec.get("value_format"))
+    else:
+        image_path = builder.paths.input_dir / spec["image"]
+        add_image_contain(slide, image_path, region)
+
+
 def render_chart_with_insight(builder, spec, page):
     slide, area = builder.add_slide(
         spec["title"], density=spec.get("density", "standard"), page=page)
     variant = spec.get("variant", "standard")
-    image_path = builder.paths.input_dir / spec["image"]
     if variant == "conclusion-led":
         insight, chart = area.columns([0.82, 1.7], gap="wide")
         add_background_zone(slide, insight.x, insight.y, insight.w, insight.h,
@@ -246,11 +274,11 @@ def render_chart_with_insight(builder, spec, page):
         if spec.get("insights"):
             add_item_list(slide, inner.x, inner.y + Inches(2.35), inner.w,
                           inner.h - Inches(2.4), spec["insights"], bullet="—")
-        add_image_contain(slide, image_path, chart)
+        _render_chart_visual(builder, slide, spec, chart)
     else:
         chart_and_notes, conclusion = area.rows([4.35, 0.72], gap=Inches(0.24))
         chart, notes = chart_and_notes.columns([1.8, 0.8], gap="wide")
-        add_image_contain(slide, image_path, chart)
+        _render_chart_visual(builder, slide, spec, chart)
         add_section_lead(slide, notes.x, notes.y, notes.w,
                          spec.get("insight_heading", "読み取れること"))
         add_item_list(slide, notes.x, notes.y + Inches(0.65), notes.w,

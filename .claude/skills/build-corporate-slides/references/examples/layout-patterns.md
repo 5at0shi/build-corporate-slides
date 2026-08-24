@@ -1,12 +1,10 @@
 # Layout Patterns
 
-該当するページを作るときだけ画像を見る。例をそのまま複製せず、内容に合う構造、強調の優先順位、読順を抽出する。
+以下のパターンは、いずれも対応するrendererとして実装済みで、決定論的にPowerPointへ変換される。画像を見て模写する段階は終えており、ここに残すのはrendererの内部設計が従っている判断根拠（Design DNA）である。renderer内部の挙動を変更するときや、renderer化されていない類似ページを個別構築するときの参照として使う。画像例が必要なページ（表紙・チャート併用の個別構築など）は他のexamplesファイルを見る。
 
 ## プロセスと判断ゲート
 
 対応renderer: `process_with_gates`
-
-![process phase gates](process-phase-gates.png)
 
 - フェーズは上段、作業は中央、判断ゲートは下段の専用軸へ分離する。
 - ゲートの目盛りを工程上の時点へ正確に揃える。
@@ -17,8 +15,6 @@
 
 対応renderer: `chart_with_insight` / `variant: standard`
 
-![chart standard](chart-standard.png)
-
 - データ全体を公平に見せるときに使う。
 - 主グラフを大きくし、補助グラフを同じ右カラムに積む。
 - セクション見出しは短い青線と文字で示し、Cardで囲わない。
@@ -27,8 +23,6 @@
 ## PNGグラフ: 結論主導型
 
 対応renderer: `chart_with_insight` / `variant: conclusion-led`
-
-![chart conclusion led](chart-conclusion-led.png)
 
 - 一つの主張を強く伝える必要があるときに使う。
 - 濃色面の主張を一つに限定し、グラフは根拠として従属させる。
@@ -39,8 +33,6 @@
 
 対応renderer: `table_with_conclusion`
 
-![table priority conclusion](table-priority-conclusion.png)
-
 - 結論を左右する行だけ淡色背景を使う。
 - 判定列など次に見てほしい箇所は、背景ではなく文字色と太さで示す。
 - 行と列の背景色を交差させない。
@@ -50,8 +42,6 @@
 
 対応renderer: `priority_actions`
 
-![issues actions priority](issues-actions-priority.png)
-
 - 左に優先度と課題、右に淡い背景の対応方針を置く。
 - 最優先だけアクセント色を使い、他の優先度はグレー文字で示す。
 - 矢印を使わず、同じ行と背景領域から対応関係を読ませる。
@@ -60,8 +50,6 @@
 ## 組織: 階層と横の役割
 
 対応renderer: `org_layers`
-
-![organization layers roles](organization-layers-roles.png)
 
 - 上段に意思決定、中段に運営管理、下段に業務実行を置く。
 - 業務実行層は部門別に横分割し、縦の責任階層と混同させない。

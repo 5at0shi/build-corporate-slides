@@ -51,8 +51,12 @@ def inspect_content(content):
         if slide_type == "table_with_conclusion":
             if not slide.get("columns") or not slide.get("rows"):
                 errors.append(f"{label}: columnsとrowsが必要です")
-        if slide_type == "chart_with_insight" and not slide.get("image"):
-            errors.append(f"{label}: imageが必要です")
+        if slide_type == "chart_with_insight":
+            chart = slide.get("chart")
+            if not slide.get("image") and not chart:
+                errors.append(f"{label}: imageまたはchartが必要です")
+            if chart and (not chart.get("categories") or not chart.get("series")):
+                errors.append(f"{label}: chart.categoriesとchart.seriesが必要です")
         if slide_type == "org_layers":
             if not slide.get("layers") or not slide.get("execution"):
                 errors.append(f"{label}: layersとexecutionが必要です")

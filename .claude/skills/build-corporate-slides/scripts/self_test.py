@@ -10,13 +10,17 @@ from pptx import Presentation
 def main() -> int:
     skill_root = Path(__file__).resolve().parents[1]
     sys.path.insert(0, str(skill_root / "runtime" / "python"))
-    from slidekit import inspect_content, logo_path_from_config, render_deck
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from slidekit import add_icon_list, inspect_content, logo_path_from_config, render_deck
+    from slidekit.icons import ICON_NAMES, add_icon
+    from slidekit.preflight import KNOWN_TYPES
+    from validate_pptx import validate
 
     config = {
         "python": {"executable": sys.executable},
         "paths": {
-            "input_dir": "./input", "work_dir": "./work",
-            "output_dir": "./output",
+            "input_dir": "./slides/input", "work_dir": "./slides/work",
+            "output_dir": "./slides/output",
         },
         "organization": {
             "department": "テスト部", "classification": "部外秘",
@@ -29,6 +33,8 @@ def main() -> int:
         },
         "branding": {"logo": {"enabled": True, "path": None}},
     }
+    # 全renderer typeを最小構成で1枚ずつ網羅する。型ごとの回帰（例: フォント
+    # サイズの取り違え、はみ出し、未対応フィールド）を機械的に検知するため。
     content = {
         "deck": {"mode": "business"},
         "slides": [
@@ -42,24 +48,131 @@ def main() -> int:
                  {"title": "品質", "body": "ばらつきを抑える"}]},
              "right": {"heading": "リスク", "items": [
                  {"title": "管理", "body": "無秩序な利用を防ぐ"},
-                 {"title": "判断", "body": "基準を明確にする"}]}}
+                 {"title": "判断", "body": "基準を明確にする"}]}},
+            {"id": "evidence", "type": "evidence_and_decision",
+             "title": "根拠から判断する", "density": "standard",
+             "primary_message": "検証してから広げる",
+             "evidence_heading": "根拠", "evidence": [
+                 {"title": "リスク", "body": "見極めが不十分"}],
+             "decision_heading": "推奨", "decision_detail": "詳細"},
+            {"id": "scope", "type": "scope_and_exclusions",
+             "title": "範囲を絞る", "density": "dense",
+             "primary_message": "対象を明確にする",
+             "scope_heading": "範囲", "scope": [
+                 {"label": "対象", "title": "業務A", "body": "説明"}],
+             "exclusions_heading": "対象外", "exclusions": ["自動判断"]},
+            {"id": "process", "type": "process_with_gates",
+             "title": "段階的に進める", "density": "dense",
+             "primary_message": "ゲートで判断する",
+             "phases": [{"title": "準備", "label": "SETUP", "weight": 1,
+                        "items": ["確定"]}],
+             "gates": [{"title": "承認", "position": 1.0}]},
+            {"id": "table", "type": "table_with_conclusion",
+             "title": "表で評価する", "density": "dense",
+             "primary_message": "必須項目を満たす",
+             "columns": [{"key": "a", "label": "項目", "weight": 1}],
+             "rows": [{"a": "作業時間削減", "_highlight": True}]},
+            {"id": "org", "type": "org_layers", "title": "役割を分ける",
+             "density": "standard", "primary_message": "責任を明確にする",
+             "layers": [{"heading": "意思決定", "title": "経営層",
+                        "body": "最終判断"}],
+             "execution_heading": "実行", "execution": [
+                 {"title": "部門A", "body": "利用"}]},
+            {"id": "priority", "type": "priority_actions",
+             "title": "優先度で対応する", "density": "standard",
+             "primary_message": "重大リスクを優先する",
+             "issues": [{"priority": "最優先", "title": "情報漏えい",
+                        "body": "運用を徹底する"}],
+             "actions": ["ログを記録する"]},
+            {"id": "stage", "type": "stage_track", "title": "段階的に広げる",
+             "density": "standard", "primary_message": "基準を満たせば進む",
+             "stages": [{"label": "STEP1", "title": "PoC", "body": "検証"}]},
+            {"id": "list", "type": "numbered_list", "title": "依頼事項",
+             "density": "standard", "primary_message": "ご承認をお願いします",
+             "message_position": "bottom",
+             "items": [{"title": "予算承認", "body": "費用"}]},
+            {"id": "divider", "type": "section_divider", "title": "体制編",
+             "kicker": "SECTION 2"},
+            {"id": "matrix", "type": "matrix_2x2", "title": "施策を整理する",
+             "density": "standard", "primary_message": "効果が高いものから着手する",
+             "x_axis": {"low": "易", "high": "難"},
+             "y_axis": {"low": "小", "high": "大"},
+             "quadrants": [
+                 {"label": "優先", "title": "A", "body": "詳細", "emphasis": True},
+                 {"label": "検討", "title": "B", "body": "詳細"},
+                 {"label": "保留", "title": "C", "body": "詳細"},
+                 {"label": "対象外", "title": "D", "body": "詳細"}]},
+            {"id": "stat", "type": "stat_highlight", "title": "実績を示す",
+             "density": "standard", "primary_message": "本格導入を検討する",
+             "stat": {"value": "-42%", "label": "作業時間削減率"},
+             "supporting": [{"value": "94%", "label": "継続意向"}]},
+            {"id": "chart", "type": "chart_with_insight", "title": "結果を示す",
+             "density": "standard", "primary_message": "全体像を確認する",
+             "image": "chart.png", "insight_heading": "読み取れること",
+             "insights": ["業務別の時間短縮率"]},
+            {"id": "chart_native", "type": "chart_with_insight",
+             "variant": "conclusion-led", "title": "実績を示す（ネイティブ）",
+             "density": "standard", "primary_message": "実証期間で効果が拡大した",
+             "chart": {"type": "column", "categories": ["準備", "実証", "評価"],
+                      "series": [{"name": "削減率", "values": [12, 38, 42]}]}},
         ],
     }
     errors, warnings = inspect_content(content)
     assert not errors, errors
+    assert set(s["type"] for s in content["slides"]) == KNOWN_TYPES, (
+        "content が KNOWN_TYPES を網羅していません: "
+        f"{KNOWN_TYPES - set(s['type'] for s in content['slides'])}")
     assert logo_path_from_config(config, Path.cwd()).is_file()
 
     with tempfile.TemporaryDirectory(prefix="slidekit-test-") as temp:
         root = Path(temp)
         (root / ".slide-skill-config.yaml").write_text(
             yaml.safe_dump(config, allow_unicode=True), encoding="utf-8")
+        input_dir = root / "slides" / "input"
+        input_dir.mkdir(parents=True, exist_ok=True)
+        from PIL import Image
+        Image.new("RGB", (400, 240), (230, 236, 245)).save(input_dir / "chart.png")
+
         output, render_warnings = render_deck(content, root)
-        assert not render_warnings
+        assert not render_warnings, render_warnings
         presentation = Presentation(output)
-        assert len(presentation.slides) == 2
+        assert len(presentation.slides) == len(content["slides"])
         cover_text = [shape.text for shape in presentation.slides[0].shapes
                       if shape.has_text_frame]
         assert "部外秘" in cover_text and "テスト部" in cover_text
+
+        issues, structure_warnings = validate(output)
+        assert not issues, issues
+
+        table_slide = presentation.slides[5]
+        for shape in table_slide.shapes:
+            if shape.has_table:
+                for row in range(len(shape.table.rows)):
+                    cell = shape.table.cell(row, 0)
+                    for paragraph in cell.text_frame.paragraphs:
+                        for run in paragraph.runs:
+                            assert run.font.size.pt >= 11, (
+                                f"表の文字が小さすぎます: {run.font.size.pt}pt "
+                                f"'{run.text}'")
+
+        icon_slide = presentation.slides.add_slide(presentation.slide_layouts[6])
+        from pptx.util import Inches
+        for index, name in enumerate(sorted(ICON_NAMES)):
+            add_icon(icon_slide, Inches(0.5 + index), Inches(0.5), Inches(0.5), name)
+        shape_count = len(icon_slide.shapes)
+        assert shape_count >= len(ICON_NAMES) * 2, (
+            f"アイコンの図形数が少なすぎます: {shape_count}")
+
+        before = len(icon_slide.shapes)
+        add_icon_list(icon_slide, Inches(0.5), Inches(1.5), Inches(4), Inches(2),
+                      ["一つ目の項目です", "二つ目の項目です", "三つ目の項目です"],
+                      icon="check")
+        new_text_boxes = [shape for shape in list(icon_slide.shapes)[before:]
+                          if shape.has_text_frame and shape.text_frame.text.strip()]
+        assert len(new_text_boxes) == 1, (
+            f"add_icon_listの文章が複数shapeに分割されています: {len(new_text_boxes)}")
+        assert len(new_text_boxes[0].text_frame.paragraphs) == 3
+
         comparison = presentation.slides[1]
         text_shapes = [shape for shape in comparison.shapes
                        if shape.has_text_frame and shape.text.strip()]

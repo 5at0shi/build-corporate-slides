@@ -1,6 +1,6 @@
 # Content Model
 
-`work/slide_content.yaml` は文章、数値、順序、意味構造を保持する。座標、寸法、フォントサイズ、色コードなどの描画詳細は `work/generate_pptx.py` またはslidekitへ置き、YAMLを別の描画言語にしない。
+`slides/work/slide_content.yaml` は文章、数値、順序、意味構造を保持する。座標、寸法、フォントサイズ、色コードなどの描画詳細は `slides/work/generate_pptx.py` またはslidekitへ置き、YAMLを別の描画言語にしない。
 
 新規作成時は [`.slide-content.example.yaml`](../.slide-content.example.yaml) を出発点にできる。
 

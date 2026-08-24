@@ -8,13 +8,53 @@ from pptx.enum.shapes import MSO_SHAPE_TYPE
 from pptx.util import Emu
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "runtime" / "python"))
-from slidekit.textmetrics import estimate_line_count  # noqa: E402
+from slidekit.textmetrics import char_width_factor  # noqa: E402
+
+
+def _paragraph_line_sizes(paragraph, available_w: float) -> list[float] | None:
+    """runをまたいだ折り返しを再現し、各行に使われた最大フォントサイズを返す。
+
+    add_item_list・add_numbered_rowなどは、タイトルと本文を改行文字("\\n")
+    で1つのparagraph内の別runへ連結する（見た目上の行ごとにtextboxを
+    分割しないため）。単純に全runのテキストを結合して1つのフォントサイズで
+    折り返し推定すると、明示的な改行を無視して過小評価する。runごとに
+    改行で区切り、行に使われた文字の最大フォントサイズで高さを見積もる。
+    """
+    sizes = [run.font.size.pt for run in paragraph.runs if run.font.size]
+    if not sizes:
+        return None
+    fallback_size = max(sizes)
+    line_sizes = []
+    current_w = 0.0
+    current_max_size = 0.0
+    started = False
+    for run in paragraph.runs:
+        size = run.font.size.pt if run.font.size else fallback_size
+        segments = run.text.split("\n")
+        for seg_index, segment in enumerate(segments):
+            if seg_index > 0:
+                line_sizes.append(current_max_size or size)
+                current_w = 0.0
+                current_max_size = 0.0
+            for ch in segment:
+                started = True
+                ch_w = char_width_factor(ch) * size
+                if current_w + ch_w > available_w and current_w > 0:
+                    line_sizes.append(current_max_size or size)
+                    current_w = 0.0
+                    current_max_size = 0.0
+                current_w += ch_w
+                current_max_size = max(current_max_size, size)
+    if current_w > 0 or not line_sizes:
+        line_sizes.append(current_max_size or fallback_size)
+    return line_sizes if started else None
 
 
 def _estimate_text_height_pt(text_frame, width_pt: float) -> float | None:
     """textboxの折り返し後の推定高さ(pt)。フォントサイズ未指定の場合はNone。
 
-    生成時のレイアウト判断(slidekit.textmetrics)と同じ折り返し推定を使う。
+    生成時のレイアウト判断(slidekit.textmetrics)と同じ文字幅ヒューリス
+    ティックを使い、runをまたいだ改行も再現して折り返し行数を見積もる。
     """
     margin_left = Emu(text_frame.margin_left or 0).pt
     margin_right = Emu(text_frame.margin_right or 0).pt
@@ -23,20 +63,17 @@ def _estimate_text_height_pt(text_frame, width_pt: float) -> float | None:
     available_w = max(1.0, width_pt - margin_left - margin_right)
     total = margin_top + margin_bottom
     for paragraph in text_frame.paragraphs:
-        text = "".join(run.text for run in paragraph.runs)
-        if not text:
+        if not paragraph.runs or not any(run.text for run in paragraph.runs):
             continue
-        sizes = [run.font.size.pt for run in paragraph.runs if run.font.size]
-        if not sizes:
+        line_sizes = _paragraph_line_sizes(paragraph, available_w)
+        if line_sizes is None:
             return None
-        font_size = max(sizes)
-        lines = estimate_line_count(text, font_size, available_w)
         spacing = paragraph.line_spacing
         multiplier = spacing if isinstance(spacing, (int, float)) else 1.0
-        line_height = font_size * 1.2 * multiplier
         space_before = Emu(paragraph.space_before or 0).pt
         space_after = Emu(paragraph.space_after or 0).pt
-        total += lines * line_height + space_before + space_after
+        total += sum(size * 1.2 * multiplier for size in line_sizes)
+        total += space_before + space_after
     return total
 
 

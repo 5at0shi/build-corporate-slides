@@ -28,6 +28,7 @@ rendererは完成テンプレートではなく、頻出する意味構造を編
 - セル編集と行追加が想定される情報は `table_with_conclusion`。
 - グラフ全体を公平に読むなら `chart_with_insight: standard`、一つの主張が主役なら `conclusion-led`。
   - 実データから作る棒・折れ線・円グラフは`chart`（`type: column|bar|line|pie`、`categories`、`series`）を使い、ネイティブPowerPointグラフにする（数値をPowerPoint上で直接編集できる）。パワーポイント生成側で用意したPNGしかない場合だけ`image`を使う。原則として`chart`を優先する。
+  - `add_native_chart`は生成時に不整合を検知して止める（categoriesとvalues数の不一致、`pie`への複数系列指定、`categories`が空、など）。負の値を含む棒・列グラフはラベル位置を自動調整し、カテゴリ数が多い（8件超）折れ線・棒グラフは点ごとのラベルを自動的に省略する（軸・目盛線での判読に任せる）。
 - 縦の責任階層と横の実行部門を両方示すなら `org_layers`。
 - 課題と対応策を優先度付きで左右に並べるなら `priority_actions`。
 - 現在から将来への段階的な広がりを示すなら `stage_track`。

@@ -7,13 +7,68 @@ import yaml
 from pptx import Presentation
 
 
+def _check_chart_stability(add_native_chart, TYPE_BUSINESS):
+    """add_native_chartのエッジケース耐性を検証する（実際にKeynoteで
+
+    はみ出し・重なりを確認して見つけた回帰を防ぐ）。
+    """
+    from pptx import Presentation as _Presentation
+    from pptx.util import Inches as _Inches
+
+    prs = _Presentation()
+    prs.slide_width = _Inches(13.333333)
+    prs.slide_height = _Inches(7.5)
+    blank = prs.slide_layouts[6]
+
+    def expect_error(label, **kwargs):
+        slide = prs.slides.add_slide(blank)
+        try:
+            add_native_chart(slide, _Inches(0.5), _Inches(0.5), _Inches(6),
+                             _Inches(4), typography=TYPE_BUSINESS, **kwargs)
+        except ValueError:
+            return
+        raise AssertionError(f"{label}: ValueErrorが発生しませんでした")
+
+    expect_error("categories/values数の不一致", chart_type="column",
+                categories=["A", "B", "C"],
+                series=[{"name": "s1", "values": [1, 2]}])
+    expect_error("categoriesが空", chart_type="column",
+                categories=[], series=[{"name": "s1", "values": []}])
+    expect_error("pieに複数系列", chart_type="pie",
+                categories=["A", "B"],
+                series=[{"name": "s1", "values": [1, 2]}, {"name": "s2", "values": [3, 4]}])
+
+    # 負の値: ラベルが軸のカテゴリ名と重ならないよう、棒の内側に置かれる
+    # ことをXMLレベルで確認する（Keynote実測でOUTSIDE_ENDが重なるのを確認済み）。
+    from pptx.enum.chart import XL_LABEL_POSITION
+    neg_slide = prs.slides.add_slide(blank)
+    frame = add_native_chart(neg_slide, _Inches(0.5), _Inches(0.5), _Inches(6),
+                             _Inches(4), typography=TYPE_BUSINESS, chart_type="column",
+                             categories=["A", "B"],
+                             series=[{"name": "s1", "values": [-5, 10]}])
+    assert frame.chart.plots[0].data_labels.position == XL_LABEL_POSITION.INSIDE_END, (
+        "負の値を含む棒グラフのラベル位置がINSIDE_ENDになっていません")
+
+    # カテゴリ数が多い折れ線: 点ごとのラベルが密集して読めなくなるのを防ぐため、
+    # 閾値を超えたらラベルを出さない。
+    many_slide = prs.slides.add_slide(blank)
+    frame = add_native_chart(many_slide, _Inches(0.5), _Inches(0.5), _Inches(6),
+                             _Inches(4), typography=TYPE_BUSINESS, chart_type="line",
+                             categories=[f"C{i}" for i in range(20)],
+                             series=[{"name": "s1", "values": list(range(20))}])
+    assert frame.chart.plots[0].has_data_labels is False, (
+        "カテゴリ数が多い折れ線グラフでデータラベルが抑制されていません")
+
+
 def main() -> int:
     skill_root = Path(__file__).resolve().parents[1]
     sys.path.insert(0, str(skill_root / "runtime" / "python"))
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from slidekit import add_icon_list, inspect_content, logo_path_from_config, render_deck
+    from slidekit.charts import add_native_chart
     from slidekit.icons import ICON_NAMES, add_icon
     from slidekit.preflight import KNOWN_TYPES
+    from slidekit.theme import TYPE_BUSINESS
     from validate_pptx import validate
 
     config = {
@@ -178,6 +233,33 @@ def main() -> int:
                        if shape.has_text_frame and shape.text.strip()]
         assert len(text_shapes) <= 8, len(text_shapes)
         assert any(len(shape.text_frame.paragraphs) >= 2 for shape in text_shapes)
+
+    # business以外のmodeでも同じcontentが構造的に破綻しない（はみ出し・エラー
+    # なし）ことを確認する。denseは文字が小さく、large-roomは大きいため、
+    # businessでは出ない回帰（はみ出し等）がmode依存で起きうる。
+    import copy
+    for mode in ("dense", "large-room"):
+        mode_config = copy.deepcopy(config)
+        mode_config["deck"]["mode"] = mode
+        mode_content = copy.deepcopy(content)
+        mode_content["deck"]["mode"] = mode
+        with tempfile.TemporaryDirectory(prefix=f"slidekit-test-{mode}-") as temp:
+            root = Path(temp)
+            (root / ".slide-skill-config.yaml").write_text(
+                yaml.safe_dump(mode_config, allow_unicode=True), encoding="utf-8")
+            mode_input_dir = root / "slides" / "input"
+            mode_input_dir.mkdir(parents=True, exist_ok=True)
+            from PIL import Image as _Image
+            _Image.new("RGB", (400, 240), (230, 236, 245)).save(
+                mode_input_dir / "chart.png")
+
+            mode_output, mode_render_warnings = render_deck(mode_content, root)
+            assert not mode_render_warnings, (mode, mode_render_warnings)
+            mode_issues, mode_warnings = validate(mode_output)
+            assert not mode_issues, (mode, mode_issues)
+            assert not mode_warnings, (mode, mode_warnings)
+
+    _check_chart_stability(add_native_chart, TYPE_BUSINESS)
     print("OK: slidekit self test")
     return 0
 

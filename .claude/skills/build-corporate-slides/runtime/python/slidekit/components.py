@@ -412,7 +412,7 @@ def add_item_list(slide, x, y, w, h, items, *, bullet="•", body_gap=3,
 
 
 def add_icon_list(slide, x, y, w, h, items, *, icon="check",
-                  icon_color=PALETTE.blue, icon_size=Inches(0.34),
+                  icon_color=PALETTE.blue, icon_size=None,
                   text_gap=Inches(0.16), body_gap=14):
     """アイコン付き箇条書きを描く。
 
@@ -421,8 +421,15 @@ def add_icon_list(slide, x, y, w, h, items, *, icon="check",
     ではないため、行ごとに独立した図形として置く。itemsは文字列の配列。
     iconは全行共通の名前、またはitemsと同数のnameリストを渡す
     （行ごとに変える場合）。
+
+    icon_sizeを指定しない場合、本文フォントサイズの約2倍を目安に自動計算
+    する。固定インチ値のままだとlarge-roomモードなど本文が大きいmodeで
+    アイコンが相対的に小さく見える（business比で本文が約1.4倍でも
+    アイコンは同じ大きさのまま、というズレが生じる）ため。
     """
     typography = _type_for(slide)
+    if icon_size is None:
+        icon_size = Pt(typography.body.pt * 2.0)
     names = icon if isinstance(icon, list) else [icon] * len(items)
     text_x = x + icon_size + text_gap
     text_w = w - icon_size - text_gap

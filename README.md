@@ -2,7 +2,7 @@
 
 社内説明・企画・提案・報告向けの編集可能なPowerPointを、PLAN・CREATE・REVISEの3モードで生成するClaude Codeスキル。
 
-- スキル本体: [`.claude/skills/build-corporate-slides`](.claude/skills/build-corporate-slides)（現在 v0.9.0）
+- スキル本体: [`.claude/skills/build-corporate-slides`](.claude/skills/build-corporate-slides)（現在 v0.9.1）
 - 開発・検証用ワークスペース: `slides/input/` `slides/work/` `slides/output/`（[`.slide-skill-config.example.yaml`](.slide-skill-config.example.yaml)を`.slide-skill-config.yaml`としてコピーして使う）
 - 使い方の早見表: [`user-guide/getting-started.md`](.claude/skills/build-corporate-slides/user-guide/getting-started.md)（設定ファイルの各項目、PLAN/CREATE/REVISEの流れ）
 - モードの見た目比較: [`user-guide/mode-guide.pdf`](.claude/skills/build-corporate-slides/user-guide/mode-guide.pdf)（business/dense/large-roomの実寸サンプル）

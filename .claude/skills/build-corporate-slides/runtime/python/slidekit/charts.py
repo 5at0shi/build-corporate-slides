@@ -26,8 +26,20 @@ def add_native_chart(slide, x, y, w, h, *, chart_type, categories, series,
     """
     if chart_type not in _CHART_TYPES:
         raise ValueError(f"未対応のchart_typeです: {chart_type}")
+    if not categories:
+        raise ValueError("categoriesが空です")
     if not series:
         raise ValueError("seriesが空です")
+    if chart_type == "pie" and len(series) > 1:
+        raise ValueError(
+            "pieは1系列のみ対応です（PowerPointの円グラフは最初の系列しか"
+            f"表示せず、他は数値だけ残って混乱のもとになります）: {len(series)}系列")
+    for s in series:
+        values = s.get("values", [])
+        if len(values) != len(categories):
+            raise ValueError(
+                f"系列'{s.get('name', '')}'のvalues数({len(values)})が"
+                f"categories数({len(categories)})と一致しません")
 
     chart_data = CategoryChartData()
     chart_data.categories = categories
@@ -41,11 +53,14 @@ def add_native_chart(slide, x, y, w, h, *, chart_type, categories, series,
     font = typography.body_font
     small = typography.small
 
+    has_negative = any(v < 0 for s in series for v in s.get("values", []))
     if chart_type == "pie":
         _style_pie(chart, font, small)
     else:
         _style_category_chart(chart, chart_type, font, small, value_format,
-                              multi_series=len(series) > 1)
+                              multi_series=len(series) > 1,
+                              has_negative=has_negative,
+                              category_count=len(categories))
     return graphic_frame
 
 
@@ -73,8 +88,11 @@ def _style_pie(chart, font, small):
         point.format.line.width = Pt(1.5)
 
 
+_MAX_LABELED_CATEGORIES = 8
+
+
 def _style_category_chart(chart, chart_type, font, small, value_format,
-                          *, multi_series):
+                          *, multi_series, has_negative=False, category_count=0):
     plot = chart.plots[0]
     plot.gap_width = 60
     if chart_type != "line":
@@ -87,7 +105,10 @@ def _style_category_chart(chart, chart_type, font, small, value_format,
         chart.legend.font.size = small
         chart.legend.font.name = font
 
-    plot.has_data_labels = not multi_series
+    # カテゴリ数が多いと点ごとのラベルが重なって読めなくなるため、閾値を
+    # 超えたら軸・目盛線での判読に任せてラベルは付けない。
+    plot.has_data_labels = (not multi_series
+                            and category_count <= _MAX_LABELED_CATEGORIES)
     if plot.has_data_labels:
         labels = plot.data_labels
         labels.font.size = small
@@ -97,7 +118,10 @@ def _style_category_chart(chart, chart_type, font, small, value_format,
             labels.number_format = value_format
             labels.number_format_is_linked = False
         if chart_type != "line":
-            labels.position = XL_LABEL_POSITION.OUTSIDE_END
+            # 負の値を含む場合、OUTSIDE_ENDだと負の棒のラベルが軸ラベルの行と
+            # 重なって読めなくなる（Keynote実測で確認）。棒の内側に収める。
+            labels.position = (XL_LABEL_POSITION.INSIDE_END if has_negative
+                              else XL_LABEL_POSITION.OUTSIDE_END)
 
     for index, s in enumerate(plot.series):
         color = _SERIES_COLORS[index % len(_SERIES_COLORS)]

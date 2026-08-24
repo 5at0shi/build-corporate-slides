@@ -22,7 +22,7 @@ def _type_for(slide):
     return getattr(presentation, "_slidekit_typography", TYPE)
 
 
-def _flat(shape, *, rounding=None):
+def _flat(shape, *, rounding=None, radius=None):
     shape.shadow.inherit = False
     effect_list = shape._element.spPr.find(qn("a:effectLst"))
     if effect_list is not None:
@@ -30,7 +30,12 @@ def _flat(shape, *, rounding=None):
     style = shape._element.find(qn("p:style"))
     if style is not None:
         shape._element.remove(style)
-    if rounding is not None and len(shape.adjustments):
+    if radius is not None and len(shape.adjustments):
+        # ROUNDED_RECTANGLEのadj値は図形の短辺に対する割合として解釈されるため、
+        # 同じ値でも縦横比が違う図形同士では角丸の見え方が揃わない。
+        # 絶対の角丸半径を保つよう、短辺から都度adj値を逆算する。
+        shape.adjustments[0] = min(radius / min(shape.width, shape.height), 0.5)
+    elif rounding is not None and len(shape.adjustments):
         shape.adjustments[0] = rounding
     return shape
 
@@ -244,7 +249,7 @@ def add_background_zone(slide, x, y, w, h, *, tone="brand-soft",
         raise ValueError(f"未定義のtoneです: {tone}")
     shape_type = MSO_SHAPE.ROUNDED_RECTANGLE if rounded else MSO_SHAPE.RECTANGLE
     zone = slide.shapes.add_shape(shape_type, x, y, w, h)
-    _flat(zone, rounding=0.018 if rounded else None)
+    _flat(zone, radius=LAYOUT.radius if rounded else None)
     zone.fill.solid(); zone.fill.fore_color.rgb = tones[tone]
     zone.line.fill.background()
     return zone
@@ -269,11 +274,11 @@ def add_card(slide, x, y, w, h, *, fill=PALETTE.surface_base,
     if elevated:
         shadow = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,
                                         x + Pt(1.5), y + Pt(2), w, h)
-        _flat(shadow, rounding=0.018)
+        _flat(shadow, radius=LAYOUT.radius)
         shadow.fill.solid(); shadow.fill.fore_color.rgb = PALETTE.surface_subtle
         shadow.line.fill.background()
     card = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y, w, h)
-    _flat(card, rounding=0.018)
+    _flat(card, radius=LAYOUT.radius)
     card.fill.solid(); card.fill.fore_color.rgb = fill
     card.line.color.rgb = line; card.line.width = Pt(0.7)
     return card
@@ -287,7 +292,7 @@ def add_focus_panel(slide, x, y, w, h, *, tone="solid"):
     else:
         raise ValueError("toneは 'solid' または 'brand' を指定してください")
     panel = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y, w, h)
-    _flat(panel, rounding=0.018)
+    _flat(panel, radius=LAYOUT.radius)
     panel.fill.solid(); panel.fill.fore_color.rgb = fill
     panel.line.color.rgb = line; panel.line.width = Pt(1.0)
     return panel
@@ -314,7 +319,7 @@ def add_key_message(slide, x, y, w, text, *, style="editorial"):
                            size=typography.section, bold=True,
                            font=typography.headline_font)
     box = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y, w, h)
-    _flat(box, rounding=0.018)
+    _flat(box, radius=LAYOUT.radius)
     box.line.width = Pt(0.7)
     if style == "solid":
         box.fill.solid(); box.fill.fore_color.rgb = PALETTE.navy

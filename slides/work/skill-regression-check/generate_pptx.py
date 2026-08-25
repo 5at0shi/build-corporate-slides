@@ -87,22 +87,25 @@ def build_border_radius_page(builder, page):
 
 
 def build_process_with_gates_page(builder, page):
-    """FIX 2: process_with_gatesでphasesが空だとZeroDivisionErrorで生成不能だった不具合。
+    """FIX 2: process_with_gates。
 
-    org_layers/stage_track/priority_actions等は必須リストが空ならpreflightで
-    エラーにする仕組みがあったが、process_with_gatesだけphasesのチェックが
-    漏れていた。preflightにチェックを追加し、レンダラー側もmax(1, len(phases))
-    パターンで防御した（Escape Hatchからpreflightを経由せず直接呼ばれても
-    落ちないようにするため）。
+    (a) phasesが空だとZeroDivisionErrorで生成不能だった。preflightに
+    必須チェックを追加し、レンダラー側もmax(1, len(phases))パターンで
+    防御した（Escape Hatchからpreflightを経由せず直接呼ばれても落ちない
+    ようにするため）。
+    (b) ゲートの点が端(position 0 / 1付近)にあると、ラベルを中央揃えの
+    まま行の外へクランプしていたためラベルだけ点から離れて見えた。端に
+    近い点はラベルを点の位置を起点に片側へ伸ばす（左端はLEFT揃え、右端は
+    RIGHT揃え）よう修正し、常に点とラベルが対応するようにした。
     """
     spec = {
-        "title": "FIX 2: phases未指定時のクラッシュを解消",
+        "title": "FIX 2: phasesクラッシュとゲートラベルのズレを解消",
         "kicker": "PROCESS WITH GATES",
-        "primary_message": "修正前: phases:[] のときZeroDivisionErrorで生成が"
-                           "止まっていた。修正後: preflightで明確なエラーメッ"
-                           "セージを出し、レンダラー側も落ちなくなった（本"
-                           "スライドは6フェーズ・5ゲートの通常構成が壊れて"
-                           "いないことの確認用）。",
+        "primary_message": "(a) phases:[]でのクラッシュをpreflightで防止。"
+                           "(b) 端の承認ラベルが点から離れていたのを、点を"
+                           "起点に片側へ伸ばす揃え方に変更して解消（全ての"
+                           "承認ラベルが点の真下・真上に揃っていることを"
+                           "確認する）。",
         "phases": [
             {"title": f"フェーズ{i + 1}", "label": f"STEP{i + 1}", "weight": 1,
              "items": [f"作業{i + 1}-A", f"作業{i + 1}-B"]}
@@ -114,26 +117,31 @@ def build_process_with_gates_page(builder, page):
 
 
 def build_org_layers_page(builder, page):
-    """FIX 3: org_layersでlayersが3件以上だと本文がはみ出していた不具合。
+    """FIX 3: org_layersのsection_leadマーカーが本文に被っていた不具合。
 
-    見出し分の固定オフセット(0.46in)を、layer数が増えて行の高さが縮んでも
-    引き続き固定のまま使っていたため、行が縮むほど本文用の残りスペースを
-    ほぼ食い潰していた。行の高さに対する上限付き割合に変更し、3件までは
-    はみ出さず収まるようにした（4件以上は行の高さが構造的に足りないため、
-    preflightで警告を出す運用に変更）。
+    layer数に応じて行の高さが縮むケースで見出し分のオフセットも縮める
+    ようにしたが、初回修正では見出しの縦棒マーカー自体は固定0.38inの
+    ままで、オフセットだけそれより短く縮めてしまい、マーカーの下側が
+    本文へ被っていた。add_section_leadにmarker_hを渡せるようにし、
+    「オフセット = マーカー高さ + 固定ギャップ」という一つの式で連動
+    させることで、マーカーと本文が構造的に重ならないようにした。
+    その結果、3layersでは本文が枠に収まりきらないことが分かったため、
+    preflightの警告閾値も2layers超に修正した（本スライドは2layersで
+    重なりなく収まることの確認用）。
     """
     spec = {
-        "title": "FIX 3: layers 3件でのはみ出しを解消",
+        "title": "FIX 3: 見出しマーカーが本文に被る不具合を解消",
         "kicker": "ORG LAYERS",
-        "primary_message": "修正前: layersが3件になった時点で本文の推定必要"
-                           "高さ32ptに対し実際の枠が16pt程度しかなく、確実に"
-                           "はみ出していた。修正後: 見出し分のオフセットを"
-                           "行の高さに応じて可変にし、3件までは収まるように"
-                           "した（4件以上はpreflightで警告）。",
+        "primary_message": "修正前: 見出しの縦棒マーカー(固定0.38in)より"
+                           "オフセットの方が短くなり得て、マーカー下側が"
+                           "本文に被っていた。修正後: オフセットをマーカー"
+                           "高さ+ギャップで連動させ、構造的に被らないよう"
+                           "にした（3layers以上は本文が収まらないため"
+                           "preflightで警告する運用に変更）。",
         "layers": [
             {"heading": f"階層{i + 1}", "title": f"意思決定レイヤー{i + 1}",
              "body": "この階層が担う責任範囲の説明文がここに入ります"}
-            for i in range(3)
+            for i in range(2)
         ],
         "execution_heading": "実行",
         "execution": [
@@ -145,21 +153,23 @@ def build_org_layers_page(builder, page):
 
 
 def build_numbered_list_page(builder, page):
-    """FIX 4: numbered_listで項目数が多いとスライド外へはみ出していた不具合。
+    """FIX 4: numbered_listの罫線が本文に被っていた不具合。
 
-    row_h(行の高さ)を0.9in固定で項目数分積み上げていたため、8項目目から
-    ブロックの下端がスライドの外へ完全にはみ出し、該当行が非表示になって
-    いた（validate_pptx.pyの「スライド外のオブジェクト」検知で確認済み）。
-    利用可能な高さに収まるようrow_hを自動で縮めるよう修正した。
+    項目多数時のスライド外はみ出しをrow_hの自動縮小で直したが、初回修正
+    では罫線の位置を「次の行に食い込まない」よう次行開始位置手前へ
+    クランプするだけで、行の高さそのものが本文2行分に足りない場合に
+    「自分の行の本文」に罫線が被る問題が残っていた。行の高さに罫線を
+    安全に置ける余白が無い場合は、中途半端な位置に引いて文字に被せる
+    より罫線そのものを省略するよう修正した。
     """
     spec = {
-        "title": "FIX 4: 項目多数時のスライド外はみ出しを解消",
+        "title": "FIX 4: 罫線が本文に被る不具合を解消",
         "kicker": "NUMBERED LIST",
-        "primary_message": "修正前: 8項目目からブロック下端がスライドの外に"
-                           "出て、該当行が完全に見えなくなっていた。修正後: "
-                           "行の高さを利用可能な範囲に収まるよう自動で縮め、"
-                           "項目数によらずスライド内に収まるようにした（本"
-                           "スライドは10項目でも全行が見えることの確認用）。",
+        "primary_message": "修正前: 罫線の位置を次の行に被らないようクラン"
+                           "プするだけで、自分の行の本文に被るケースが残"
+                           "っていた。修正後: 罫線を安全に置ける余白が無い"
+                           "行では罫線自体を省略する（本スライドは10項目"
+                           "で、文字に重なる罫線が無いことの確認用）。",
         "message_position": "bottom",
         "items": [
             {"title": f"確認項目{i + 1}", "body": "この行が最後まで見えていればOK"}

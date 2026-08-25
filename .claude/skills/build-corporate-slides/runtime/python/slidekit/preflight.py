@@ -60,10 +60,10 @@ def inspect_content(content):
         if slide_type == "org_layers":
             if not slide.get("layers") or not slide.get("execution"):
                 errors.append(f"{label}: layersとexecutionが必要です")
-            elif len(slide["layers"]) > 3:
+            elif len(slide["layers"]) > 2:
                 warnings.append(
                     f"{label}: layersが多く({len(slide['layers'])}件)、各層の"
-                    "本文がはみ出す可能性があります。3件以下に抑えるか、"
+                    "本文がはみ出す可能性があります。2件以下に抑えるか、"
                     "階層を統合してください")
         if slide_type == "priority_actions":
             if not slide.get("issues") or not slide.get("actions"):

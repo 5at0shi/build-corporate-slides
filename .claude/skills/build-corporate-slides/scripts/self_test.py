@@ -198,6 +198,7 @@ def main() -> int:
 
         issues, structure_warnings = validate(output)
         assert not issues, issues
+        assert not structure_warnings, structure_warnings
 
         table_slide = presentation.slides[5]
         for shape in table_slide.shapes:

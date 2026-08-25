@@ -5,10 +5,81 @@ from pathlib import Path
 
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE_TYPE
-from pptx.util import Emu
+from pptx.enum.text import MSO_ANCHOR
+from pptx.util import Emu, Inches
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "runtime" / "python"))
 from slidekit.textmetrics import char_width_factor  # noqa: E402
+
+
+_THIN_W = Inches(0.12)
+_THIN_H = Inches(0.16)
+
+
+def _bbox(shape):
+    return (shape.left, shape.top, shape.left + shape.width, shape.top + shape.height)
+
+
+def _overlap_area(a, b):
+    left, top = max(a[0], b[0]), max(a[1], b[1])
+    right, bottom = min(a[2], b[2]), min(a[3], b[3])
+    if right <= left or bottom <= top:
+        return 0
+    return (right - left) * (bottom - top)
+
+
+def _text_glyph_bbox(shape):
+    """テキストが実際に占めるであろう概算の矩形。
+
+    textboxは中身より高さに余裕を持たせて作ることが多い（例:
+    add_numbered_rowは行の高さに関わらず常に0.76in）。図形の公称の
+    bboxをそのまま重なり判定に使うと、余白部分に触れただけの装飾を
+    誤検知してしまうため、vertical_anchorと推定文字高さから実際の
+    文字が占める範囲だけを切り出す。
+    """
+    box = _bbox(shape)
+    tf = shape.text_frame
+    estimated_pt = _estimate_text_height_pt(tf, Emu(shape.width).pt)
+    if estimated_pt is None:
+        return box
+    estimated_emu = int(estimated_pt * 12700)
+    top, height = shape.top, shape.height
+    if tf.vertical_anchor == MSO_ANCHOR.MIDDLE:
+        glyph_top = top + max(0, (height - estimated_emu) // 2)
+    elif tf.vertical_anchor == MSO_ANCHOR.BOTTOM:
+        glyph_top = top + max(0, height - estimated_emu)
+    else:
+        glyph_top = top
+    glyph_bottom = min(top + height, glyph_top + estimated_emu)
+    return (box[0], glyph_top, box[2], glyph_bottom)
+
+
+def _check_decoration_overlap(slide, slide_no, warnings):
+    """罫線・アクセントバー等の薄い装飾図形が、文字の上に被っていないか検知する。
+
+    add_card/add_background_zone等の大きな背景面はテキストを内側に持つのが
+    通常の使い方（薄くない図形は対象外）なので誤検知しない。角丸統一・
+    org_layersの見出しマーカー・numbered_listの罫線で、実際にこの種の
+    重なりが起きたことがあるため、目視に頼らず機械的に検知する。
+    """
+    text_shapes = [s for s in slide.shapes if s.has_text_frame and s.text.strip()]
+    for shape in slide.shapes:
+        if shape.has_text_frame and shape.text.strip():
+            continue
+        if shape.width <= 0 or shape.height <= 0:
+            continue
+        if shape.width > _THIN_W and shape.height > _THIN_H:
+            continue
+        deco_area = shape.width * shape.height
+        deco_box = _bbox(shape)
+        for text_shape in text_shapes:
+            overlap = _overlap_area(deco_box, _text_glyph_bbox(text_shape))
+            if overlap / deco_area > 0.12:
+                snippet = text_shape.text.strip().replace("\n", " ")[:24]
+                warnings.append(
+                    f"slide {slide_no}: 薄い装飾図形 '{shape.name}' が"
+                    f"テキスト '{snippet}' に重なっている可能性")
+                break
 
 
 def _paragraph_line_sizes(paragraph, available_w: float) -> list[float] | None:
@@ -130,6 +201,7 @@ def validate(path: Path) -> tuple[list[str], list[str]]:
         if visible == 0:
             issues.append(f"slide {slide_no}: 空ページの可能性")
         _check_text_overflow(slide, slide_no, warnings)
+        _check_decoration_overlap(slide, slide_no, warnings)
         short_shapes = [s for s in text_shapes if len(s.text.strip()) <= 24]
         if len(text_shapes) >= 16 and len(short_shapes) / len(text_shapes) >= 0.65:
             warnings.append(

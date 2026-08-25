@@ -200,9 +200,12 @@ def render_process_with_gates(builder, spec, page):
         add_textbox(slide, region.x, region.y + Inches(0.18), region.w,
                     Inches(0.28), phase.get("label", f"{index + 1:02}"),
                     size=_type(slide).small, color=PALETTE.blue, bold=True)
+        # phasesは最大6分割まで想定する狭い列のため、他の箇条書きと同じ
+        # 全角ダッシュ「—」だと項目テキストに対して不自然に長く見える。
+        # 中黒「・」は幅が狭く、狭い列でも項目とのバランスが崩れない。
         add_item_list(slide, region.x, region.y + Inches(0.62), region.w,
                       region.h - Inches(0.65), phase.get("items", []),
-                      bullet="—", body_gap=5)
+                      bullet="・", body_gap=5)
 
     add_hairline(slide, gate_row.x, gate_row.y + Inches(0.4), gate_row.w,
                  color=PALETTE.line_neutral, width=1)

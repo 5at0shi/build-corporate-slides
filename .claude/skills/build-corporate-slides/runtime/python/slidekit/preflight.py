@@ -55,8 +55,17 @@ def inspect_content(content):
             chart = slide.get("chart")
             if not slide.get("image") and not chart:
                 errors.append(f"{label}: imageまたはchartが必要です")
-            if chart and (not chart.get("categories") or not chart.get("series")):
-                errors.append(f"{label}: chart.categoriesとchart.seriesが必要です")
+            elif chart:
+                if chart.get("type") == "scatter":
+                    # scatterはcategoriesを使わず、seriesの各要素がpoints
+                    # (x/y座標)を持つ形式のため、他typeとは別に検証する。
+                    if not chart.get("series"):
+                        errors.append(f"{label}: chart.seriesが必要です")
+                    elif any(not s.get("points") for s in chart["series"]):
+                        errors.append(
+                            f"{label}: chart.series各要素にpointsが必要です")
+                elif not chart.get("categories") or not chart.get("series"):
+                    errors.append(f"{label}: chart.categoriesとchart.seriesが必要です")
         if slide_type == "org_layers":
             if not slide.get("layers") or not slide.get("execution"):
                 errors.append(f"{label}: layersとexecutionが必要です")

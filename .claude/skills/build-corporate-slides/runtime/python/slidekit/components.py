@@ -337,7 +337,7 @@ def add_key_message(slide, x, y, w, text, *, style="editorial"):
     return box
 
 
-def add_numbered_row(slide, x, y, w, number, title, body=None):
+def add_numbered_row(slide, x, y, w, number, title, body=None, *, row_h=None):
     typography = _type_for(slide)
     segments = [
         (f"{number:02}   ", {
@@ -368,7 +368,13 @@ def add_numbered_row(slide, x, y, w, number, title, body=None):
         # 折り返し推定にも含めて過小評価を防ぐ。
         content_pt += estimate_paragraph_height_pt("      " + body, typography.small.pt,
                                                     text_pt, line_spacing=1.08)
-    add_hairline(slide, x, y + Inches(content_pt / 72) + Inches(0.14), w)
+    offset = Inches(content_pt / 72) + Inches(0.14)
+    if row_h is not None:
+        # row_hが項目数に応じて縮められている場合、文字高さ基準のオフセット
+        # のままだと次の行の番号・タイトルへ罫線が食い込む。次の行が始まる
+        # 手前に収まるようクランプする。
+        offset = min(offset, max(Inches(0.1), row_h - Inches(0.08)))
+    add_hairline(slide, x, y + offset, w)
 
 
 def add_item_list(slide, x, y, w, h, items, *, bullet="•", body_gap=3,

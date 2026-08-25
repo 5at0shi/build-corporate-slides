@@ -476,7 +476,7 @@ def render_numbered_list(builder, spec, page):
     y = list_top + max(0, (available - block_h) // 2)
     for index, item in enumerate(items, 1):
         add_numbered_row(slide, area.x, y, area.w, index,
-                         item.get("title", ""), item.get("body"))
+                         item.get("title", ""), item.get("body"), row_h=row_h)
         y += row_h
 
     if position == "bottom":

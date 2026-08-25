@@ -39,6 +39,6 @@ deck.add_cover(title, subtitle=subtitle)
 
 ## 検証とレンダリング
 
-`validate_pptx.py` はファイル破損、スライド数、空ページ、スライド外オブジェクト、極小テキスト、短いtextboxの過剰分割を検出する。Visual QAの代替ではない。Skill更新時は `scripts/self_test.py` も実行する。
+`validate_pptx.py` はファイル破損、スライド数、空ページ、スライド外オブジェクト、極小テキスト（本文・表セルとも）、テキストが枠や表の行高からはみ出す可能性、薄い装飾図形（罫線・アクセントバー等）がテキストに重なっている可能性、短いtextboxの過剰分割を検出する。Visual QAの代替ではない。Skill更新時は `scripts/self_test.py` も実行する。
 
 `render_and_check.py` はmacOSではKeynote、その他ではLibreOfficeを優先してPDF化し、Popplerの `pdftoppm` でページPNGを作る。WindowsではPowerPoint COMも利用できる。Keynoteの自動操作権限がない場合はLibreOfficeへフォールバックする。レンダラーがなければPPTX生成を無効扱いにせず、Visual QA未実施と明示する。

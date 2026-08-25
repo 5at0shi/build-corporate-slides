@@ -148,6 +148,35 @@ def _estimate_text_height_pt(text_frame, width_pt: float) -> float | None:
     return total
 
 
+def _check_table(shape, slide_no, issues, warnings):
+    """表はGraphicFrameでhas_text_frame=Falseのため、他のテキストチェックの
+    対象から漏れる。セルの小さすぎる文字と、行の高さに対する文字のはみ出し
+    をここで別途確認する。
+    """
+    table = shape.table
+    for row_index in range(len(table.rows)):
+        row_height_pt = Emu(table.rows[row_index].height).pt
+        for col_index in range(len(table.columns)):
+            cell = table.cell(row_index, col_index)
+            text = cell.text_frame.text
+            if not text.strip():
+                continue
+            for paragraph in cell.text_frame.paragraphs:
+                for run in paragraph.runs:
+                    if run.font.size and run.font.size.pt < 7:
+                        issues.append(
+                            f"slide {slide_no}: 表内に7pt未満の文字 '{run.text[:24]}'")
+            col_width_pt = Emu(table.columns[col_index].width).pt
+            estimated = _estimate_text_height_pt(cell.text_frame, col_width_pt)
+            if estimated is None:
+                continue
+            if estimated > row_height_pt * 1.15:
+                snippet = text.strip().replace("\n", " ")[:24]
+                warnings.append(
+                    f"slide {slide_no}: 表のセルが行の高さからはみ出す可能性 "
+                    f"'{snippet}' (推定{estimated:.0f}pt / 行{row_height_pt:.0f}pt)")
+
+
 def _check_text_overflow(slide, slide_no, warnings):
     for shape in slide.shapes:
         if not shape.has_text_frame or not shape.text.strip():
@@ -198,6 +227,8 @@ def validate(path: Path) -> tuple[list[str], list[str]]:
                                 f"slide {slide_no}: 7pt未満の文字 '{run.text[:24]}'")
             elif not shape.has_text_frame:
                 visible += 1
+                if shape.has_table:
+                    _check_table(shape, slide_no, issues, warnings)
         if visible == 0:
             issues.append(f"slide {slide_no}: 空ページの可能性")
         _check_text_overflow(slide, slide_no, warnings)

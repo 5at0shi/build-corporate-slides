@@ -487,23 +487,33 @@ def render_section_divider(builder, spec, page):
                                 subtitle=spec.get("subtitle"), page=page)
 
 
-def render_matrix_2x2(builder, spec, page):
-    """4象限に分け、各象限の位置づけを示す(ポートフォリオ分析等)。
+def render_matrix(builder, spec, page):
+    """rows×colsのマス目に分け、各マスの位置づけを示す(ポートフォリオ分析等)。
 
-    axes=True（既定）は連続軸（低い⇄高いの度合い）上の位置づけとして
-    2x2を使う場合。axes=Falseは、SWOT等「軸のない4つの固定カテゴリ」
-    を示す場合で、軸ラベル分の余白を使わず4象限を広く使う。どちらも
-    構造は同じ4象限グリッドで、軸キャプションの有無だけが違う。
+    x_axis/y_axisを指定すると連続軸（低い⇄高いの度合い）上の位置づけ
+    として使う（BCGの成長率-シェア、Eisenhowerの緊急度-重要度等）。
+    どちらも指定しなければ、SWOT等「軸を持たない固定カテゴリ」として
+    軸ラベル分の余白を使わずマス目を広く使う。専用のaxesフラグは持たず
+    x_axis/y_axisの有無だけで自動的に切り替わる（値を与えれば使う、
+    という以上の情報をこの2つは持たないため）。
+
+    rows/colsは省略時2x2（BCGマトリクスやSWOT等、最も一般的な2軸/
+    4象限フレームワークに合わせた既定）。GE-McKinseyの3x3のような
+    2x2を超えるマトリクスも、同じ構造でrows/colsを指定するだけで
+    作れる（次元数はBoxGridと同じく1つの操作のパラメータに過ぎない）。
     """
     slide, area = builder.add_slide(
         spec["title"], density=spec.get("density", "standard"), page=page)
     typography = _type_for(slide)
-    axes = spec.get("axes", True)
+    rows = spec.get("rows", 2)
+    cols = spec.get("cols", 2)
+    x_axis = spec.get("x_axis") or {}
+    y_axis = spec.get("y_axis") or {}
+    axes = bool(x_axis) or bool(y_axis)
     if axes:
         grid_area, caption_row, conclusion = area.rows(
             [4.5, 0.34, 0.62], gap=Inches(0.16))
         axis_col, plot_col = grid_area.columns([0.14, 1], gap=Inches(0.14))
-        y_axis = spec.get("y_axis", {})
         add_textbox(slide, axis_col.x, axis_col.y, axis_col.w, Inches(0.4),
                     y_axis.get("high", ""), size=typography.small,
                     color=PALETTE.text_secondary, bold=True)
@@ -513,31 +523,30 @@ def render_matrix_2x2(builder, spec, page):
     else:
         plot_col, conclusion = area.rows([4.84, 0.62], gap=Inches(0.16))
 
-    quadrants = spec.get("quadrants", [])
+    cells = spec.get("cells", [])
     emphasis_tone = (lambda item, i:
                      "brand-soft" if isinstance(item, dict) and item.get("emphasis")
                      else "neutral")
-    contents = BoxGrid(slide, plot_col, quadrants, rows=2, cols=2,
+    contents = BoxGrid(slide, plot_col, cells, rows=rows, cols=cols,
                        skin="zone", tones=emphasis_tone, gap=Inches(0.1),
                        inset_x=Inches(0.24), inset_y=Inches(0.2))
-    for quadrant, inner in zip(quadrants, contents):
+    for cell, inner in zip(cells, contents):
         add_paragraph_textbox(slide, inner.x, inner.y, inner.w, inner.h, [
-            {"segments": [(quadrant.get("label", ""), {
+            {"segments": [(cell.get("label", ""), {
                 "size": typography.small, "color": PALETTE.blue,
                 "bold": True, "font": typography.body_font,
             })], "space_after": 4},
-            {"segments": [(quadrant.get("title", ""), {
+            {"segments": [(cell.get("title", ""), {
                 "size": typography.body, "color": PALETTE.text_primary,
                 "bold": True, "font": typography.body_font,
             })], "space_after": 3},
-            {"segments": [(quadrant.get("body", ""), {
+            {"segments": [(cell.get("body", ""), {
                 "size": typography.small, "color": PALETTE.text_secondary,
                 "font": typography.body_font,
             })]},
         ], vertical_anchor=MSO_ANCHOR.MIDDLE)
 
     if axes:
-        x_axis = spec.get("x_axis", {})
         half = plot_col.w // 2
         add_textbox(slide, plot_col.x, caption_row.y, half, caption_row.h,
                     x_axis.get("low", ""), size=typography.small,
@@ -646,7 +655,7 @@ RENDERERS = {
     "stage_track": render_stage_track,
     "numbered_list": render_numbered_list,
     "section_divider": render_section_divider,
-    "matrix_2x2": render_matrix_2x2,
+    "matrix": render_matrix,
     "stat_highlight": render_stat_highlight,
     "funnel": render_funnel,
 }

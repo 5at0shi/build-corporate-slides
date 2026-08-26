@@ -30,7 +30,7 @@ slides:
 ## Rules
 
 - `primary_message` は原則一つ。描画時の最強要素を決める。
-- 項目を強調したい場合も、各項目へ装飾命令を列挙しない。現状`emphasis`相当のフラグは`matrix_2x2`の`quadrants[].emphasis`（真偽値、強調象限を`brand-soft`にする）にのみ実装されている。他のrendererには汎用の`emphasis`フィールドはまだ無く、強調は`primary_message`や項目の並び順、`top_priority`（`priority_actions`）のような個別フィールドで表現する。
+- 項目を強調したい場合も、各項目へ装飾命令を列挙しない。現状`emphasis`相当のフラグは`matrix`の`cells[].emphasis`（真偽値、強調マスを`brand-soft`にする）にのみ実装されている。他のrendererには汎用の`emphasis`フィールドはまだ無く、強調は`primary_message`や項目の並び順、`top_priority`（`priority_actions`）のような個別フィールドで表現する。
 - `density` は `standard` / `dense`。denseでも文章縮小より重複削除と構造化を優先する。
 - 標準構造に合わない図解はPythonで個別構築できる。すべてを固定スキーマへ押し込まない。
 - REVISEでは文言・数値・項目順をYAML、レイアウトとDesign DNAをPythonまたはslidekitで修正する。

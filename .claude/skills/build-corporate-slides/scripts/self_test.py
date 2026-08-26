@@ -180,11 +180,11 @@ def main() -> int:
              "items": [{"title": "予算承認", "body": "費用"}]},
             {"id": "divider", "type": "section_divider", "title": "体制編",
              "kicker": "SECTION 2"},
-            {"id": "matrix", "type": "matrix_2x2", "title": "施策を整理する",
+            {"id": "matrix", "type": "matrix", "title": "施策を整理する",
              "density": "standard", "primary_message": "効果が高いものから着手する",
              "x_axis": {"low": "易", "high": "難"},
              "y_axis": {"low": "小", "high": "大"},
-             "quadrants": [
+             "cells": [
                  {"label": "優先", "title": "A", "body": "詳細", "emphasis": True},
                  {"label": "検討", "title": "B", "body": "詳細"},
                  {"label": "保留", "title": "C", "body": "詳細"},

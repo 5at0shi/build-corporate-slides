@@ -392,16 +392,16 @@ renderer_specs = [
             {"title": "アジェンダやNext Stepに最適", "body": "単列の番号付き項目だけで構成されるページに使う"},
             {"title": "row_hは項目数で自動調整", "body": "項目が少ないほど各行の余白が広がる"}],
     }),
-    ("matrix_2x2", "2軸で選択肢を4象限に整理する（ポートフォリオ分析等）", {
-        "title": "matrix_2x2: 2軸で4象限に整理する", "density": "standard",
+    ("matrix", "2軸で選択肢を4象限に整理する（ポートフォリオ分析等）", {
+        "title": "matrix: 2軸で4象限に整理する", "density": "standard",
         "primary_message": "軸上の正確な数値でなく、象限のどれに属するかが要点のときに使う",
         "x_axis": {"low": "x_axis.low", "high": "x_axis.high"},
         "y_axis": {"low": "y_axis.low", "high": "y_axis.high"},
-        "quadrants": [
-            {"label": "強調", "title": "quadrants配列", "body": "4件ちょうど必要。各象限は独立編集可能", "emphasis": True},
-            {"label": "補足", "title": "emphasis:Trueで強調", "body": "1象限だけ強調したい場合に使う"},
+        "cells": [
+            {"label": "強調", "title": "cells配列", "body": "rows×cols件ちょうど必要。各マスは独立編集可能", "emphasis": True},
+            {"label": "補足", "title": "emphasis:Trueで強調", "body": "1マスだけ強調したい場合に使う"},
             {"label": "補足", "title": "正確な座標が要点なら", "body": "chart_with_insightのscatterを使う"},
-            {"label": "補足", "title": "背景はBackground Zone", "body": "象限ごとに独立した面として描く"}],
+            {"label": "補足", "title": "背景はBackground Zone", "body": "マスごとに独立した面として描く"}],
     }),
     ("stat_highlight", "単一の実績数値を主役に、補足指標と結論を示す", {
         "title": "stat_highlight: 単一の実績数値を主役にする", "density": "standard",
@@ -465,19 +465,36 @@ for variant, desc, spec in chart_with_insight_specs:
     renderer_footer(f"chart_with_insight ({variant})", desc)
     page += 1
 
-# matrix_2x2とstat_highlightは、新しい構造を増やさずパラメータの違いだけで
-# 別用途に対応する2つの追加variantを持つため、それぞれ1枚ずつ見せる。
-RENDERERS["matrix_2x2"](builder, {
-    "title": "matrix_2x2 (axes: false): 軸のない4カテゴリで示す", "density": "standard",
-    "axes": False,
-    "primary_message": "SWOT等、連続軸を持たない固定4カテゴリはaxes: falseで軸ラベル分の余白を返す",
-    "quadrants": [
-        {"label": "S", "title": "強み", "body": "axes: falseで軸キャプション行を省く"},
-        {"label": "W", "title": "弱み", "body": "quadrantsの構造はaxes: trueと同じ"},
+# matrixとstat_highlightは、新しい構造を増やさずパラメータの違いだけで
+# 別用途に対応する追加variantを持つため、それぞれ見せる。
+RENDERERS["matrix"](builder, {
+    "title": "matrix (x_axis/y_axis省略): 軸のない4カテゴリで示す", "density": "standard",
+    "primary_message": "SWOT等、連続軸を持たない固定4カテゴリはx_axis/y_axisを省略すると軸ラベル分の余白を返す",
+    "cells": [
+        {"label": "S", "title": "強み", "body": "x_axis/y_axisを省くと軸キャプション行を省く"},
+        {"label": "W", "title": "弱み", "body": "cellsの構造は軸ありと同じ"},
         {"label": "O", "title": "機会", "body": "SWOT等、固定4カテゴリの整理に使う"},
-        {"label": "T", "title": "脅威", "body": "連続軸上の位置づけが要点ならaxes: true"}],
+        {"label": "T", "title": "脅威", "body": "連続軸上の位置づけが要点ならx_axis/y_axisを指定"}],
 }, page)
-renderer_footer("matrix_2x2 (axes: false)", "SWOT等、軸のない固定4カテゴリの整理")
+renderer_footer("matrix (軸なし)", "SWOT等、軸のない固定4カテゴリの整理")
+page += 1
+
+RENDERERS["matrix"](builder, {
+    "title": "matrix (rows: 3, cols: 3): 2x2を超えるマトリクスも同じ構造で",
+    "density": "dense",
+    "rows": 3, "cols": 3,
+    "primary_message": "GE-McKinseyの9マス等、rows/colsを指定するだけで2x2を超える構造にも対応する",
+    "x_axis": {"low": "競争力: 弱", "high": "競争力: 強"},
+    "y_axis": {"low": "市場魅力度: 低", "high": "市場魅力度: 高"},
+    "cells": [
+        {"label": "撤退", "title": "低×弱"}, {"label": "選別", "title": "低×中"},
+        {"label": "選別", "title": "低×強"},
+        {"label": "選別", "title": "中×弱"}, {"label": "選別", "title": "中×中", "emphasis": True},
+        {"label": "投資", "title": "中×強"},
+        {"label": "選別", "title": "高×弱"}, {"label": "投資", "title": "高×中"},
+        {"label": "投資", "title": "高×強"}],
+}, page)
+renderer_footer("matrix (rows: 3, cols: 3)", "GE-McKinsey等、2x2を超えるマトリクスの整理")
 page += 1
 
 RENDERERS["stat_highlight"](builder, {

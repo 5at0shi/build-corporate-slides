@@ -6,7 +6,7 @@ KNOWN_TYPES = {
     "scope_and_exclusions", "process_with_gates",
     "table_with_conclusion", "chart_with_insight",
     "org_layers", "priority_actions", "stage_track", "numbered_list",
-    "section_divider", "matrix_2x2", "stat_highlight", "funnel",
+    "section_divider", "matrix", "stat_highlight", "funnel",
 }
 
 
@@ -83,14 +83,14 @@ def inspect_content(content):
             errors.append(f"{label}: phasesが必要です")
         if slide_type == "numbered_list" and not slide.get("items"):
             errors.append(f"{label}: itemsが必要です")
-        if slide_type == "matrix_2x2":
-            quadrants = slide.get("quadrants")
-            if not quadrants or len(quadrants) != 4:
-                errors.append(f"{label}: quadrantsは4件必要です")
-            if slide.get("axes", True) and (
-                    not slide.get("x_axis") or not slide.get("y_axis")):
-                errors.append(f"{label}: x_axisとy_axisが必要です"
-                              "（軸のない4象限はaxes: falseを指定）")
+        if slide_type == "matrix":
+            rows, cols = slide.get("rows", 2), slide.get("cols", 2)
+            cells = slide.get("cells")
+            if not cells or len(cells) != rows * cols:
+                errors.append(f"{label}: cellsは{rows * cols}件（rows×cols）必要です")
+            if bool(slide.get("x_axis")) != bool(slide.get("y_axis")):
+                errors.append(f"{label}: x_axisとy_axisは両方指定するか両方省略します"
+                              "（片方だけでは軸を描けません）")
         if slide_type == "stat_highlight":
             if not slide.get("stat") and not slide.get("supporting"):
                 errors.append(f"{label}: statまたはsupportingが必要です")
@@ -121,7 +121,7 @@ def inspect_content(content):
         for key in ("items", "left", "right", "scope", "exclusions",
                     "phases", "gates", "evidence", "insights", "rows",
                     "layers", "execution", "issues", "actions", "stages",
-                    "quadrants", "supporting"):
+                    "cells", "supporting"):
             value = slide.get(key)
             if isinstance(value, list):
                 item_count += len(value)

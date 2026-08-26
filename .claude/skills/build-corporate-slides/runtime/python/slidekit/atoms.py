@@ -91,3 +91,22 @@ def add_hairline(slide, x, y, w, *, color=PALETTE.grey_300, width=0.75):
     line.fill.fore_color.rgb = color
     line.line.fill.background()
     return line
+
+
+def Marker(slide, x, y, w, h, *, shape="bar", fill=PALETTE.line_brand, rounding=0.16):
+    """テキストを持たない小さな単色アクセント図形（縦棒・点など）を描く。
+
+    見出し脇の縦棒（SectionLead・章扉）、プロセスのゲート点など、
+    「小さく・単色塗り・枠線なし」という同じ構造の装飾がrenderer側に
+    個別実装されがちだったため、1箇所に集約する。Boxと違い枠線・影の
+    バリエーションは持たない（装飾はBoxほど作り込まない、という区別）。
+
+    shape="bar"（既定）は角丸の細い帯。shape="dot"は円。
+    """
+    shape_type = MSO_SHAPE.OVAL if shape == "dot" else MSO_SHAPE.ROUNDED_RECTANGLE
+    marker = slide.shapes.add_shape(shape_type, x, y, w, h)
+    _flat(marker, rounding=None if shape == "dot" else rounding)
+    marker.fill.solid()
+    marker.fill.fore_color.rgb = fill
+    marker.line.fill.background()
+    return marker

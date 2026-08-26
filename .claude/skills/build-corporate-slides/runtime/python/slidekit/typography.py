@@ -18,12 +18,18 @@ def _type_for(slide):
     return getattr(presentation, "_slidekit_typography", TYPE)
 
 
-def style_text_frame(text_frame, *, margin=0, vertical_anchor=MSO_ANCHOR.TOP):
+def style_text_frame(text_frame, *, margin=0, margin_x=None, margin_y=None,
+                     vertical_anchor=MSO_ANCHOR.TOP):
+    """textboxの余白・折り返し・垂直配置を初期化する。
+
+    margin_x/margin_yを指定すると左右/上下で異なる余白にできる（未指定
+    の側はmargin、既定0を使う）。
+    """
     text_frame.clear()
-    text_frame.margin_left = margin
-    text_frame.margin_right = margin
-    text_frame.margin_top = margin
-    text_frame.margin_bottom = margin
+    text_frame.margin_left = text_frame.margin_right = (
+        margin_x if margin_x is not None else margin)
+    text_frame.margin_top = text_frame.margin_bottom = (
+        margin_y if margin_y is not None else margin)
     text_frame.vertical_anchor = vertical_anchor
     text_frame.word_wrap = True
     return text_frame
@@ -55,18 +61,6 @@ def add_textbox(slide, x, y, w, h, text, *, size=TYPE.body,
     paragraph.space_after = Pt(0)
     set_run(paragraph.add_run(), size=size, color=color, bold=bold, font=font)
     paragraph.runs[0].text = text
-    return shape
-
-
-def add_rich_textbox(slide, x, y, w, h, segments, *, align=PP_ALIGN.LEFT):
-    shape = slide.shapes.add_textbox(x, y, w, h)
-    tf = style_text_frame(shape.text_frame)
-    paragraph = tf.paragraphs[0]
-    paragraph.alignment = align
-    for text, kwargs in segments:
-        run = paragraph.add_run()
-        run.text = text
-        set_run(run, **kwargs)
     return shape
 
 

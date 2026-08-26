@@ -1,7 +1,7 @@
-from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Inches, Pt
 
+from .atoms import Marker
 from .builder import DeckBuilder
 from .charts import add_native_chart
 from .components import (SECTION_LEAD_GAP, add_background_zone, add_card,
@@ -215,11 +215,8 @@ def render_process_with_gates(builder, spec, page):
     for gate in gates:
         position = max(0.0, min(1.0, float(gate.get("position", 0))))
         x = gate_row.x + int(gate_row.w * position)
-        marker = slide.shapes.add_shape(MSO_SHAPE.OVAL, x - Inches(0.055),
-                                        gate_row.y + Inches(0.345),
-                                        Inches(0.11), Inches(0.11))
-        marker.fill.solid(); marker.fill.fore_color.rgb = PALETTE.blue
-        marker.line.fill.background()
+        Marker(slide, x - Inches(0.055), gate_row.y + Inches(0.345),
+              Inches(0.11), Inches(0.11), shape="dot", fill=PALETTE.blue)
         # 中央揃えのまま単純に行の外へクランプすると、点の中心とラベルの
         # 中心がズレて「点から離れて見える」（端の点で顕著）。端に近い点は
         # 点の位置を起点にラベルを片側へ伸ばし、常に点と対応が付くようにする。

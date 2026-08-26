@@ -16,6 +16,7 @@ from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.util import Pt
 
+from .atoms import _flat
 from .theme import PALETTE
 
 _WHITE = RGBColor(0xFF, 0xFF, 0xFF)
@@ -23,11 +24,6 @@ _WHITE = RGBColor(0xFF, 0xFF, 0xFF)
 ICON_NAMES = {"check", "warning", "people", "document", "clock", "target",
              "growth", "cost", "calendar", "idea", "location", "building",
              "globe", "shield"}
-
-
-def _flat(shape):
-    shape.shadow.inherit = False
-    return shape
 
 
 def _oval(slide, x0, y0, x1, y1, *, x, y, size, fill=None, line=None,
@@ -51,9 +47,7 @@ def _rounded_rect(slide, x0, y0, x1, y1, *, x, y, size, fill, rounding=0.15):
     shape = slide.shapes.add_shape(
         MSO_SHAPE.ROUNDED_RECTANGLE, x + int(x0 * size), y + int(y0 * size),
         int((x1 - x0) * size), int((y1 - y0) * size))
-    _flat(shape)
-    if len(shape.adjustments):
-        shape.adjustments[0] = rounding
+    _flat(shape, rounding=rounding)
     shape.fill.solid(); shape.fill.fore_color.rgb = fill
     shape.line.fill.background()
     return shape

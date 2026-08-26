@@ -5,10 +5,11 @@ from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Inches, Pt
 
-from .atoms import Box, _flat, add_hairline
+from .atoms import Box, Marker, _flat, add_hairline
 from .layout import Region
 from .theme import LAYOUT, PALETTE
-from .typography import _type_for, add_text_list, add_textbox, set_run
+from .typography import (_type_for, add_text_list, add_textbox, set_run,
+                         style_text_frame)
 
 
 def add_slide_title(slide, title, *, kicker=None, page=None):
@@ -130,10 +131,8 @@ def add_cover(slide, title, *, subtitle=None, department="", created=None,
         _flat(label, rounding=0.05)
         label.fill.background(); label.line.color.rgb = PALETTE.grey_500
         label.line.width = Pt(1.0)
-        tf = label.text_frame
-        tf.clear(); tf.margin_left = tf.margin_right = Inches(0.05)
-        tf.margin_top = tf.margin_bottom = 0
-        tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+        tf = style_text_frame(label.text_frame, margin_x=Inches(0.05),
+                              vertical_anchor=MSO_ANCHOR.MIDDLE)
         p = tf.paragraphs[0]; p.alignment = PP_ALIGN.CENTER
         run = p.add_run(); run.text = classification
         set_run(run, size=typography.small, color=PALETTE.text_secondary,
@@ -159,12 +158,7 @@ def add_section_divider(slide, title, *, kicker=None, subtitle=None, page=None):
     """章扉。通常ページの小見出しヘッダーは使わず、単独で成立させる。"""
     typography = _type_for(slide)
     center_y = Inches(3.2)
-    marker = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,
-                                    LAYOUT.margin_x, center_y,
-                                    Inches(0.09), Inches(0.6))
-    _flat(marker, rounding=0.16)
-    marker.fill.solid(); marker.fill.fore_color.rgb = PALETTE.line_brand
-    marker.line.fill.background()
+    Marker(slide, LAYOUT.margin_x, center_y, Inches(0.09), Inches(0.6))
     text_x = LAYOUT.margin_x + Inches(0.3)
     title_y = center_y
     if kicker:
@@ -195,11 +189,7 @@ def add_section_lead(slide, x, y, w, text, *, color=PALETTE.line_brand,
                      size=None, marker_h=Inches(0.38)):
     typography = _type_for(slide)
     size = size or typography.section
-    marker = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y,
-                                    Inches(0.06), marker_h)
-    _flat(marker, rounding=0.16)
-    marker.fill.solid(); marker.fill.fore_color.rgb = color
-    marker.line.fill.background()
+    marker = Marker(slide, x, y, Inches(0.06), marker_h, fill=color)
     label = add_textbox(slide, x + Inches(0.16), y - Inches(0.01),
                         w - Inches(0.16), Inches(0.42), text,
                         size=size, color=PALETTE.text_primary, bold=True)
@@ -281,10 +271,8 @@ def add_key_message(slide, x, y, w, text, *, style="editorial"):
         box = Box(slide, x, y, w, h, radius=LAYOUT.radius_base,
                   fill=PALETTE.grey_100, line=PALETTE.grey_300, line_width=Pt(0.7))
         color = PALETTE.ink
-    tf = box.text_frame
-    tf.clear(); tf.margin_left = tf.margin_right = Inches(0.18)
-    tf.margin_top = tf.margin_bottom = Inches(0.12)
-    tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+    tf = style_text_frame(box.text_frame, margin_x=Inches(0.18), margin_y=Inches(0.12),
+                          vertical_anchor=MSO_ANCHOR.MIDDLE)
     run = tf.paragraphs[0].add_run(); run.text = text
     set_run(run, size=typography.body, color=color, bold=True,
             font=typography.body_font)

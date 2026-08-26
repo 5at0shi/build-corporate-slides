@@ -6,6 +6,7 @@ from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.oxml.ns import qn
 from pptx.util import Inches, Pt
 
+from .atoms import Box, _flat
 from .icons import add_icon
 from .layout import Region
 from .textmetrics import (adaptive_gap_pt, estimate_item_list_height_pt,
@@ -20,24 +21,6 @@ def _type_for(slide):
         return slide_typography
     presentation = slide.part.package.presentation_part.presentation
     return getattr(presentation, "_slidekit_typography", TYPE)
-
-
-def _flat(shape, *, rounding=None, radius=None):
-    shape.shadow.inherit = False
-    effect_list = shape._element.spPr.find(qn("a:effectLst"))
-    if effect_list is not None:
-        shape._element.spPr.remove(effect_list)
-    style = shape._element.find(qn("p:style"))
-    if style is not None:
-        shape._element.remove(style)
-    if radius is not None and len(shape.adjustments):
-        # ROUNDED_RECTANGLEのadj値は図形の短辺に対する割合として解釈されるため、
-        # 同じ値でも縦横比が違う図形同士では角丸の見え方が揃わない。
-        # 絶対の角丸半径を保つよう、短辺から都度adj値を逆算する。
-        shape.adjustments[0] = min(radius / min(shape.width, shape.height), 0.5)
-    elif rounding is not None and len(shape.adjustments):
-        shape.adjustments[0] = rounding
-    return shape
 
 
 def add_hairline(slide, x, y, w, *, color=PALETTE.grey_300, width=0.75):
@@ -253,12 +236,10 @@ def add_background_zone(slide, x, y, w, h, *, tone="brand-soft",
     }
     if tone not in tones:
         raise ValueError(f"未定義のtoneです: {tone}")
-    shape_type = MSO_SHAPE.ROUNDED_RECTANGLE if rounded else MSO_SHAPE.RECTANGLE
-    zone = slide.shapes.add_shape(shape_type, x, y, w, h)
-    _flat(zone, radius=LAYOUT.radius if rounded else None)
-    zone.fill.solid(); zone.fill.fore_color.rgb = tones[tone]
-    zone.line.fill.background()
-    return zone
+    # 画面の大部分を占める面のため、角丸を使う場合はradius_lg（Card等の
+    # radius_baseより大きい半径）を使う。小さい半径だと丸みが足りずに見える。
+    return Box(slide, x, y, w, h, rounded=rounded, radius=LAYOUT.radius_lg,
+               fill=tones[tone], line=None)
 
 
 def add_panel(slide, x, y, w, h, *, tone="neutral", rounded=True,
@@ -276,18 +257,10 @@ def add_panel(slide, x, y, w, h, *, tone="neutral", rounded=True,
 
 
 def add_card(slide, x, y, w, h, *, fill=PALETTE.surface_base,
-             line=PALETTE.line_neutral, elevated=False):
-    if elevated:
-        shadow = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,
-                                        x + Pt(1.5), y + Pt(2), w, h)
-        _flat(shadow, radius=LAYOUT.radius)
-        shadow.fill.solid(); shadow.fill.fore_color.rgb = PALETTE.surface_subtle
-        shadow.line.fill.background()
-    card = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y, w, h)
-    _flat(card, radius=LAYOUT.radius)
-    card.fill.solid(); card.fill.fore_color.rgb = fill
-    card.line.color.rgb = line; card.line.width = Pt(0.7)
-    return card
+             line=PALETTE.line_neutral, elevated=True):
+    """独立した情報単位。既定で軽い影を付ける（elevated=Falseでフラットに）。"""
+    return Box(slide, x, y, w, h, radius=LAYOUT.radius_base, fill=fill,
+               line=line, line_width=Pt(0.7), elevated=elevated)
 
 
 def add_focus_panel(slide, x, y, w, h, *, tone="solid"):
@@ -297,11 +270,8 @@ def add_focus_panel(slide, x, y, w, h, *, tone="solid"):
         fill, line = PALETTE.surface_brand_soft, PALETTE.line_brand
     else:
         raise ValueError("toneは 'solid' または 'brand' を指定してください")
-    panel = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y, w, h)
-    _flat(panel, radius=LAYOUT.radius)
-    panel.fill.solid(); panel.fill.fore_color.rgb = fill
-    panel.line.color.rgb = line; panel.line.width = Pt(1.0)
-    return panel
+    return Box(slide, x, y, w, h, radius=LAYOUT.radius_base, fill=fill,
+               line=line, line_width=Pt(1.0), elevated=False)
 
 
 def add_key_message(slide, x, y, w, text, *, style="editorial"):
@@ -324,15 +294,14 @@ def add_key_message(slide, x, y, w, text, *, style="editorial"):
         return add_textbox(slide, x, y + Inches(0.17), w, h - Inches(0.17), text,
                            size=typography.section, bold=True,
                            font=typography.headline_font)
-    box = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y, w, h)
-    _flat(box, radius=LAYOUT.radius)
-    box.line.width = Pt(0.7)
     if style == "solid":
-        box.fill.solid(); box.fill.fore_color.rgb = PALETTE.navy
-        box.line.fill.background(); color = PALETTE.white
+        box = Box(slide, x, y, w, h, radius=LAYOUT.radius_base,
+                  fill=PALETTE.navy, line=None)
+        color = PALETTE.white
     else:
-        box.fill.solid(); box.fill.fore_color.rgb = PALETTE.grey_100
-        box.line.color.rgb = PALETTE.grey_300; color = PALETTE.ink
+        box = Box(slide, x, y, w, h, radius=LAYOUT.radius_base,
+                  fill=PALETTE.grey_100, line=PALETTE.grey_300, line_width=Pt(0.7))
+        color = PALETTE.ink
     tf = box.text_frame
     tf.clear(); tf.margin_left = tf.margin_right = Inches(0.18)
     tf.margin_top = tf.margin_bottom = Inches(0.12)

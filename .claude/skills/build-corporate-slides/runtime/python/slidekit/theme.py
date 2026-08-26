@@ -71,14 +71,23 @@ class LargeRoomTypography(BusinessTypography):
 
 @dataclass(frozen=True)
 class Layout:
+    """余白・角丸は4pt刻みの基準単位で揃える（デザイントークンの一貫性のため）。
+
+    角丸はスケール化する: radius_base（Card等の標準コンテナ）と
+    radius_lg（Background Zone等、画面の大部分を占める面）の2段階。
+    同じ絶対半径でも小さい面では丸すぎ、大きい面では丸みが足りなく
+    見える（知覚上のズレ）ため、役割に応じて使い分ける。完全な丸薬型
+    （Tag等）は固定値を持たず、高さ/2から都度算出する。
+    """
     slide_width = Inches(13.333333)
     slide_height = Inches(7.5)
-    margin_x = Inches(0.67)
-    margin_top = Inches(0.46)
-    margin_bottom = Inches(0.42)
-    gap_x = Inches(0.25)
-    gap_y = Inches(0.18)
-    radius = Inches(0.08)
+    margin_x = Inches(48 / 72)
+    margin_top = Inches(32 / 72)
+    margin_bottom = Inches(32 / 72)
+    gap_x = Inches(20 / 72)
+    gap_y = Inches(16 / 72)
+    radius_base = Pt(8)
+    radius_lg = Pt(14)
 
 
 PALETTE = Palette()

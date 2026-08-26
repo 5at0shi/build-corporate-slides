@@ -41,8 +41,16 @@ def Box(slide, x, y, w, h, *, rounded=True, radius=None, fill=None,
 
     elevated=Trueの場合、オフセットした面を背後に重ねて擬似的な影を
     作る。PowerPoint/LibreOffice/Keynote間で描画結果が揺れるネイティブ
-    shadowエフェクトは使わない。fill/lineを指定しない場合はそれぞれ
-    塗りなし/枠線なしになる（区切りのための透明な領域としても使える）。
+    shadowエフェクト（outerShdw）は使わない（LibreOffice側で想定より
+    濃く描画され、環境間で見え方が揺れることを確認済み）。fill/line
+    を指定しない場合はそれぞれ塗りなし/枠線なしになる（区切りのため
+    の透明な領域としても使える）。
+
+    elevated=Trueで作った影と本体は、PowerPoint上でグループ化して
+    1つの編集単位にする。グループ化しないと、手作業でサイズ変更する
+    際に本体と影を毎回2つ別々に動かす必要があり、編集性が落ちるため。
+    グループ化後もbox（本体）への参照はそのまま有効で、fill/line等を
+    個別に変更できる。
     """
     if rounded:
         radius = LAYOUT.radius_base if radius is None else radius
@@ -69,4 +77,7 @@ def Box(slide, x, y, w, h, *, rounded=True, radius=None, fill=None,
         box.line.width = line_width
     else:
         box.line.fill.background()
+
+    if elevated:
+        slide.shapes.add_group_shape([shadow, box])
     return box

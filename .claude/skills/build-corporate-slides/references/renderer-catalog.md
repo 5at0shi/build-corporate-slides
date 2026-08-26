@@ -37,7 +37,7 @@ rendererは完成テンプレートではなく、頻出する意味構造を編
 - 現在から将来への段階的な広がりを示すなら `stage_track`。
 - アジェンダやNext Stepなど、番号付きの単列項目だけで構成されるページは `numbered_list`。
 - 複数テーマを扱う資料で章を区切るなら `section_divider`。表紙と混同しない（ロゴ・部署名・開示区分は表紙のみ）。
-- 選択肢の位置づけをマス目に整理するなら `matrix`。軸上の座標が厳密な数値でなく、どのマスに属するかが要点の場合に使う。正確な座標が要点の場合は`chart_with_insight`の`chart.type: scatter`を使う（込み入った散布図はPNGの`image`）。`x_axis`/`y_axis`を指定すると連続軸上の位置づけ（BCGマトリクス等）、省略するとSWOT等「軸を持たない固定カテゴリ」になる（`cells`の構造はどちらも同じで、軸ラベル分の余白の有無だけが違う。x_axis/y_axisは両方指定するか両方省略する）。`rows`/`cols`は既定2×2で、GE-McKinseyの3×3等2×2を超えるマトリクスも同じ構造で指定できる（`cells`はrows×cols件ちょうど必要）。
+- 選択肢の位置づけをマス目に整理するなら `matrix`。軸上の座標が厳密な数値でなく、どのマスに属するかが要点の場合に使う。正確な座標が要点の場合は`chart_with_insight`の`chart.type: scatter`を使う（込み入った散布図はPNGの`image`）。`x_axis`/`y_axis`を指定すると連続軸上の位置づけ（BCGマトリクス等）、省略するとSWOT等「軸を持たない固定カテゴリ」になる（`cells`の構造はどちらも同じで、軸ラベル分の余白の有無だけが違う。x_axis/y_axisは両方指定するか両方省略する）。`rows`/`cols`は既定2×2で、GE-McKinseyの3×3等2×2を超えるマトリクスも同じ構造で指定できる（`cells`はrows×cols件ちょうど必要）。`table_with_conclusion`とは似て見えるが役割が違う: `matrix`は行・列の数自体に意味がある少数の軸/カテゴリへの位置づけ・分類（各マスはラベル＋見出し＋本文の塊）、`table_with_conclusion`は可変長の項目×評価基準の一覧比較（各セルは短い値）。項目数が増減しても構造の意味が変わらないなら`table_with_conclusion`、軸やカテゴリの数自体が意味を持つなら`matrix`を選ぶ。
 - 実績・効果を1つの数値で語るなら `stat_highlight`（`stat`を指定）。複数の観点を対等に比較する場合は`table_with_conclusion`を優先する。複数指標を対等な重みでまとめて一覧したい（KPIダッシュボード）場合は、`stat`を省略し`supporting`だけを指定する（heroが無いだけで構造はstat_highlightと同じため、別rendererにしない）。
 - 順を追って絞り込まれていく推移（リード獲得のファネル、市場規模のTAM/SAM/SOM等）を示すなら `funnel`。`stages`は値の大きい順に並べる。帯の幅はおおよその絞り込み具合を示す構造表現で、正確な比率を厳密に伝えたい場合は`chart_with_insight`の棒グラフを使う。
 

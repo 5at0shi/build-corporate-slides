@@ -1,11 +1,11 @@
 """Fragment層: AtomとLayoutを組み合わせた、意味的にはまだ完結しない
 再利用可能な構造パターン。
 
-BoxGrid（regionをR×Cのグリッドに分割しBoxを並べる）、MarkerOverlay
-（線上の位置にMarker＋ラベルを重ねる）など、複数のrendererで同じ形が
-繰り返し必要になった構造をここに集約する。Fragment自体はページの意味
-（何のためのグラフか等）を持たず、rendererがこれらを組み合わせてページ
-を構築する。
+BoxGrid（regionをR×Cのグリッドに分割しBoxを並べる）、ProportionalStack
+（値に比例した幅の帯を積む）、MarkerOverlay（線上の位置にMarker＋
+ラベルを重ねる）など、複数のrendererで同じ形が繰り返し必要になった
+構造をここに集約する。Fragment自体はページの意味（何のためのグラフ
+か等）を持たず、rendererがこれらを組み合わせてページを構築する。
 
 命名はビジネス用語を使わない（「階層」「ゲート」等はrenderer側の語彙）。
 形だけで再利用できることがFragment層の価値のため。同じ操作（矩形を
@@ -18,8 +18,32 @@ from pptx.util import Inches
 
 from .atoms import Marker, add_hairline
 from .components import add_background_zone, add_card
+from .layout import Region
 from .theme import PALETTE
 from .typography import _type_for, add_textbox
+
+
+def _skin_tone(items, index, tones):
+    if callable(tones):
+        return tones(items[index], index)
+    if tones:
+        return tones[index % len(tones)]
+    return "neutral"
+
+
+def _skinned_cell(slide, cell, items, index, *, skin, tones):
+    """skin="zone"なら背景色付きの面、"card"なら白背景+枠線+影のCardを描く。
+
+    BoxGridとProportionalStackが共有する「セルの見た目を決める」手順。
+    どちらも中身（テキスト等）は呼び出し側が別途配置するため、ここでは
+    面を描いて終わる。
+    """
+    if skin == "zone":
+        tone = _skin_tone(items, index, tones)
+        add_background_zone(slide, cell.x, cell.y, cell.w, cell.h,
+                            tone=tone, rounded=True)
+    else:
+        add_card(slide, cell.x, cell.y, cell.w, cell.h)
 
 
 def BoxGrid(slide, region, items, *, rows=None, cols=None, skin="card",
@@ -65,18 +89,43 @@ def BoxGrid(slide, region, items, *, rows=None, cols=None, skin="card",
             index = row_index * cols + col_index
             if index >= len(items):
                 break
-            if skin == "zone":
-                if callable(tones):
-                    tone = tones(items[index], index)
-                elif tones:
-                    tone = tones[index % len(tones)]
-                else:
-                    tone = "neutral"
-                add_background_zone(slide, cell.x, cell.y, cell.w, cell.h,
-                                    tone=tone, rounded=True)
-            else:
-                add_card(slide, cell.x, cell.y, cell.w, cell.h)
+            _skinned_cell(slide, cell, items, index, skin=skin, tones=tones)
             content_regions.append(cell.inset(inset_x, inset_y))
+    return content_regions
+
+
+def ProportionalStack(slide, region, items, *, value_key="value", min_ratio=0.18,
+                      skin="zone", tones=None, gap="tight",
+                      inset_x=Inches(0.28), inset_y=Inches(0.12)):
+    """regionを縦に積み、各段の幅をvalue_keyの値に応じて描く。
+
+    BoxGridが「等しい大きさのセルに分ける」操作なのに対し、これは
+    「値に応じた幅の帯を順に積む」という別の操作（ファネル＝絞り込みの
+    推移、ピラミッド＝下から積み上がる構造は、並び順と値の大小関係が
+    違うだけの同じ操作のため、Fragmentは分けない）。
+
+    幅は最大値に対する比率の平方根を使う（線形比率そのままだと、実際の
+    ファネルによくある10〜100倍の落差で下位の段がほぼ潰れ、テキストが
+    入らなくなるため）。正確な値の比率を厳密に伝えたい場合はこの
+    Fragmentではなくchart_with_insightの棒グラフを使う。min_ratioは
+    それでも潰れる最小段への下限。中央揃えで積み、各段の高さは均等。
+
+    BoxGridと同じくskin/tonesを共有し、返り値も内側の余白を差し引いた
+    Regionのリスト（items順）。
+    """
+    n = max(1, len(items))
+    row_regions = region.rows([1] * n, gap=gap) if n > 1 else [region]
+    values = [max(0.0, float(item.get(value_key, 0))) if isinstance(item, dict) else 0.0
+             for item in items]
+    max_value = max(values) if values else 0.0
+    content_regions = []
+    for index, (row_region, value) in enumerate(zip(row_regions, values)):
+        ratio = max(min_ratio, (value / max_value) ** 0.5) if max_value else 1.0
+        width = int(row_region.w * ratio)
+        x = row_region.x + (row_region.w - width) // 2
+        cell = Region(x, row_region.y, width, row_region.h)
+        _skinned_cell(slide, cell, items, index, skin=skin, tones=tones)
+        content_regions.append(cell.inset(inset_x, inset_y))
     return content_regions
 
 

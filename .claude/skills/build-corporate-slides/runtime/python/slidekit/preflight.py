@@ -6,7 +6,7 @@ KNOWN_TYPES = {
     "scope_and_exclusions", "process_with_gates",
     "table_with_conclusion", "chart_with_insight",
     "org_layers", "priority_actions", "stage_track", "numbered_list",
-    "section_divider", "matrix_2x2", "stat_highlight",
+    "section_divider", "matrix_2x2", "stat_highlight", "funnel",
 }
 
 
@@ -87,11 +87,17 @@ def inspect_content(content):
             quadrants = slide.get("quadrants")
             if not quadrants or len(quadrants) != 4:
                 errors.append(f"{label}: quadrantsは4件必要です")
-            if not slide.get("x_axis") or not slide.get("y_axis"):
-                errors.append(f"{label}: x_axisとy_axisが必要です")
+            if slide.get("axes", True) and (
+                    not slide.get("x_axis") or not slide.get("y_axis")):
+                errors.append(f"{label}: x_axisとy_axisが必要です"
+                              "（軸のない4象限はaxes: falseを指定）")
         if slide_type == "stat_highlight":
-            if not slide.get("stat") or not slide["stat"].get("value"):
+            if not slide.get("stat") and not slide.get("supporting"):
+                errors.append(f"{label}: statまたはsupportingが必要です")
+            elif slide.get("stat") and not slide["stat"].get("value"):
                 errors.append(f"{label}: stat.valueが必要です")
+        if slide_type == "funnel" and not slide.get("stages"):
+            errors.append(f"{label}: stagesが必要です")
 
         text_values = list(_walk_text(slide))
         total_chars = sum(len(value) for value in text_values)

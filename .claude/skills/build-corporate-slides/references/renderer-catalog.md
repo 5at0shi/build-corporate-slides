@@ -13,11 +13,12 @@ rendererは完成テンプレートではなく、頻出する意味構造を編
 | `chart_with_insight` | グラフと読み取りを示す | `standard`, `conclusion-led` | `chart`指定でネイティブPowerPointグラフ（数値・系列名を編集可）、`image`指定でPNG画像 |
 | `org_layers` | 意思決定・運営など縦の責任階層と、横に並ぶ実行部門 | 標準 | 階層バンド＋実行部門ごとのCard |
 | `priority_actions` | 優先度付きの課題と、対応する方針 | 標準 | 優先度付きリスト＋淡色の対応方針パネル |
-| `stage_track` | 現在から将来への段階的な進行（ロードマップ等） | 標準 | 同格のステージCard群 |
+| `stage_track` | 現在から将来への段階的な進行（ロードマップ等） | 標準 | 同格のステージCard群。既定でCard間を矢印で繋ぐ（`connectors: false`で非表示） |
 | `numbered_list` | アジェンダ、依頼事項など番号付きの単列項目 | 標準 | 番号付き行の集合。上部導入文／下部結論のどちらかを選べる |
 | `section_divider` | 複数テーマを扱う資料の章区切り | 標準 | 通常ページのヘッダーを使わない単独ページ |
-| `matrix_2x2` | 2軸で選択肢を4象限に整理する（ポートフォリオ分析等） | 標準 | 象限ごとのBackground Zone。各象限は独立編集可能 |
-| `stat_highlight` | 単一の実績数値を主役に、補足指標と結論を示す | 標準 | 主指標＋補足指標Cardの集合 |
+| `matrix_2x2` | 2軸で選択肢を4象限に整理する（ポートフォリオ分析等）、または軸のない固定4カテゴリの整理（SWOT等） | `axes: true`（既定）, `axes: false` | 象限ごとのBackground Zone。各象限は独立編集可能 |
+| `stat_highlight` | 単一の実績数値を主役に、補足指標と結論を示す。`stat`省略時は複数指標を均等グリッドで一覧するKPIダッシュボードになる | 標準 | 主指標＋補足指標Cardの集合 |
+| `funnel` | 順を追って絞り込まれていく推移（ファネル分析、市場規模のTAM/SAM/SOM等） | 標準 | 値に応じた幅の帯を積む。各段は独立編集可能 |
 
 ## Selection
 
@@ -36,8 +37,9 @@ rendererは完成テンプレートではなく、頻出する意味構造を編
 - 現在から将来への段階的な広がりを示すなら `stage_track`。
 - アジェンダやNext Stepなど、番号付きの単列項目だけで構成されるページは `numbered_list`。
 - 複数テーマを扱う資料で章を区切るなら `section_divider`。表紙と混同しない（ロゴ・部署名・開示区分は表紙のみ）。
-- 2軸で選択肢の位置づけを比較するなら `matrix_2x2`。軸上の座標が厳密な数値でなく、4象限のどれに属するかが要点の場合に使う。正確な座標が要点の場合は`chart_with_insight`の`chart.type: scatter`を使う（込み入った散布図はPNGの`image`）。
-- 実績・効果を1つの数値で語るなら `stat_highlight`。複数の観点を対等に比較する場合は`table_with_conclusion`を優先する。
+- 2軸で選択肢の位置づけを比較するなら `matrix_2x2`。軸上の座標が厳密な数値でなく、4象限のどれに属するかが要点の場合に使う。正確な座標が要点の場合は`chart_with_insight`の`chart.type: scatter`を使う（込み入った散布図はPNGの`image`）。SWOT等、連続軸を持たない固定4カテゴリを整理したい場合は`axes: false`を指定する（軸ラベル分の余白を使わず4象限を広く使う。`quadrants`の構造自体は`axes: true`と同じ）。
+- 実績・効果を1つの数値で語るなら `stat_highlight`（`stat`を指定）。複数の観点を対等に比較する場合は`table_with_conclusion`を優先する。複数指標を対等な重みでまとめて一覧したい（KPIダッシュボード）場合は、`stat`を省略し`supporting`だけを指定する（heroが無いだけで構造はstat_highlightと同じため、別rendererにしない）。
+- 順を追って絞り込まれていく推移（リード獲得のファネル、市場規模のTAM/SAM/SOM等）を示すなら `funnel`。`stages`は値の大きい順に並べる。帯の幅はおおよその絞り込み具合を示す構造表現で、正確な比率を厳密に伝えたい場合は`chart_with_insight`の棒グラフを使う。
 
 ## Escape Hatch
 

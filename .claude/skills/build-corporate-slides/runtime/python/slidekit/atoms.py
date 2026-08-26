@@ -10,9 +10,14 @@ Box/Marker/add_hairlineはいずれも「図形を作る→既定のテーマス
 消す→塗るか透明か→枠線を引くかなしか」という同じ手順の上に成り立つ
 （違うのは形・既定色・角丸の付け方だけ）。この手順を_filled_shapeへ
 集約し、それぞれは見た目の役割（コンテナ／装飾／罫線）だけを表す。
+
+Connectorは2点を結ぶ線で、1点だけを装飾するMarkerとは本質的に別の
+構造（つながりを表す）のため、_filled_shapeではなくadd_connectorの
+上に別途実装する。
 """
-from pptx.enum.shapes import MSO_SHAPE
+from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE
 from pptx.oxml.ns import qn
+from pptx.oxml.xmlchemy import OxmlElement
 from pptx.util import Pt
 
 from .theme import LAYOUT, PALETTE
@@ -102,6 +107,38 @@ def add_hairline(slide, x, y, w, *, color=PALETTE.grey_300, width=0.75):
     """細い横罫線（区切り線）を引く。テキストを持たない純粋な装飾図形。"""
     return _filled_shape(slide, MSO_SHAPE.RECTANGLE, x, y, w, Pt(width),
                          fill=color)
+
+
+def _arrow_head(tag):
+    element = OxmlElement(f"a:{tag}")
+    element.set("type", "triangle")
+    return element
+
+
+def Connector(slide, x1, y1, x2, y2, *, style="straight", arrow="end",
+             color=PALETTE.line_neutral, width=Pt(1.25)):
+    """2点を結ぶ線（矢印可）を描く。
+
+    横に並べたBox同士を「順番につながっている」と示すなど、要素間の
+    関係を表す最小単位。Markerと違い2点間の関係を持つ点が異なる
+    （Markerは1点の装飾、Connectorは2点をつなぐ線）。
+
+    style: "straight"（直線、既定）または "elbow"（PowerPoint既定の
+    自動経路で直角に曲がる線。始点・終点の相対位置から経路が決まる）。
+    arrow: "end"（終点のみ矢印、既定）、"both"（両端）、"none"（矢印
+    なし。区切り線ではなく関係を示す用途のまま矢印だけ外したい場合）。
+    """
+    connector_type = MSO_CONNECTOR.ELBOW if style == "elbow" else MSO_CONNECTOR.STRAIGHT
+    shape = slide.shapes.add_connector(connector_type, x1, y1, x2, y2)
+    _flat(shape)
+    shape.line.color.rgb = color
+    shape.line.width = width
+    if arrow != "none":
+        line = shape._element.spPr.find(qn("a:ln"))
+        if arrow == "both":
+            line.append(_arrow_head("headEnd"))
+        line.append(_arrow_head("tailEnd"))
+    return shape
 
 
 def Marker(slide, x, y, w, h, *, shape="bar", fill=PALETTE.line_brand, rounding=0.16):

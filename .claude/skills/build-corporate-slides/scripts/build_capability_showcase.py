@@ -1,7 +1,7 @@
 """スキルが標準搭載する部品を一覧できるショーケースデッキを生成する。
 
 配色・タイポグラフィ・基本コンポーネント・アイコン・ネイティブチャート・
-renderer 14種を、実際の描画関数を直接呼び出して本物の出力として並べる。
+renderer 15種を、実際の描画関数を直接呼び出して本物の出力として並べる。
 内容は常に実装と一致する（手書きの説明画像ではない）。デザインシステムや
 renderer/icon/chartを追加・変更したら、このスクリプトを再実行して
 参照を最新化する。
@@ -83,7 +83,7 @@ builder = DeckBuilder.from_workspace(WORKSPACE_ROOT)
 # ================================================================ 1. Cover
 builder.add_cover(
     "build-corporate-slidesスキル 機能一覧",
-    subtitle="配色・コンポーネント・アイコン・チャート・renderer 14種の実物見本",
+    subtitle="配色・コンポーネント・アイコン・チャート・renderer 15種の実物見本",
     eyebrow="CAPABILITY SHOWCASE",
     brand_side="right", brand_shape="diagonal")
 
@@ -411,11 +411,21 @@ renderer_specs = [
         "supporting": [{"value": "N件", "label": "supportingは補足指標"},
                        {"value": "任意", "label": "複数観点の対等比較はtable_with_conclusionを優先"}],
     }),
+    ("funnel", "順を追って絞り込まれていく推移（ファネル分析等）", {
+        "title": "funnel: 絞り込みの推移を帯の幅で示す", "density": "standard",
+        "primary_message": "stagesは値の大きい順に並べる。帯の幅はおおよその絞り込み具合を示す",
+        "stages": [
+            {"title": "stages配列", "value": 100, "value_label": "value(大)から順に並べる"},
+            {"title": "帯の幅は値に応じる", "value": 42,
+             "value_label": "厳密な比率でなく、平方根で圧縮した幅"},
+            {"title": "正確な比率が要点なら", "value": 12,
+             "value_label": "chart_with_insightの棒グラフを使う"}],
+    }),
 ]
 
 page = 8
 RENDERERS["section_divider"](builder, {
-    "title": "renderer カタログ（14種）", "kicker": "SECTION DIVIDER",
+    "title": "renderer カタログ（15種）", "kicker": "SECTION DIVIDER",
     "subtitle": "renderer-catalog.mdの各typeを、実際の最小構成で見せる",
 }, page)
 renderer_footer("section_divider", "複数テーマを扱う資料の章区切り")
@@ -454,6 +464,34 @@ for variant, desc, spec in chart_with_insight_specs:
     RENDERERS["chart_with_insight"](builder, spec, page)
     renderer_footer(f"chart_with_insight ({variant})", desc)
     page += 1
+
+# matrix_2x2とstat_highlightは、新しい構造を増やさずパラメータの違いだけで
+# 別用途に対応する2つの追加variantを持つため、それぞれ1枚ずつ見せる。
+RENDERERS["matrix_2x2"](builder, {
+    "title": "matrix_2x2 (axes: false): 軸のない4カテゴリで示す", "density": "standard",
+    "axes": False,
+    "primary_message": "SWOT等、連続軸を持たない固定4カテゴリはaxes: falseで軸ラベル分の余白を返す",
+    "quadrants": [
+        {"label": "S", "title": "強み", "body": "axes: falseで軸キャプション行を省く"},
+        {"label": "W", "title": "弱み", "body": "quadrantsの構造はaxes: trueと同じ"},
+        {"label": "O", "title": "機会", "body": "SWOT等、固定4カテゴリの整理に使う"},
+        {"label": "T", "title": "脅威", "body": "連続軸上の位置づけが要点ならaxes: true"}],
+}, page)
+renderer_footer("matrix_2x2 (axes: false)", "SWOT等、軸のない固定4カテゴリの整理")
+page += 1
+
+RENDERERS["stat_highlight"](builder, {
+    "title": "stat_highlight (stat省略): KPIダッシュボードとして一覧する",
+    "density": "standard",
+    "primary_message": "statを省略すると、supportingが均等グリッドのKPIダッシュボードになる",
+    "supporting": [
+        {"value": "94%", "label": "満足度"},
+        {"value": "-42%", "label": "作業時間削減率"},
+        {"value": "3.2x", "label": "処理件数"},
+        {"value": "12", "label": "導入部署数"}],
+}, page)
+renderer_footer("stat_highlight (KPI dashboard)", "hero無しで複数指標を均等に並べるKPIダッシュボード")
+page += 1
 
 output = builder.save(SKILL / "user-guide" / "capability-showcase.pptx")
 print("PPTX:", output)

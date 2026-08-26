@@ -1,12 +1,13 @@
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Inches, Pt
 
+from .atoms import Connector
 from .builder import DeckBuilder
 from .charts import add_native_chart
 from .components import (SECTION_LEAD_GAP, add_background_zone,
                          add_item_list, add_key_message,
                          add_panel, add_section_lead)
-from .fragments import BoxGrid, MarkerOverlay
+from .fragments import BoxGrid, MarkerOverlay, ProportionalStack
 from .layout import Region
 from .preflight import require_valid_content
 from .images import add_image_contain
@@ -403,7 +404,11 @@ def render_priority_actions(builder, spec, page):
 
 
 def render_stage_track(builder, spec, page):
-    """左から右への段階的な進行を、同格のステージカードで示す。"""
+    """左から右への段階的な進行を、同格のステージカードで示す。
+
+    段階数が2以上ならCardの間を矢印でつなぎ、順番であることを明示する
+    （connectors=Falseで矢印なしのCard群に戻せる）。
+    """
     slide, area = builder.add_slide(
         spec["title"], density=spec.get("density", "standard"), page=page)
     typography = _type_for(slide)
@@ -411,8 +416,14 @@ def render_stage_track(builder, spec, page):
         [3.9, 0.34, 0.62], gap=Inches(0.16))
     stages = spec.get("stages", [])
     tones = ["neutral", "brand-soft", "teal-soft"]
+    inset_x = Inches(0.28)
     contents = BoxGrid(slide, stages_row, stages, skin="zone", tones=tones,
-                       gap="wide", inset_x=Inches(0.28), inset_y=Inches(0.26))
+                       gap="wide", inset_x=inset_x, inset_y=Inches(0.26))
+    if spec.get("connectors", True):
+        arrow_y = stages_row.y + stages_row.h // 2
+        for left, right in zip(contents, contents[1:]):
+            Connector(slide, left.x + left.w + inset_x, arrow_y,
+                     right.x - inset_x, arrow_y, color=PALETTE.grey_500)
     for index, (stage, inner) in enumerate(zip(stages, contents)):
         add_paragraph_textbox(slide, inner.x, inner.y, inner.w, inner.h, [
             {"segments": [(stage.get("label", f"STEP {index}"), {
@@ -477,21 +488,30 @@ def render_section_divider(builder, spec, page):
 
 
 def render_matrix_2x2(builder, spec, page):
-    """2軸で4象限に分け、各象限の位置づけを示す(ポートフォリオ分析等)。"""
+    """4象限に分け、各象限の位置づけを示す(ポートフォリオ分析等)。
+
+    axes=True（既定）は連続軸（低い⇄高いの度合い）上の位置づけとして
+    2x2を使う場合。axes=Falseは、SWOT等「軸のない4つの固定カテゴリ」
+    を示す場合で、軸ラベル分の余白を使わず4象限を広く使う。どちらも
+    構造は同じ4象限グリッドで、軸キャプションの有無だけが違う。
+    """
     slide, area = builder.add_slide(
         spec["title"], density=spec.get("density", "standard"), page=page)
     typography = _type_for(slide)
-    grid_area, caption_row, conclusion = area.rows(
-        [4.5, 0.34, 0.62], gap=Inches(0.16))
-    axis_col, plot_col = grid_area.columns([0.14, 1], gap=Inches(0.14))
-
-    y_axis = spec.get("y_axis", {})
-    add_textbox(slide, axis_col.x, axis_col.y, axis_col.w, Inches(0.4),
-                y_axis.get("high", ""), size=typography.small,
-                color=PALETTE.text_secondary, bold=True)
-    add_textbox(slide, axis_col.x, axis_col.y + axis_col.h - Inches(0.4),
-                axis_col.w, Inches(0.4), y_axis.get("low", ""),
-                size=typography.small, color=PALETTE.text_secondary, bold=True)
+    axes = spec.get("axes", True)
+    if axes:
+        grid_area, caption_row, conclusion = area.rows(
+            [4.5, 0.34, 0.62], gap=Inches(0.16))
+        axis_col, plot_col = grid_area.columns([0.14, 1], gap=Inches(0.14))
+        y_axis = spec.get("y_axis", {})
+        add_textbox(slide, axis_col.x, axis_col.y, axis_col.w, Inches(0.4),
+                    y_axis.get("high", ""), size=typography.small,
+                    color=PALETTE.text_secondary, bold=True)
+        add_textbox(slide, axis_col.x, axis_col.y + axis_col.h - Inches(0.4),
+                    axis_col.w, Inches(0.4), y_axis.get("low", ""),
+                    size=typography.small, color=PALETTE.text_secondary, bold=True)
+    else:
+        plot_col, conclusion = area.rows([4.84, 0.62], gap=Inches(0.16))
 
     quadrants = spec.get("quadrants", [])
     emphasis_tone = (lambda item, i:
@@ -516,14 +536,15 @@ def render_matrix_2x2(builder, spec, page):
             })]},
         ], vertical_anchor=MSO_ANCHOR.MIDDLE)
 
-    x_axis = spec.get("x_axis", {})
-    half = plot_col.w // 2
-    add_textbox(slide, plot_col.x, caption_row.y, half, caption_row.h,
-                x_axis.get("low", ""), size=typography.small,
-                color=PALETTE.text_secondary, bold=True)
-    add_textbox(slide, plot_col.x + half, caption_row.y, half, caption_row.h,
-                x_axis.get("high", ""), size=typography.small,
-                color=PALETTE.text_secondary, bold=True, align=PP_ALIGN.RIGHT)
+    if axes:
+        x_axis = spec.get("x_axis", {})
+        half = plot_col.w // 2
+        add_textbox(slide, plot_col.x, caption_row.y, half, caption_row.h,
+                    x_axis.get("low", ""), size=typography.small,
+                    color=PALETTE.text_secondary, bold=True)
+        add_textbox(slide, plot_col.x + half, caption_row.y, half, caption_row.h,
+                    x_axis.get("high", ""), size=typography.small,
+                    color=PALETTE.text_secondary, bold=True, align=PP_ALIGN.RIGHT)
 
     add_key_message(slide, conclusion.x, conclusion.y, conclusion.w,
                     spec["primary_message"],
@@ -531,37 +552,82 @@ def render_matrix_2x2(builder, spec, page):
 
 
 def render_stat_highlight(builder, spec, page):
-    """単一の実績数値を主役にし、補足指標と結論を添える。"""
+    """単一の実績数値を主役にする（stat指定時）か、複数指標を均等な
+    グリッドで一覧するKPIダッシュボード（stat省略時）を描く。
+
+    どちらも同じBoxGrid＋Statの組み合わせで、hero（主役として大きく
+    見せる1指標）の有無だけが違う。パラメータ差で別rendererに分けない
+    という方針（BandStack/BoxGridの統合と同じ理由）で、1つのrenderer
+    が両方を担う。
+    """
     slide, area = builder.add_slide(
         spec["title"], density=spec.get("density", "standard"), page=page)
     typography = _type_for(slide)
-    stat = spec.get("stat", {})
+    stat = spec.get("stat")
     supporting = spec.get("supporting", [])
-    if supporting:
-        hero_row, supporting_row, conclusion = area.rows(
-            [2.5, 2.05, 0.62], gap=Inches(0.2))
+
+    if stat:
+        if supporting:
+            hero_row, supporting_row, conclusion = area.rows(
+                [2.5, 2.05, 0.62], gap=Inches(0.2))
+        else:
+            hero_row, conclusion = area.rows([4.7, 0.62], gap=Inches(0.24))
+            supporting_row = None
+        add_background_zone(slide, hero_row.x, hero_row.y, hero_row.w, hero_row.h,
+                            tone="brand-soft", rounded=True)
+        inner = hero_row.inset(Inches(0.5), Inches(0.3))
+        Stat(slide, inner.x, inner.y, inner.w, inner.h,
+            stat.get("value", ""), stat.get("label", ""), detail=stat.get("detail"),
+            value_size=Pt(56), label_size=typography.section,
+            vertical_anchor=MSO_ANCHOR.MIDDLE)
     else:
-        hero_row, conclusion = area.rows([4.7, 0.62], gap=Inches(0.24))
-        supporting_row = None
+        supporting_row, conclusion = area.rows([4.7, 0.62], gap=Inches(0.24))
 
-    add_background_zone(slide, hero_row.x, hero_row.y, hero_row.w, hero_row.h,
-                        tone="brand-soft", rounded=True)
-    inner = hero_row.inset(Inches(0.5), Inches(0.3))
-    Stat(slide, inner.x, inner.y, inner.w, inner.h,
-        stat.get("value", ""), stat.get("label", ""), detail=stat.get("detail"),
-        value_size=Pt(56), label_size=typography.section,
-        vertical_anchor=MSO_ANCHOR.MIDDLE)
-
-    if supporting_row is not None:
-        contents = BoxGrid(slide, supporting_row, supporting,
+    if supporting_row is not None and supporting:
+        cols = min(4, len(supporting))
+        value_size = typography.metric if stat else Pt(34)
+        contents = BoxGrid(slide, supporting_row, supporting, cols=cols,
                            inset_x=Inches(0.2), inset_y=Inches(0.2))
         for item, inner in zip(supporting, contents):
             Stat(slide, inner.x, inner.y, inner.w, inner.h,
                 item.get("value", ""), item.get("label", ""),
-                value_size=typography.metric, value_color=PALETTE.blue,
+                value_size=value_size, value_color=PALETTE.blue,
                 label_size=typography.small, label_color=PALETTE.text_secondary,
                 label_bold=False, vertical_anchor=MSO_ANCHOR.MIDDLE)
 
+    add_key_message(slide, conclusion.x, conclusion.y, conclusion.w,
+                    spec["primary_message"],
+                    style=spec.get("conclusion_style", "subtle"))
+
+
+def render_funnel(builder, spec, page):
+    """順を追って絞り込まれていく推移を、段ごとの値に応じた帯の幅で示す
+    （リード獲得のファネル分析、市場規模のTAM/SAM/SOM等）。
+
+    stagesは値の大きい順（絞り込みが進むほど値が小さくなる順）に並べる。
+    帯の幅は正確な比率ではなくおおよその絞り込み具合を示す構造表現の
+    ため、比率そのものを厳密に伝えたい場合はchart_with_insightの
+    棒グラフを使う。
+    """
+    slide, area = builder.add_slide(
+        spec["title"], density=spec.get("density", "standard"), page=page)
+    typography = _type_for(slide)
+    stack_row, conclusion = area.rows([4.7, 0.62], gap=Inches(0.22))
+    stages = spec.get("stages", [])
+    tones = ["brand-soft", "teal-soft", "neutral", "brand-soft"]
+    contents = ProportionalStack(slide, stack_row, stages, skin="zone",
+                                 tones=tones, gap=Inches(0.12))
+    for stage, inner in zip(stages, contents):
+        add_paragraph_textbox(slide, inner.x, inner.y, inner.w, inner.h, [
+            {"segments": [(stage.get("title", ""), {
+                "size": typography.body, "color": PALETTE.text_primary,
+                "bold": True, "font": typography.body_font,
+            })], "space_after": 3, "align": PP_ALIGN.CENTER},
+            {"segments": [(stage.get("value_label", ""), {
+                "size": typography.small, "color": PALETTE.text_secondary,
+                "font": typography.body_font,
+            })], "align": PP_ALIGN.CENTER},
+        ], vertical_anchor=MSO_ANCHOR.MIDDLE)
     add_key_message(slide, conclusion.x, conclusion.y, conclusion.w,
                     spec["primary_message"],
                     style=spec.get("conclusion_style", "subtle"))
@@ -582,6 +648,7 @@ RENDERERS = {
     "section_divider": render_section_divider,
     "matrix_2x2": render_matrix_2x2,
     "stat_highlight": render_stat_highlight,
+    "funnel": render_funnel,
 }
 
 

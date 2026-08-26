@@ -193,6 +193,12 @@ def main() -> int:
              "density": "standard", "primary_message": "本格導入を検討する",
              "stat": {"value": "-42%", "label": "作業時間削減率"},
              "supporting": [{"value": "94%", "label": "継続意向"}]},
+            {"id": "funnel", "type": "funnel", "title": "絞り込みを示す",
+             "density": "standard", "primary_message": "資料請求後の転換率を上げる",
+             "stages": [
+                 {"title": "サイト訪問", "value": 12000, "value_label": "12,000"},
+                 {"title": "資料請求", "value": 3400, "value_label": "3,400"},
+                 {"title": "成約", "value": 210, "value_label": "210"}]},
             {"id": "chart", "type": "chart_with_insight", "title": "結果を示す",
              "density": "standard", "primary_message": "全体像を確認する",
              "image": "chart.png", "insight_heading": "読み取れること",

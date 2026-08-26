@@ -14,7 +14,7 @@
 2. **CREATE** — 確定した構成をもとにPowerPointを生成する。`slides/work/slide_content.yaml`（内容）と`slides/work/generate_pptx.py`（生成コード）が残る。
 3. **REVISE** — 修正はYAMLの文言・数値を直すか、生成コードのレイアウトを直して再生成する。手作業でPowerPointを直接編集することは基本的にしない（再生成すると消えるため）。
 
-修正を頼むときは「4ページ目のBackground Zoneをもう少し広げて」のように、部位の名称を使うと伝わりやすい。名称の一覧は[`component-map.pdf`](component-map.pdf)を参照（実際のスライドに赤枠で名称を注記したもの）。モードの違い（後述）は[`mode-guide.pdf`](mode-guide.pdf)で実物のサイズ比較ができる。
+修正を頼むときは「4ページ目のBackground Zoneをもう少し広げて」のように、部位の名称を使うと伝わりやすい。名称の一覧は[`capability-showcase.pdf`](capability-showcase.pdf)の各部品のキャプション（関数名）を参照する。モードの違い（後述）は[`mode-guide.pdf`](mode-guide.pdf)で実物のサイズ比較ができる。
 
 ## 設定ファイル（`.slide-skill-config.yaml`）
 

@@ -6,7 +6,7 @@ from .charts import add_native_chart
 from .components import (SECTION_LEAD_GAP, add_background_zone,
                          add_item_list, add_key_message,
                          add_panel, add_section_lead)
-from .fragments import BandStack, BoxGrid, MarkerOverlay, QuadrantGrid
+from .fragments import BoxGrid, MarkerOverlay
 from .layout import Region
 from .preflight import require_valid_content
 from .images import add_image_contain
@@ -294,8 +294,10 @@ def render_org_layers(builder, spec, page):
         layers_region = Region(
             area.x, layer_rows[0].y, area.w,
             layer_rows[-1].y + layer_rows[-1].h - layer_rows[0].y)
-        layer_contents = BandStack(slide, layers_region, layers, tones=tones,
-                                   weights=[1.3] * len(layers), gap=Inches(0.16))
+        layer_contents = BoxGrid(slide, layers_region, layers,
+                                 rows=len(layers), skin="zone", tones=tones,
+                                 row_weights=[1.3] * len(layers), gap=Inches(0.16),
+                                 inset_x=Inches(0.3), inset_y=Inches(0.14))
         for layer, inner in zip(layers, layer_contents):
             # 見出し分のオフセットを固定0.46inのままにすると、layers数が増えて
             # 行の高さが縮んだ際に本文用の残りスペースをほぼ食い潰してしまう。
@@ -496,8 +498,12 @@ def render_matrix_2x2(builder, spec, page):
                 size=typography.small, color=PALETTE.text_secondary, bold=True)
 
     quadrants = spec.get("quadrants", [])
-    contents = QuadrantGrid(slide, plot_col, quadrants, gap=Inches(0.1),
-                            inset_x=Inches(0.24), inset_y=Inches(0.2))
+    emphasis_tone = (lambda item, i:
+                     "brand-soft" if isinstance(item, dict) and item.get("emphasis")
+                     else "neutral")
+    contents = BoxGrid(slide, plot_col, quadrants, rows=2, cols=2,
+                       skin="zone", tones=emphasis_tone, gap=Inches(0.1),
+                       inset_x=Inches(0.24), inset_y=Inches(0.2))
     for quadrant, inner in zip(quadrants, contents):
         add_paragraph_textbox(slide, inner.x, inner.y, inner.w, inner.h, [
             {"segments": [(quadrant.get("label", ""), {

@@ -8,7 +8,7 @@ from pptx.util import Inches, Pt
 from .atoms import Box, Marker, _flat, add_hairline
 from .layout import Region
 from .theme import LAYOUT, PALETTE
-from .typography import (_type_for, add_text_list, add_textbox, set_run,
+from .typography import (Tag, _type_for, add_text_list, add_textbox, set_run,
                          style_text_frame)
 
 
@@ -126,17 +126,7 @@ def add_cover(slide, title, *, subtitle=None, department="", created=None,
     meta_x, meta_w = Inches(9.2), Inches(3.45)
     badge_x, badge_y, badge_w = Inches(11.42), Inches(0.32), Inches(1.22)
     if classification:
-        label = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE,
-                                       badge_x, badge_y, badge_w, Inches(0.3))
-        _flat(label, rounding=0.05)
-        label.fill.background(); label.line.color.rgb = PALETTE.grey_500
-        label.line.width = Pt(1.0)
-        tf = style_text_frame(label.text_frame, margin_x=Inches(0.05),
-                              vertical_anchor=MSO_ANCHOR.MIDDLE)
-        p = tf.paragraphs[0]; p.alignment = PP_ALIGN.CENTER
-        run = p.add_run(); run.text = classification
-        set_run(run, size=typography.small, color=PALETTE.text_secondary,
-                bold=True, font=typography.body_font)
+        Tag(slide, badge_x, badge_y, badge_w, Inches(0.3), classification)
     if department:
         add_textbox(slide, meta_x, Inches(0.72), meta_w, Inches(0.24), department,
                     size=typography.small, color=PALETTE.text_secondary,

@@ -12,7 +12,8 @@ from .images import add_image_contain
 from .tables import add_data_table
 from .textmetrics import adaptive_gap_pt, estimate_item_list_height_pt
 from .theme import PALETTE
-from .typography import add_paragraph_textbox, add_text_list, add_textbox
+from .typography import (Stat, add_paragraph_textbox, add_text_list,
+                         add_textbox)
 
 
 HEADING_BLOCK_H = Inches(0.62)
@@ -568,23 +569,10 @@ def render_stat_highlight(builder, spec, page):
     add_background_zone(slide, hero_row.x, hero_row.y, hero_row.w, hero_row.h,
                         tone="brand-soft", rounded=True)
     inner = hero_row.inset(Inches(0.5), Inches(0.3))
-    paragraphs = [
-        {"segments": [(stat.get("value", ""), {
-            "size": Pt(56), "color": PALETTE.navy, "bold": True,
-            "font": typography.headline_font,
-        })], "space_after": 6},
-        {"segments": [(stat.get("label", ""), {
-            "size": typography.section, "color": PALETTE.text_primary,
-            "bold": True, "font": typography.body_font,
-        })], "space_after": (4 if stat.get("detail") else 0)},
-    ]
-    if stat.get("detail"):
-        paragraphs.append({"segments": [(stat["detail"], {
-            "size": typography.small, "color": PALETTE.text_secondary,
-            "font": typography.body_font,
-        })]})
-    add_paragraph_textbox(slide, inner.x, inner.y, inner.w, inner.h,
-                          paragraphs, vertical_anchor=MSO_ANCHOR.MIDDLE)
+    Stat(slide, inner.x, inner.y, inner.w, inner.h,
+        stat.get("value", ""), stat.get("label", ""), detail=stat.get("detail"),
+        value_size=Pt(56), label_size=typography.section,
+        vertical_anchor=MSO_ANCHOR.MIDDLE)
 
     if supporting_row is not None:
         columns = supporting_row.columns([1] * max(1, len(supporting)),
@@ -592,16 +580,11 @@ def render_stat_highlight(builder, spec, page):
         for item, column in zip(supporting, columns):
             add_card(slide, column.x, column.y, column.w, column.h)
             inner = column.inset(Inches(0.2), Inches(0.2))
-            add_paragraph_textbox(slide, inner.x, inner.y, inner.w, inner.h, [
-                {"segments": [(item.get("value", ""), {
-                    "size": typography.metric, "color": PALETTE.blue,
-                    "bold": True, "font": typography.headline_font,
-                })], "space_after": 4},
-                {"segments": [(item.get("label", ""), {
-                    "size": typography.small, "color": PALETTE.text_secondary,
-                    "font": typography.body_font,
-                })]},
-            ], vertical_anchor=MSO_ANCHOR.MIDDLE)
+            Stat(slide, inner.x, inner.y, inner.w, inner.h,
+                item.get("value", ""), item.get("label", ""),
+                value_size=typography.metric, value_color=PALETTE.blue,
+                label_size=typography.small, label_color=PALETTE.text_secondary,
+                label_bold=False, vertical_anchor=MSO_ANCHOR.MIDDLE)
 
     add_key_message(slide, conclusion.x, conclusion.y, conclusion.w,
                     spec["primary_message"],

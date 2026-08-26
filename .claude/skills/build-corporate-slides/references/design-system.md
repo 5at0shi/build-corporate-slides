@@ -55,6 +55,8 @@
 | Key Message | ページの結論 | 内容に応じ4スタイル |
 | Section Lead | セクション内の見出し | 短いブランド線＋文字 |
 | Cover Brand Field | 表紙のブランド面 | 情報を詰め込まない |
+| Tag | ステータス・分類の小さなラベル | 常に丸薬型。枠線のみ／単色塗りの2種 |
+| Stat | 数値を主役にする表現の最小単位 | 面（Card/Zone）は別途組み合わせる |
 
 ## Common Structural Choices
 

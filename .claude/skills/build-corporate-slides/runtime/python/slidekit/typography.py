@@ -1,9 +1,10 @@
+from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.oxml.ns import qn
 from pptx.oxml.xmlchemy import OxmlElement
 from pptx.util import Inches, Pt
 
-from .atoms import add_hairline
+from .atoms import _flat, add_hairline
 from .icons import add_icon
 from .textmetrics import (adaptive_gap_pt, estimate_item_list_height_pt,
                           estimate_paragraph_height_pt)
@@ -211,5 +212,71 @@ def add_text_list(slide, x, y, w, h, items, *, marker="bullet", bullet_char="・
             "segments": segments,
             "space_after": body_gap if index < len(items) - 1 else 0,
         })
+    return add_paragraph_textbox(slide, x, y, w, h, paragraphs,
+                                 vertical_anchor=vertical_anchor)
+
+
+def Tag(slide, x, y, w, h, text, *, fill=None, line=PALETTE.grey_500,
+        color=None, size=None, bold=True):
+    """ステータス・分類を示す小さなピル型ラベル（Atom層）。
+
+    fill未指定（既定）は枠線のみのバッジ（表紙の開示区分など）。fillを
+    指定すると単色塗りの状態チップになる（KPI/ステータス表示向け）。
+    角丸は高さの半分に固定し、常に完全な丸薬型にする（Box/Markerの
+    radiusスケールとは別に、Tagは形が意味を持つため固定にする）。
+    """
+    typography = _type_for(slide)
+    size = size or typography.small
+    color = color or (PALETTE.white if fill else PALETTE.text_secondary)
+    tag = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y, w, h)
+    _flat(tag, radius=h / 2)
+    if fill is not None:
+        tag.fill.solid()
+        tag.fill.fore_color.rgb = fill
+        tag.line.fill.background()
+    else:
+        tag.fill.background()
+        tag.line.color.rgb = line
+        tag.line.width = Pt(1.0)
+    tf = style_text_frame(tag.text_frame, margin_x=Inches(0.05),
+                          vertical_anchor=MSO_ANCHOR.MIDDLE)
+    paragraph = tf.paragraphs[0]
+    paragraph.alignment = PP_ALIGN.CENTER
+    set_run(paragraph.add_run(), size=size, color=color, bold=bold,
+            font=typography.body_font)
+    paragraph.runs[0].text = text
+    return tag
+
+
+def Stat(slide, x, y, w, h, value, label=None, *, detail=None,
+        value_size=None, value_color=PALETTE.navy,
+        label_size=None, label_color=PALETTE.text_primary, label_bold=True,
+        detail_color=PALETTE.text_secondary, vertical_anchor=MSO_ANCHOR.TOP):
+    """数値＋ラベル（＋補足）を1つの編集可能テキストとして描く（Atom層）。
+
+    stat_highlightの主指標・補足指標など、大きな数値を主役にする表現の
+    最小単位。背景の面（Box/Card）は呼び出し側が別途用意する
+    （Statはテキストだけを担当し、Box/Cardと自由に組み合わせられる
+    ようにするため）。
+    """
+    typography = _type_for(slide)
+    value_size = value_size or typography.metric
+    label_size = label_size or typography.small
+    paragraphs = [
+        {"segments": [(value, {
+            "size": value_size, "color": value_color, "bold": True,
+            "font": typography.headline_font,
+        })], "space_after": 4 if (label or detail) else 0},
+    ]
+    if label:
+        paragraphs.append({"segments": [(label, {
+            "size": label_size, "color": label_color, "bold": label_bold,
+            "font": typography.body_font,
+        })], "space_after": 4 if detail else 0})
+    if detail:
+        paragraphs.append({"segments": [(detail, {
+            "size": typography.small, "color": detail_color,
+            "font": typography.body_font,
+        })]})
     return add_paragraph_textbox(slide, x, y, w, h, paragraphs,
                                  vertical_anchor=vertical_anchor)

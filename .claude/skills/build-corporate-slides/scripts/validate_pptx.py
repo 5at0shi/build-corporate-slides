@@ -32,7 +32,7 @@ def _text_glyph_bbox(shape):
     """テキストが実際に占めるであろう概算の矩形。
 
     textboxは中身より高さに余裕を持たせて作ることが多い（例:
-    add_numbered_rowは行の高さに関わらず常に0.76in）。図形の公称の
+    add_text_list(divider=True)の各行は行の高さに関わらず常に0.76in）。図形の公称の
     bboxをそのまま重なり判定に使うと、余白部分に触れただけの装飾を
     誤検知してしまうため、vertical_anchorと推定文字高さから実際の
     文字が占める範囲だけを切り出す。
@@ -85,7 +85,7 @@ def _check_decoration_overlap(slide, slide_no, warnings):
 def _paragraph_line_sizes(paragraph, available_w: float) -> list[float] | None:
     """runをまたいだ折り返しを再現し、各行に使われた最大フォントサイズを返す。
 
-    add_item_list・add_numbered_rowなどは、タイトルと本文を改行文字("\\n")
+    add_text_list（item_list/numbered_list/icon_list）などは、タイトルと本文を改行文字("\\n")
     で1つのparagraph内の別runへ連結する（見た目上の行ごとにtextboxを
     分割しないため）。単純に全runのテキストを結合して1つのフォントサイズで
     折り返し推定すると、明示的な改行を無視して過小評価する。runごとに

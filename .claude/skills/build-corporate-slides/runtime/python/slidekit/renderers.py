@@ -6,13 +6,13 @@ from .builder import DeckBuilder
 from .charts import add_native_chart
 from .components import (SECTION_LEAD_GAP, add_background_zone, add_card,
                          add_hairline, add_item_list, add_key_message,
-                         add_numbered_row, add_panel, add_section_lead)
+                         add_panel, add_section_lead)
 from .preflight import require_valid_content
 from .images import add_image_contain
 from .tables import add_data_table
 from .textmetrics import adaptive_gap_pt, estimate_item_list_height_pt
 from .theme import PALETTE
-from .typography import add_paragraph_textbox, add_textbox
+from .typography import add_paragraph_textbox, add_text_list, add_textbox
 
 
 HEADING_BLOCK_H = Inches(0.62)
@@ -483,15 +483,11 @@ def render_numbered_list(builder, spec, page):
         list_bottom = area.y + area.h - Inches(1.1)
 
     available = max(0, list_bottom - list_top)
-    # 項目数が多いとrow_h固定(0.9in)ではブロックがスライド外へはみ出すため、
-    # 利用可能な高さに収まるよう縮める（項目数が少ない通常時は0.9inのまま）。
-    row_h = Inches(0.9) if not items else min(Inches(0.9), available // len(items))
-    block_h = row_h * max(0, len(items))
-    y = list_top + max(0, (available - block_h) // 2)
-    for index, item in enumerate(items, 1):
-        add_numbered_row(slide, area.x, y, area.w, index,
-                         item.get("title", ""), item.get("body"), row_h=row_h)
-        y += row_h
+    # 項目が少なくても余白が偏らないよう、add_text_list側でブロックを
+    # 利用可能な高さの中央へ配置する（項目数が多い場合はmax_row_hを
+    # 上限に行の高さを縮め、スライド外へのはみ出しを防ぐ）。
+    add_text_list(slide, area.x, list_top, area.w, available, items,
+                 marker="number", divider=True, max_row_h=Inches(0.9))
 
     if position == "bottom":
         add_key_message(slide, area.x, list_bottom + Inches(0.25), area.w,

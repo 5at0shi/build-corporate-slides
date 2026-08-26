@@ -4,13 +4,13 @@ from pptx import Presentation
 
 from .components import (add_background_zone, add_card, add_cover, add_item_list,
                          add_icon_list, add_focus_panel, add_hairline, add_key_message,
-                         add_numbered_row, add_panel, add_section_divider,
+                         add_panel, add_section_divider,
                          add_section_lead, add_slide_title)
 from .theme import (LAYOUT, PALETTE, TYPE, TYPE_BUSINESS, TYPE_DENSE,
                     TYPE_LARGE_ROOM, TYPE_PRESENTATION, rgb,
                     typography_for)
-from .typography import (add_paragraph_textbox, add_rich_textbox, add_textbox,
-                         set_run, style_text_frame)
+from .typography import (add_paragraph_textbox, add_rich_textbox, add_text_list,
+                         add_textbox, set_run, style_text_frame)
 
 
 PLACEHOLDER_LOGO = Path(__file__).resolve().parents[3] / "assets" / "logo-placeholder.png"
@@ -60,7 +60,7 @@ __all__ = [
     "add_background_zone", "add_card", "add_cover", "add_item_list", "add_icon_list",
     "add_focus_panel",
     "add_panel", "add_section_divider",
-    "add_hairline", "add_key_message", "add_numbered_row",
+    "add_hairline", "add_key_message", "add_text_list",
     "add_paragraph_textbox", "add_rich_textbox", "add_section_lead", "add_slide_title",
     "add_textbox", "new_presentation", "rgb", "set_run",
     "style_text_frame", "typography_for", "logo_path_from_config",

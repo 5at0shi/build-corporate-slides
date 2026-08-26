@@ -3,33 +3,12 @@ from datetime import date
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
-from pptx.oxml.ns import qn
 from pptx.util import Inches, Pt
 
-from .atoms import Box, _flat
-from .icons import add_icon
+from .atoms import Box, _flat, add_hairline
 from .layout import Region
-from .textmetrics import (adaptive_gap_pt, estimate_item_list_height_pt,
-                          estimate_paragraph_height_pt)
-from .theme import LAYOUT, PALETTE, TYPE
-from .typography import add_paragraph_textbox, add_textbox, set_run
-
-
-def _type_for(slide):
-    slide_typography = getattr(slide, "_slidekit_typography", None)
-    if slide_typography is not None:
-        return slide_typography
-    presentation = slide.part.package.presentation_part.presentation
-    return getattr(presentation, "_slidekit_typography", TYPE)
-
-
-def add_hairline(slide, x, y, w, *, color=PALETTE.grey_300, width=0.75):
-    line = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, x, y, w, Pt(width))
-    _flat(line)
-    line.fill.solid()
-    line.fill.fore_color.rgb = color
-    line.line.fill.background()
-    return line
+from .theme import LAYOUT, PALETTE
+from .typography import _type_for, add_text_list, add_textbox, set_run
 
 
 def add_slide_title(slide, title, *, kicker=None, page=None):
@@ -312,52 +291,6 @@ def add_key_message(slide, x, y, w, text, *, style="editorial"):
     return box
 
 
-def add_numbered_row(slide, x, y, w, number, title, body=None, *, row_h=None):
-    typography = _type_for(slide)
-    segments = [
-        (f"{number:02}   ", {
-            "size": typography.small, "color": PALETTE.blue,
-            "bold": True, "font": typography.body_font,
-        }),
-        (title, {
-            "size": typography.body, "color": PALETTE.text_primary,
-            "bold": True, "font": typography.body_font,
-        }),
-    ]
-    if body:
-        segments.append((f"\n      {body}", {
-            "size": typography.small, "color": PALETTE.text_secondary,
-            "font": typography.body_font,
-        }))
-    add_paragraph_textbox(slide, x, y, w, Inches(0.76), [
-        {"segments": segments, "space_after": 0}
-    ])
-    # 罫線は固定オフセットではなく実際の文字高さに合わせる。行が短い場合、
-    # 固定オフセットのままだと罫線が自分の行から離れ、次の行の文字に
-    # 近づきすぎて見える（区切り線が次行に属して見える）ため。
-    text_pt = w / 12700
-    content_pt = estimate_paragraph_height_pt(title, typography.body.pt, text_pt,
-                                              line_spacing=1.08)
-    if body:
-        # 実際の描画は本文の前に "      "（6スペース）の字下げが付くため、
-        # 折り返し推定にも含めて過小評価を防ぐ。
-        content_pt += estimate_paragraph_height_pt("      " + body, typography.small.pt,
-                                                    text_pt, line_spacing=1.08)
-    content_h = Inches(content_pt / 72)
-    offset = content_h + Inches(0.14)
-    if row_h is not None:
-        # row_hが項目数に応じて縮められている場合、文字高さ基準のオフセット
-        # のままだと次の行の番号・タイトルへ罫線が食い込む。次の行が始まる
-        # 手前に収まるようクランプする。
-        safe_offset = row_h - Inches(0.08)
-        if safe_offset < content_h + Inches(0.04):
-            # 本文自体が行の高さぎりぎりで、線を安全に置ける余白がない。
-            # 中途半端な位置に引いて文字に被せるより、線を省略する。
-            return
-        offset = min(offset, safe_offset)
-    add_hairline(slide, x, y + offset, w)
-
-
 def add_item_list(slide, x, y, w, h, items, *, bullet="•", body_gap=3,
                   vertical_anchor=MSO_ANCHOR.TOP, adaptive=True):
     """複数項目を一つのtextboxとして配置し、手修正しやすく保つ。
@@ -369,38 +302,12 @@ def add_item_list(slide, x, y, w, h, items, *, bullet="•", body_gap=3,
     広げ、上詰めのまま下部の余白の割合を抑える。見出しを伴わない独立
     ブロック（カード、パネルなど）を領域全体で釣り合わせたい場合は
     vertical_anchor=MSO_ANCHOR.MIDDLEを指定する。
+
+    実体はadd_text_list（marker="bullet"）。
     """
-    typography = _type_for(slide)
-    if adaptive and items:
-        content_pt = estimate_item_list_height_pt(
-            typography, items, w / 12700, body_gap=0)
-        body_gap = int(adaptive_gap_pt(
-            content_pt, len(items), h / 12700, base_gap=body_gap))
-    paragraphs = []
-    for index, item in enumerate(items):
-        if isinstance(item, str):
-            segments = [(f"{bullet}  {item}", {
-                "size": typography.body, "color": PALETTE.text_primary,
-                "font": typography.body_font,
-            })]
-        else:
-            title = item.get("title", "")
-            body = item.get("body", "")
-            segments = [(f"{bullet}  {title}", {
-                "size": typography.body, "color": PALETTE.text_primary,
-                "bold": True, "font": typography.body_font,
-            })]
-            if body:
-                segments.append((f"\n    {body}", {
-                    "size": typography.small, "color": PALETTE.text_secondary,
-                    "font": typography.body_font,
-                }))
-        paragraphs.append({
-            "segments": segments,
-            "space_after": body_gap if index < len(items) - 1 else 0,
-        })
-    return add_paragraph_textbox(slide, x, y, w, h, paragraphs,
-                                 vertical_anchor=vertical_anchor)
+    return add_text_list(slide, x, y, w, h, items, marker="bullet",
+                         bullet_char=bullet, gap=body_gap,
+                         vertical_anchor=vertical_anchor, adaptive=adaptive)
 
 
 def add_icon_list(slide, x, y, w, h, items, *, icon="check",
@@ -418,27 +325,9 @@ def add_icon_list(slide, x, y, w, h, items, *, icon="check",
     する。固定インチ値のままだとlarge-roomモードなど本文が大きいmodeで
     アイコンが相対的に小さく見える（business比で本文が約1.4倍でも
     アイコンは同じ大きさのまま、というズレが生じる）ため。
+
+    実体はadd_text_list（marker="icon"）。
     """
-    typography = _type_for(slide)
-    if icon_size is None:
-        icon_size = Pt(typography.body.pt * 2.0)
-    names = icon if isinstance(icon, list) else [icon] * len(items)
-    text_x = x + icon_size + text_gap
-    text_w = w - icon_size - text_gap
-    text_w_pt = text_w / 12700
-    heights_pt = [estimate_paragraph_height_pt(item, typography.body.pt, text_w_pt,
-                                                line_spacing=1.15) for item in items]
-    gap_pt = adaptive_gap_pt(sum(heights_pt), len(items), h / 12700, base_gap=body_gap)
-    paragraphs, cursor = [], y
-    for index, (item, name, item_h_pt) in enumerate(zip(items, names, heights_pt)):
-        add_icon(slide, x, cursor, icon_size, name, color=icon_color)
-        paragraphs.append({
-            "segments": [(item, {
-                "size": typography.body, "color": PALETTE.text_primary,
-                "font": typography.body_font,
-            })],
-            "line_spacing": 1.15,
-            "space_after": gap_pt if index < len(items) - 1 else 0,
-        })
-        cursor += Inches(item_h_pt / 72) + Pt(gap_pt)
-    return add_paragraph_textbox(slide, text_x, y, text_w, h, paragraphs)
+    return add_text_list(slide, x, y, w, h, items, marker="icon", icon=icon,
+                         icon_color=icon_color, icon_size=icon_size,
+                         text_gap=text_gap, gap=body_gap)

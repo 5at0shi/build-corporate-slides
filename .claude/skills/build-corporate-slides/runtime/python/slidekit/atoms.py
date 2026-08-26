@@ -81,3 +81,13 @@ def Box(slide, x, y, w, h, *, rounded=True, radius=None, fill=None,
     if elevated:
         slide.shapes.add_group_shape([shadow, box])
     return box
+
+
+def add_hairline(slide, x, y, w, *, color=PALETTE.grey_300, width=0.75):
+    """細い横罫線（区切り線）を引く。テキストを持たない純粋な装飾図形。"""
+    line = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, x, y, w, Pt(width))
+    _flat(line)
+    line.fill.solid()
+    line.fill.fore_color.rgb = color
+    line.line.fill.background()
+    return line

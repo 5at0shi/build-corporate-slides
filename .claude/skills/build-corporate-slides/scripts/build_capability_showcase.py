@@ -27,12 +27,12 @@ from slidekit.charts import add_native_chart  # noqa: E402
 from slidekit.components import (add_background_zone, add_card,  # noqa: E402
                                  add_focus_panel, add_icon_list,
                                  add_item_list, add_key_message,
-                                 add_numbered_row, add_section_lead)
+                                 add_section_lead)
 from slidekit.icons import ICON_NAMES, add_icon  # noqa: E402
 from slidekit.layout import Region, content_region  # noqa: E402
 from slidekit.renderers import RENDERERS  # noqa: E402
 from slidekit.theme import TYPE_BUSINESS, TYPE_DENSE, TYPE_LARGE_ROOM  # noqa: E402
-from slidekit.typography import add_paragraph_textbox, add_textbox  # noqa: E402
+from slidekit.typography import add_paragraph_textbox, add_text_list, add_textbox  # noqa: E402
 
 FONT = "Hiragino Sans"
 
@@ -204,12 +204,13 @@ caption(slide, lead_col.x, lead_col.y + Inches(2.3), lead_col.w,
        "add_section_lead() + add_item_list()", size=10, bold=True,
        color=PALETTE.text_primary)
 
-add_numbered_row(slide, list_col.x, list_col.y, list_col.w, 1,
-                 "add_numbered_row()", "番号付きの単一行。numbered_listで使用")
-add_numbered_row(slide, list_col.x, list_col.y + Inches(0.9), list_col.w, 2,
-                 "row_hを渡すと", "項目数に応じて罫線の安全な位置を計算する")
+add_text_list(slide, list_col.x, list_col.y, list_col.w, Inches(1.9), [
+    {"title": "marker=\"number\"", "body": "01, 02...を自動採番する"},
+    {"title": "divider=True", "body": "行ごとに安全な位置へ罫線を引く"}],
+    marker="number", divider=True, max_row_h=Inches(0.9))
 caption(slide, list_col.x, list_col.y + Inches(1.9), list_col.w,
-       "add_numbered_row()", size=10, bold=True, color=PALETTE.text_primary)
+       'add_text_list(marker="number", divider=True)', size=10, bold=True,
+       color=PALETTE.text_primary)
 
 add_icon_list(slide, icon_col.x, icon_col.y, icon_col.w, Inches(1.7), [
     "add_icon_listはアイコンを行ごとに独立させる", "文章は一つのtextboxへまとめる"],

@@ -1,12 +1,13 @@
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Inches, Pt
 
-from .atoms import Marker
 from .builder import DeckBuilder
 from .charts import add_native_chart
-from .components import (SECTION_LEAD_GAP, add_background_zone, add_card,
-                         add_hairline, add_item_list, add_key_message,
+from .components import (SECTION_LEAD_GAP, add_background_zone,
+                         add_item_list, add_key_message,
                          add_panel, add_section_lead)
+from .fragments import BandStack, BoxGrid, MarkerOverlay, QuadrantGrid
+from .layout import Region
 from .preflight import require_valid_content
 from .images import add_image_contain
 from .tables import add_data_table
@@ -208,29 +209,9 @@ def render_process_with_gates(builder, spec, page):
                       region.h - Inches(0.65), phase.get("items", []),
                       bullet="・", body_gap=5)
 
-    add_hairline(slide, gate_row.x, gate_row.y + Inches(0.4), gate_row.w,
-                 color=PALETTE.line_neutral, width=1)
     gates = spec.get("gates", [])
-    gate_row_right = gate_row.x + gate_row.w
-    label_w = Inches(1.75)
-    for gate in gates:
-        position = max(0.0, min(1.0, float(gate.get("position", 0))))
-        x = gate_row.x + int(gate_row.w * position)
-        Marker(slide, x - Inches(0.055), gate_row.y + Inches(0.345),
-              Inches(0.11), Inches(0.11), shape="dot", fill=PALETTE.blue)
-        # 中央揃えのまま単純に行の外へクランプすると、点の中心とラベルの
-        # 中心がズレて「点から離れて見える」（端の点で顕著）。端に近い点は
-        # 点の位置を起点にラベルを片側へ伸ばし、常に点と対応が付くようにする。
-        if x - label_w // 2 < gate_row.x:
-            label_x, align = x, PP_ALIGN.LEFT
-        elif x + label_w // 2 > gate_row_right:
-            label_x, align = x - label_w, PP_ALIGN.RIGHT
-        else:
-            label_x, align = x - label_w // 2, PP_ALIGN.CENTER
-        add_textbox(slide, int(label_x), gate_row.y + Inches(0.58), label_w,
-                    Inches(0.34), gate.get("title", ""),
-                    size=_type(slide).small, color=PALETTE.text_primary,
-                    bold=True, align=align)
+    MarkerOverlay(slide, gate_row, gates, track_y=Inches(0.4),
+                 marker_color=PALETTE.blue, label_color=PALETTE.text_primary)
     add_key_message(slide, conclusion.x, conclusion.y, conclusion.w,
                     spec["primary_message"],
                     style=spec.get("conclusion_style", "editorial"))
@@ -309,31 +290,34 @@ def render_org_layers(builder, spec, page):
     weights = [1.3] * len(layers) + [2.1, 0.62]
     *layer_rows, execution_row, conclusion = area.rows(weights, gap=Inches(0.16))
     tones = ["brand-soft", "neutral", "teal-soft"]
-    for index, (layer, region) in enumerate(zip(layers, layer_rows)):
-        add_background_zone(slide, region.x, region.y, region.w, region.h,
-                            tone=tones[index % len(tones)], rounded=True)
-        inner = region.inset(Inches(0.3), Inches(0.14))
-        # 見出し分のオフセットを固定0.46inのままにすると、layers数が増えて
-        # 行の高さが縮んだ際に本文用の残りスペースをほぼ食い潰してしまう。
-        # 行の高さに対する上限付き割合で縮めるが、add_section_leadの縦棒
-        # マーカー自体も同じ値で縮め、offset = marker_h + GAPで揃えることで
-        # マーカーが本文へ被らないことを構造的に保証する（マーカーだけ
-        # 固定のまま offset だけ縮めると、マーカーが本文へ被る）。
-        marker_h = min(Inches(0.38), max(Inches(0.22), int(inner.h * 0.34)))
-        add_section_lead(slide, inner.x, inner.y, inner.w,
-                         layer.get("heading", ""), marker_h=marker_h)
-        header_offset = marker_h + SECTION_LEAD_GAP
-        add_paragraph_textbox(slide, inner.x, inner.y + header_offset,
-                              inner.w, inner.h - header_offset, [
-            {"segments": [(layer.get("title", ""), {
-                "size": typography.body, "color": PALETTE.text_primary,
-                "bold": True, "font": typography.body_font,
-            })], "space_after": 3},
-            {"segments": [(layer.get("body", ""), {
-                "size": typography.small, "color": PALETTE.text_secondary,
-                "font": typography.body_font,
-            })]},
-        ], vertical_anchor=MSO_ANCHOR.MIDDLE)
+    if layer_rows:
+        layers_region = Region(
+            area.x, layer_rows[0].y, area.w,
+            layer_rows[-1].y + layer_rows[-1].h - layer_rows[0].y)
+        layer_contents = BandStack(slide, layers_region, layers, tones=tones,
+                                   weights=[1.3] * len(layers), gap=Inches(0.16))
+        for layer, inner in zip(layers, layer_contents):
+            # 見出し分のオフセットを固定0.46inのままにすると、layers数が増えて
+            # 行の高さが縮んだ際に本文用の残りスペースをほぼ食い潰してしまう。
+            # 行の高さに対する上限付き割合で縮めるが、add_section_leadの縦棒
+            # マーカー自体も同じ値で縮め、offset = marker_h + GAPで揃えることで
+            # マーカーが本文へ被らないことを構造的に保証する（マーカーだけ
+            # 固定のまま offset だけ縮めると、マーカーが本文へ被る）。
+            marker_h = min(Inches(0.38), max(Inches(0.22), int(inner.h * 0.34)))
+            add_section_lead(slide, inner.x, inner.y, inner.w,
+                             layer.get("heading", ""), marker_h=marker_h)
+            header_offset = marker_h + SECTION_LEAD_GAP
+            add_paragraph_textbox(slide, inner.x, inner.y + header_offset,
+                                  inner.w, inner.h - header_offset, [
+                {"segments": [(layer.get("title", ""), {
+                    "size": typography.body, "color": PALETTE.text_primary,
+                    "bold": True, "font": typography.body_font,
+                })], "space_after": 3},
+                {"segments": [(layer.get("body", ""), {
+                    "size": typography.small, "color": PALETTE.text_secondary,
+                    "font": typography.body_font,
+                })]},
+            ], vertical_anchor=MSO_ANCHOR.MIDDLE)
 
     add_background_zone(slide, execution_row.x, execution_row.y,
                         execution_row.w, execution_row.h,
@@ -344,10 +328,9 @@ def render_org_layers(builder, spec, page):
                      spec.get("execution_heading", "業務実行"),
                      color=PALETTE.accent_secondary)
     cards_row = execution_inner.inset(top=Inches(0.48), bottom=0)
-    columns = cards_row.columns([1] * max(1, len(execution)), gap="standard")
-    for item, column in zip(execution, columns):
-        add_card(slide, column.x, column.y, column.w, column.h)
-        inner = column.inset(Inches(0.16), Inches(0.16))
+    execution_contents = BoxGrid(slide, cards_row, execution,
+                                 inset_x=Inches(0.16), inset_y=Inches(0.16))
+    for item, inner in zip(execution, execution_contents):
         add_paragraph_textbox(slide, inner.x, inner.y, inner.w, inner.h, [
             {"segments": [(item.get("title", ""), {
                 "size": typography.body, "color": PALETTE.text_primary,
@@ -430,11 +413,9 @@ def render_stage_track(builder, spec, page):
         [3.9, 0.34, 0.62], gap=Inches(0.16))
     stages = spec.get("stages", [])
     tones = ["neutral", "brand-soft", "teal-soft"]
-    columns = stages_row.columns([1] * max(1, len(stages)), gap="wide")
-    for index, (stage, column) in enumerate(zip(stages, columns)):
-        add_background_zone(slide, column.x, column.y, column.w, column.h,
-                            tone=tones[index % len(tones)], rounded=True)
-        inner = column.inset(Inches(0.28), Inches(0.26))
+    contents = BoxGrid(slide, stages_row, stages, skin="zone", tones=tones,
+                       gap="wide", inset_x=Inches(0.28), inset_y=Inches(0.26))
+    for index, (stage, inner) in enumerate(zip(stages, contents)):
         add_paragraph_textbox(slide, inner.x, inner.y, inner.w, inner.h, [
             {"segments": [(stage.get("label", f"STEP {index}"), {
                 "size": typography.small, "color": PALETTE.blue,
@@ -515,14 +496,9 @@ def render_matrix_2x2(builder, spec, page):
                 size=typography.small, color=PALETTE.text_secondary, bold=True)
 
     quadrants = spec.get("quadrants", [])
-    top_row, bottom_row = plot_col.rows([1, 1], gap=Inches(0.1))
-    cells = list(top_row.columns([1, 1], gap=Inches(0.1))) + \
-        list(bottom_row.columns([1, 1], gap=Inches(0.1)))
-    for quadrant, cell in zip(quadrants, cells):
-        tone = "brand-soft" if quadrant.get("emphasis") else "neutral"
-        add_background_zone(slide, cell.x, cell.y, cell.w, cell.h,
-                            tone=tone, rounded=True)
-        inner = cell.inset(Inches(0.24), Inches(0.2))
+    contents = QuadrantGrid(slide, plot_col, quadrants, gap=Inches(0.1),
+                            inset_x=Inches(0.24), inset_y=Inches(0.2))
+    for quadrant, inner in zip(quadrants, contents):
         add_paragraph_textbox(slide, inner.x, inner.y, inner.w, inner.h, [
             {"segments": [(quadrant.get("label", ""), {
                 "size": typography.small, "color": PALETTE.blue,
@@ -575,11 +551,9 @@ def render_stat_highlight(builder, spec, page):
         vertical_anchor=MSO_ANCHOR.MIDDLE)
 
     if supporting_row is not None:
-        columns = supporting_row.columns([1] * max(1, len(supporting)),
-                                         gap="standard")
-        for item, column in zip(supporting, columns):
-            add_card(slide, column.x, column.y, column.w, column.h)
-            inner = column.inset(Inches(0.2), Inches(0.2))
+        contents = BoxGrid(slide, supporting_row, supporting,
+                           inset_x=Inches(0.2), inset_y=Inches(0.2))
+        for item, inner in zip(supporting, contents):
             Stat(slide, inner.x, inner.y, inner.w, inner.h,
                 item.get("value", ""), item.get("label", ""),
                 value_size=typography.metric, value_color=PALETTE.blue,

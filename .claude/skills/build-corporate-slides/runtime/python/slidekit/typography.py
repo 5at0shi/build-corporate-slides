@@ -4,7 +4,7 @@ from pptx.oxml.ns import qn
 from pptx.oxml.xmlchemy import OxmlElement
 from pptx.util import Inches, Pt
 
-from .atoms import _flat, add_hairline
+from .atoms import _filled_shape, add_hairline
 from .icons import add_icon
 from .textmetrics import (adaptive_gap_pt, estimate_item_list_height_pt,
                           estimate_paragraph_height_pt)
@@ -51,17 +51,32 @@ def set_run(run, *, size=TYPE.body, color=PALETTE.ink, bold=False,
     return run
 
 
-def add_textbox(slide, x, y, w, h, text, *, size=TYPE.body,
-                color=PALETTE.ink, bold=False, font=TYPE.body_font,
-                align=PP_ALIGN.LEFT, margin=0, line_spacing=1.08):
-    shape = slide.shapes.add_textbox(x, y, w, h)
-    tf = style_text_frame(shape.text_frame, margin=margin)
+def _fill_text_frame(text_frame, text, *, size=TYPE.body, color=PALETTE.ink,
+                     bold=False, font=TYPE.body_font, align=PP_ALIGN.LEFT,
+                     margin=0, margin_x=None, margin_y=None, line_spacing=1.08,
+                     vertical_anchor=MSO_ANCHOR.TOP):
+    """既存のtext_frameへ単一run・単一段落のテキストを設定する。
+
+    add_textbox（新規textboxを作ってから呼ぶ）とTag（既存図形のtext_frame
+    へ直接呼ぶ）が共有する、テキスト設定だけの手順。
+    """
+    tf = style_text_frame(text_frame, margin=margin, margin_x=margin_x,
+                          margin_y=margin_y, vertical_anchor=vertical_anchor)
     paragraph = tf.paragraphs[0]
     paragraph.alignment = align
     paragraph.line_spacing = line_spacing
     paragraph.space_after = Pt(0)
     set_run(paragraph.add_run(), size=size, color=color, bold=bold, font=font)
     paragraph.runs[0].text = text
+    return tf
+
+
+def add_textbox(slide, x, y, w, h, text, *, size=TYPE.body,
+                color=PALETTE.ink, bold=False, font=TYPE.body_font,
+                align=PP_ALIGN.LEFT, margin=0, line_spacing=1.08):
+    shape = slide.shapes.add_textbox(x, y, w, h)
+    _fill_text_frame(shape.text_frame, text, size=size, color=color, bold=bold,
+                     font=font, align=align, margin=margin, line_spacing=line_spacing)
     return shape
 
 
@@ -233,23 +248,12 @@ def Tag(slide, x, y, w, h, text, *, fill=None, line=PALETTE.grey_500,
     size = size or typography.small
     color = color or (PALETTE.white if fill else PALETTE.text_secondary)
     shape_type = MSO_SHAPE.ROUNDED_RECTANGLE if pill else MSO_SHAPE.RECTANGLE
-    tag = slide.shapes.add_shape(shape_type, x, y, w, h)
-    _flat(tag, radius=h / 2 if pill else None)
-    if fill is not None:
-        tag.fill.solid()
-        tag.fill.fore_color.rgb = fill
-        tag.line.fill.background()
-    else:
-        tag.fill.background()
-        tag.line.color.rgb = line
-        tag.line.width = Pt(1.0)
-    tf = style_text_frame(tag.text_frame, margin_x=Inches(0.05),
-                          vertical_anchor=MSO_ANCHOR.MIDDLE)
-    paragraph = tf.paragraphs[0]
-    paragraph.alignment = PP_ALIGN.CENTER
-    set_run(paragraph.add_run(), size=size, color=color, bold=bold,
-            font=typography.body_font)
-    paragraph.runs[0].text = text
+    tag = _filled_shape(slide, shape_type, x, y, w, h,
+                        radius=h / 2 if pill else None, fill=fill,
+                        line=None if fill else line, line_width=Pt(1.0))
+    _fill_text_frame(tag.text_frame, text, size=size, color=color, bold=bold,
+                     font=typography.body_font, align=PP_ALIGN.CENTER,
+                     margin_x=Inches(0.05), vertical_anchor=MSO_ANCHOR.MIDDLE)
     return tag
 
 

@@ -13,15 +13,11 @@ from .images import add_image_contain
 from .tables import add_data_table
 from .textmetrics import adaptive_gap_pt, estimate_item_list_height_pt
 from .theme import PALETTE
-from .typography import (Stat, add_paragraph_textbox, add_text_list,
-                         add_textbox)
+from .typography import (Stat, _type_for, add_paragraph_textbox,
+                         add_text_list, add_textbox)
 
 
 HEADING_BLOCK_H = Inches(0.62)
-
-
-def _type(slide):
-    return slide._slidekit_typography
 
 
 def _items(section):
@@ -59,7 +55,7 @@ def render_cover(builder, spec, page):
 def render_comparison(builder, spec, page):
     slide, area = builder.add_slide(
         spec["title"], density=spec.get("density", "standard"), page=page)
-    typography = _type(slide)
+    typography = _type_for(slide)
     body, conclusion = area.rows([4.35, 0.72], gap=Inches(0.24))
     variant = spec.get("variant", "balanced")
     weights = [1, 1] if variant == "balanced" else [1.08, 0.92]
@@ -88,7 +84,7 @@ def render_comparison(builder, spec, page):
 def render_evidence_and_decision(builder, spec, page):
     slide, area = builder.add_slide(
         spec["title"], density=spec.get("density", "standard"), page=page)
-    typography = _type(slide)
+    typography = _type_for(slide)
     left, right = area.columns([1.55, 1], gap="wide")
     evidence = spec.get("evidence", [])
 
@@ -146,26 +142,26 @@ def render_scope_and_exclusions(builder, spec, page):
         region = columns[index]
         label = item.get("label", f"{index + 1:02}")
         add_textbox(slide, region.x, region.y + Inches(0.78), region.w,
-                    Inches(0.28), label, size=_type(slide).small,
+                    Inches(0.28), label, size=_type_for(slide).small,
                     color=PALETTE.blue, bold=True)
         add_paragraph_textbox(slide, region.x, region.y + Inches(1.22),
                               region.w, Inches(2.5), [
             {"segments": [(item.get("title", ""), {
-                "size": _type(slide).section,
+                "size": _type_for(slide).section,
                 "color": PALETTE.text_primary,
                 "bold": True,
-                "font": _type(slide).body_font,
+                "font": _type_for(slide).body_font,
             })], "space_after": 7},
             {"segments": [(item.get("body", ""), {
-                "size": _type(slide).small,
+                "size": _type_for(slide).small,
                 "color": PALETTE.text_secondary,
-                "font": _type(slide).body_font,
+                "font": _type_for(slide).body_font,
             })]},
         ])
     if spec.get("period"):
         add_textbox(slide, scope_inner.x, scope_inner.y + scope_inner.h - Inches(0.42),
                     scope_inner.w, Inches(0.28), spec["period"],
-                    size=_type(slide).small, color=PALETTE.text_primary,
+                    size=_type_for(slide).small, color=PALETTE.text_primary,
                     bold=True)
 
     add_section_lead(slide, exclusions.x, exclusions.y, exclusions.w,
@@ -177,7 +173,7 @@ def render_scope_and_exclusions(builder, spec, page):
                   exclusions_items, bullet="—", body_gap=7)
     add_textbox(slide, exclusions.x, exclusions.y + exclusions.h - Inches(0.42),
                 exclusions.w, Inches(0.34), spec["primary_message"],
-                size=_type(slide).small, color=PALETTE.text_primary, bold=True)
+                size=_type_for(slide).small, color=PALETTE.text_primary, bold=True)
 
 
 def render_process_with_gates(builder, spec, page):
@@ -194,14 +190,14 @@ def render_process_with_gates(builder, spec, page):
                             tone=tones[index % len(tones)], rounded=True)
         add_textbox(slide, region.x + Inches(0.15), region.y + Inches(0.15),
                     region.w - Inches(0.3), Inches(0.3), phase.get("title", ""),
-                    size=_type(slide).body, color=PALETTE.text_primary,
+                    size=_type_for(slide).body, color=PALETTE.text_primary,
                     bold=True, align=PP_ALIGN.CENTER)
 
     work_columns = work_row.columns(phase_weights, gap="tight")
     for index, (phase, region) in enumerate(zip(phases, work_columns)):
         add_textbox(slide, region.x, region.y + Inches(0.18), region.w,
                     Inches(0.28), phase.get("label", f"{index + 1:02}"),
-                    size=_type(slide).small, color=PALETTE.blue, bold=True)
+                    size=_type_for(slide).small, color=PALETTE.blue, bold=True)
         # phasesは最大6分割まで想定する狭い列のため、他の箇条書きと同じ
         # 全角ダッシュ「—」だと項目テキストに対して不自然に長く見える。
         # 中黒「・」は幅が狭く、狭い列でも項目とのバランスが崩れない。
@@ -237,7 +233,7 @@ def _render_chart_visual(builder, slide, spec, region):
             chart_type=chart_spec.get("type", "column"),
             categories=chart_spec.get("categories", []),
             series=chart_spec.get("series", []),
-            typography=_type(slide),
+            typography=_type_for(slide),
             value_format=chart_spec.get("value_format"))
     else:
         image_path = builder.paths.input_dir / spec["image"]
@@ -255,10 +251,10 @@ def render_chart_with_insight(builder, spec, page):
         inner = insight.inset(Inches(0.3), Inches(0.34))
         add_textbox(slide, inner.x, inner.y, inner.w, Inches(0.3),
                     spec.get("insight_heading", "読み取れること"),
-                    size=_type(slide).small, color=PALETTE.blue, bold=True)
+                    size=_type_for(slide).small, color=PALETTE.blue, bold=True)
         add_textbox(slide, inner.x, inner.y + Inches(0.58), inner.w,
                     Inches(1.55), spec["primary_message"],
-                    size=_type(slide).section, color=PALETTE.text_primary,
+                    size=_type_for(slide).section, color=PALETTE.text_primary,
                     bold=True, line_spacing=1.02)
         if spec.get("insights"):
             add_item_list(slide, inner.x, inner.y + Inches(2.35), inner.w,
@@ -284,7 +280,7 @@ def render_org_layers(builder, spec, page):
     """
     slide, area = builder.add_slide(
         spec["title"], density=spec.get("density", "standard"), page=page)
-    typography = _type(slide)
+    typography = _type_for(slide)
     layers = spec.get("layers", [])
     execution = spec.get("execution", [])
     weights = [1.3] * len(layers) + [2.1, 0.62]
@@ -355,7 +351,7 @@ def render_priority_actions(builder, spec, page):
     """
     slide, area = builder.add_slide(
         spec["title"], density=spec.get("density", "standard"), page=page)
-    typography = _type(slide)
+    typography = _type_for(slide)
     body, conclusion = area.rows([4.35, 0.72], gap=Inches(0.24))
     left, right = body.columns([1.05, 1], gap="wide")
 
@@ -410,7 +406,7 @@ def render_stage_track(builder, spec, page):
     """左から右への段階的な進行を、同格のステージカードで示す。"""
     slide, area = builder.add_slide(
         spec["title"], density=spec.get("density", "standard"), page=page)
-    typography = _type(slide)
+    typography = _type_for(slide)
     stages_row, note_row, conclusion = area.rows(
         [3.9, 0.34, 0.62], gap=Inches(0.16))
     stages = spec.get("stages", [])
@@ -484,7 +480,7 @@ def render_matrix_2x2(builder, spec, page):
     """2軸で4象限に分け、各象限の位置づけを示す(ポートフォリオ分析等)。"""
     slide, area = builder.add_slide(
         spec["title"], density=spec.get("density", "standard"), page=page)
-    typography = _type(slide)
+    typography = _type_for(slide)
     grid_area, caption_row, conclusion = area.rows(
         [4.5, 0.34, 0.62], gap=Inches(0.16))
     axis_col, plot_col = grid_area.columns([0.14, 1], gap=Inches(0.14))
@@ -538,7 +534,7 @@ def render_stat_highlight(builder, spec, page):
     """単一の実績数値を主役にし、補足指標と結論を添える。"""
     slide, area = builder.add_slide(
         spec["title"], density=spec.get("density", "standard"), page=page)
-    typography = _type(slide)
+    typography = _type_for(slide)
     stat = spec.get("stat", {})
     supporting = spec.get("supporting", [])
     if supporting:

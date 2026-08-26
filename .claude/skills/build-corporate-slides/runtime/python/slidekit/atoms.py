@@ -5,6 +5,11 @@ Boxは「矩形領域＋見た目（塗り・枠線・角丸・影）」とい�
 だけの同じもの（skinの違い）であり、幾何計算（角丸半径の絶対値換算、
 影の作り方）は1箇所に集約する。components.pyのadd_card等は、この
 Boxへ薄く委譲するラッパーとして再定義する。
+
+Box/Marker/add_hairlineはいずれも「図形を作る→既定のテーマスタイルを
+消す→塗るか透明か→枠線を引くかなしか」という同じ手順の上に成り立つ
+（違うのは形・既定色・角丸の付け方だけ）。この手順を_filled_shapeへ
+集約し、それぞれは見た目の役割（コンテナ／装飾／罫線）だけを表す。
 """
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.oxml.ns import qn
@@ -28,6 +33,29 @@ def _flat(shape, *, rounding=None, radius=None):
         shape.adjustments[0] = min(radius / min(shape.width, shape.height), 0.5)
     elif rounding is not None and len(shape.adjustments):
         shape.adjustments[0] = rounding
+    return shape
+
+
+def _filled_shape(slide, shape_type, x, y, w, h, *, radius=None, rounding=None,
+                  fill=None, line=None, line_width=Pt(0.7)):
+    """図形を作り、既定のテーマスタイルを消し、塗り・枠線を設定する。
+
+    Box/Marker/add_hairlineが共有する最小単位の手順。fill/line未指定は
+    それぞれ透明/枠線なしになる。radius（絶対値）とrounding（相対値）は
+    _flatにそのまま渡す。
+    """
+    shape = slide.shapes.add_shape(shape_type, x, y, w, h)
+    _flat(shape, radius=radius, rounding=rounding)
+    if fill is not None:
+        shape.fill.solid()
+        shape.fill.fore_color.rgb = fill
+    else:
+        shape.fill.background()
+    if line is not None:
+        shape.line.color.rgb = line
+        shape.line.width = line_width
+    else:
+        shape.line.fill.background()
     return shape
 
 
@@ -59,24 +87,11 @@ def Box(slide, x, y, w, h, *, rounded=True, radius=None, fill=None,
     shape_type = MSO_SHAPE.ROUNDED_RECTANGLE if rounded else MSO_SHAPE.RECTANGLE
 
     if elevated:
-        shadow = slide.shapes.add_shape(shape_type, x + Pt(1.5), y + Pt(2), w, h)
-        _flat(shadow, radius=radius)
-        shadow.fill.solid()
-        shadow.fill.fore_color.rgb = shadow_fill or PALETTE.surface_subtle
-        shadow.line.fill.background()
+        shadow = _filled_shape(slide, shape_type, x + Pt(1.5), y + Pt(2), w, h,
+                               radius=radius, fill=shadow_fill or PALETTE.surface_subtle)
 
-    box = slide.shapes.add_shape(shape_type, x, y, w, h)
-    _flat(box, radius=radius)
-    if fill is not None:
-        box.fill.solid()
-        box.fill.fore_color.rgb = fill
-    else:
-        box.fill.background()
-    if line is not None:
-        box.line.color.rgb = line
-        box.line.width = line_width
-    else:
-        box.line.fill.background()
+    box = _filled_shape(slide, shape_type, x, y, w, h, radius=radius,
+                        fill=fill, line=line, line_width=line_width)
 
     if elevated:
         slide.shapes.add_group_shape([shadow, box])
@@ -85,12 +100,8 @@ def Box(slide, x, y, w, h, *, rounded=True, radius=None, fill=None,
 
 def add_hairline(slide, x, y, w, *, color=PALETTE.grey_300, width=0.75):
     """細い横罫線（区切り線）を引く。テキストを持たない純粋な装飾図形。"""
-    line = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, x, y, w, Pt(width))
-    _flat(line)
-    line.fill.solid()
-    line.fill.fore_color.rgb = color
-    line.line.fill.background()
-    return line
+    return _filled_shape(slide, MSO_SHAPE.RECTANGLE, x, y, w, Pt(width),
+                         fill=color)
 
 
 def Marker(slide, x, y, w, h, *, shape="bar", fill=PALETTE.line_brand, rounding=0.16):
@@ -104,9 +115,5 @@ def Marker(slide, x, y, w, h, *, shape="bar", fill=PALETTE.line_brand, rounding=
     shape="bar"（既定）は角丸の細い帯。shape="dot"は円。
     """
     shape_type = MSO_SHAPE.OVAL if shape == "dot" else MSO_SHAPE.ROUNDED_RECTANGLE
-    marker = slide.shapes.add_shape(shape_type, x, y, w, h)
-    _flat(marker, rounding=None if shape == "dot" else rounding)
-    marker.fill.solid()
-    marker.fill.fore_color.rgb = fill
-    marker.line.fill.background()
-    return marker
+    return _filled_shape(slide, shape_type, x, y, w, h,
+                         rounding=None if shape == "dot" else rounding, fill=fill)

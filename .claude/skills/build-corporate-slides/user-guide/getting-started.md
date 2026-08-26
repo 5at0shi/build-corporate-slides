@@ -1,6 +1,12 @@
 # はじめに
 
-`build-corporate-slides`スキルの簡易ガイド。詳細な設計原則は`SKILL.md`と他のreferencesを参照。ここは「最初に何をすればよいか」「設定ファイルの各項目は何か」だけをまとめた早見表。
+`build-corporate-slides`スキルの簡易ガイド。詳細な設計原則は`SKILL.md`と他のreferencesを参照。ここは「最初に何をすればよいか」「何が作れるか」「設定ファイルの各項目は何か」だけをまとめた早見表。
+
+## まず見る: このスキルで作れるもの
+
+文章より先に実物を見るのが早い。[`capability-showcase.pdf`](capability-showcase.pdf)に、配色・タイポグラフィ・基本コンポーネント・アイコン（14種）・ネイティブチャート（6種：棒・積み上げ棒・横棒・折れ線・円・散布図）・スライド構成（renderer、14種）の実物見本を1つのPowerPointとしてまとめてある。各ページには使用したPython関数名も添えてあるので、修正を頼むときの手がかりにもなる。
+
+スライド構成（1ページ＝1つの意味構造）の一覧と使い分けは[`renderer-catalog.md`](../references/renderer-catalog.md)を見る。「比較のページを作りたい」のような依頼はそこに載っている型に対応する。
 
 ## 全体の流れ
 
@@ -35,7 +41,7 @@
 - **dense**: 表や比較など情報量が多い"ページだけ"に使う。資料全体をdenseにはしない。
 - **large-room**: 大会議室・講演など遠距離投影が明示された場合だけ使う。通常の社内資料では使わない。
 
-実際の文字サイズ・見た目の違いは[`mode-guide.pdf`](mode-guide.pdf)で確認できる。本文（body）は`business`で12ptを基準にしている（`design-system.md`参照）。
+実際の文字サイズ・見た目の違いは[`mode-guide.pdf`](mode-guide.pdf)で確認できる。本文（body）は`business`で12ptを基準にしている（[`design-system.md`](../references/design-system.md)参照）。
 
 ## うまくいかないときは
 

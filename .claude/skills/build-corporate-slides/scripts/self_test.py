@@ -59,6 +59,38 @@ def _check_chart_stability(add_native_chart, TYPE_BUSINESS):
     assert frame.chart.plots[0].has_data_labels is False, (
         "カテゴリ数が多い折れ線グラフでデータラベルが抑制されていません")
 
+    # stacked_column: セグメントが重なるようoverlap=100、ラベルは
+    # セグメント内(CENTER)に収める。
+    stacked_slide = prs.slides.add_slide(blank)
+    frame = add_native_chart(stacked_slide, _Inches(0.5), _Inches(0.5), _Inches(6),
+                             _Inches(4), typography=TYPE_BUSINESS,
+                             chart_type="stacked_column",
+                             categories=["A", "B"],
+                             series=[{"name": "s1", "values": [3, 4]},
+                                     {"name": "s2", "values": [2, 1]}])
+    assert frame.chart.plots[0].overlap == 100, (
+        "stacked_columnのoverlapが100になっていません")
+    assert frame.chart.plots[0].data_labels.position == XL_LABEL_POSITION.CENTER, (
+        "stacked_columnのラベル位置がCENTERになっていません")
+    expect_error("stacked_columnのcategories/values数不一致",
+                chart_type="stacked_column", categories=["A", "B"],
+                series=[{"name": "s1", "values": [1, 2, 3]}])
+
+    # scatter: categoriesを使わずpoints(x, y)を使うXY座標型。
+    scatter_slide = prs.slides.add_slide(blank)
+    frame = add_native_chart(scatter_slide, _Inches(0.5), _Inches(0.5), _Inches(6),
+                             _Inches(4), typography=TYPE_BUSINESS,
+                             chart_type="scatter",
+                             series=[{"name": "s1", "points": [
+                                 {"x": 1.0, "y": 2.0}, {"x": 2.0, "y": 3.5}]}])
+    assert len(list(frame.chart.plots[0].series)) == 1, (
+        "scatterの系列数が想定と異なります")
+    expect_error("scatterのseriesが空", chart_type="scatter", series=[])
+    expect_error("scatterのpointsが空", chart_type="scatter",
+                series=[{"name": "s1", "points": []}])
+    expect_error("scatterのpointsにyが無い", chart_type="scatter",
+                series=[{"name": "s1", "points": [{"x": 1.0}]}])
+
 
 def main() -> int:
     skill_root = Path(__file__).resolve().parents[1]
@@ -198,6 +230,7 @@ def main() -> int:
 
         issues, structure_warnings = validate(output)
         assert not issues, issues
+        assert not structure_warnings, structure_warnings
 
         table_slide = presentation.slides[5]
         for shape in table_slide.shapes:

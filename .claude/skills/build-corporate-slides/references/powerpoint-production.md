@@ -24,7 +24,7 @@
 - 再実行して同じ成果物を上書き生成できる
 - 一つの意味単位を一つの編集可能オブジェクトにする。箇条書き群や連続項目を見た目上の行ごとにboxへ分割しない
 - `add_paragraph_textbox` などを使い、一つのtextbox内の段落とrunで階層を作る
-- 表は可能な限りPowerPoint table、図は編集可能な図形、グラフは可能な限りネイティブchartにする（`chart_with_insight`の`chart`フィールド。`add_native_chart`が実体で、column/bar/line/pieに対応。事前生成PNGしかない場合だけ`image`を使う）
+- 表は可能な限りPowerPoint table、図は編集可能な図形、グラフは可能な限りネイティブchartにする（`chart_with_insight`の`chart`フィールド。`add_native_chart`が実体で、column/stacked_column/bar/line/pie/scatterに対応。事前生成PNGしかない場合だけ`image`を使う）
 
 表紙では `DeckBuilder.add_cover()` を使い、configの部署名、開示範囲、日付、ロゴを自動反映する。ロゴをAI判断で省略しない。
 
@@ -39,6 +39,6 @@ deck.add_cover(title, subtitle=subtitle)
 
 ## 検証とレンダリング
 
-`validate_pptx.py` はファイル破損、スライド数、空ページ、スライド外オブジェクト、極小テキスト、短いtextboxの過剰分割を検出する。Visual QAの代替ではない。Skill更新時は `scripts/self_test.py` も実行する。
+`validate_pptx.py` はファイル破損、スライド数、空ページ、スライド外オブジェクト、極小テキスト（本文・表セルとも）、テキストが枠や表の行高からはみ出す可能性、薄い装飾図形（罫線・アクセントバー等）がテキストに重なっている可能性、短いtextboxの過剰分割を検出する。Visual QAの代替ではない。Skill更新時は `scripts/self_test.py` も実行する。
 
 `render_and_check.py` はmacOSではKeynote、その他ではLibreOfficeを優先してPDF化し、Popplerの `pdftoppm` でページPNGを作る。WindowsではPowerPoint COMも利用できる。Keynoteの自動操作権限がない場合はLibreOfficeへフォールバックする。レンダラーがなければPPTX生成を無効扱いにせず、Visual QA未実施と明示する。

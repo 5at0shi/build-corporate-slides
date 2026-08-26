@@ -27,14 +27,16 @@ rendererは完成テンプレートではなく、頻出する意味構造を編
 - 順番だけでなく承認時点が重要なら `process_with_gates`。
 - セル編集と行追加が想定される情報は `table_with_conclusion`。
 - グラフ全体を公平に読むなら `chart_with_insight: standard`、一つの主張が主役なら `conclusion-led`。
-  - 実データから作る棒・折れ線・円グラフは`chart`（`type: column|bar|line|pie`、`categories`、`series`）を使い、ネイティブPowerPointグラフにする（数値をPowerPoint上で直接編集できる）。パワーポイント生成側で用意したPNGしかない場合だけ`image`を使う。原則として`chart`を優先する。
-  - `add_native_chart`は生成時に不整合を検知して止める（categoriesとvalues数の不一致、`pie`への複数系列指定、`categories`が空、など）。負の値を含む棒・列グラフはラベル位置を自動調整し、カテゴリ数が多い（8件超）折れ線・棒グラフは点ごとのラベルを自動的に省略する（軸・目盛線での判読に任せる）。
-- 縦の責任階層と横の実行部門を両方示すなら `org_layers`。
+  - 実データから作る棒・積み上げ棒・折れ線・円・散布図は`chart`（`type: column|stacked_column|bar|line|pie|scatter`）を使い、ネイティブPowerPointグラフにする（数値をPowerPoint上で直接編集できる）。パワーポイント生成側で用意したPNGしかない場合だけ`image`を使う。原則として`chart`を優先する。
+    - `column`/`stacked_column`/`bar`/`line`/`pie`は`categories`と`series`（`[{"name": ..., "values": [...]}]`）を組み合わせるカテゴリ型。
+    - `scatter`は`categories`不要で、`series`を`[{"name": ..., "points": [{"x": ..., "y": ...}, ...]}]`というXY座標形式にする（マーカーのみ、線で結ばない）。ただし実務でのグラフ調整は細部の作り込みを伴うことが多く、このrendererが担うのは「用意した図を説明に合わせて配置する」という基本的な作図まで。込み入った散布図・複合グラフは事前生成PNGを`image`で使う。
+  - `add_native_chart`は生成時に不整合を検知して止める（categoriesとvalues数の不一致、`pie`への複数系列指定、`categories`が空、`scatter`のpointsが空またはx/y欠落、など）。負の値を含む棒・列グラフはラベル位置を自動調整し、カテゴリ数が多い（8件超）折れ線・棒グラフは点ごとのラベルを自動的に省略する（軸・目盛線での判読に任せる）。`stacked_column`のラベルはセグメント内（CENTER）に置く。
+- 縦の責任階層と横の実行部門を両方示すなら `org_layers`。`layers`は2件までを目安にする（3件以上は各層の本文が収まらずpreflightで警告する。業務実行層は`execution`で別途横分割できるため、階層自体は「意思決定・運営」の2段+実行、のように抑える）。
 - 課題と対応策を優先度付きで左右に並べるなら `priority_actions`。
 - 現在から将来への段階的な広がりを示すなら `stage_track`。
 - アジェンダやNext Stepなど、番号付きの単列項目だけで構成されるページは `numbered_list`。
 - 複数テーマを扱う資料で章を区切るなら `section_divider`。表紙と混同しない（ロゴ・部署名・開示区分は表紙のみ）。
-- 2軸で選択肢の位置づけを比較するなら `matrix_2x2`。軸上の座標が厳密な数値でなく、4象限のどれに属するかが要点の場合に使う。散布図のように正確な座標が要点の場合はPNGを`chart_with_insight`で扱う。
+- 2軸で選択肢の位置づけを比較するなら `matrix_2x2`。軸上の座標が厳密な数値でなく、4象限のどれに属するかが要点の場合に使う。正確な座標が要点の場合は`chart_with_insight`の`chart.type: scatter`を使う（込み入った散布図はPNGの`image`）。
 - 実績・効果を1つの数値で語るなら `stat_highlight`。複数の観点を対等に比較する場合は`table_with_conclusion`を優先する。
 
 ## Escape Hatch

@@ -223,12 +223,18 @@ def add_section_divider(slide, title, *, kicker=None, subtitle=None, page=None):
                     color=PALETTE.grey_500)
 
 
+# add_section_leadの縦棒マーカー分として、呼び出し側が下に置く要素へ
+# 空けるべき最小オフセット。マーカー高さが呼び出し側でも変わる場合は
+# marker_h + SECTION_LEAD_GAPを使い、値がズレて重なるのを防ぐ。
+SECTION_LEAD_GAP = Inches(0.1)
+
+
 def add_section_lead(slide, x, y, w, text, *, color=PALETTE.line_brand,
-                     size=None):
+                     size=None, marker_h=Inches(0.38)):
     typography = _type_for(slide)
     size = size or typography.section
     marker = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y,
-                                    Inches(0.06), Inches(0.38))
+                                    Inches(0.06), marker_h)
     _flat(marker, rounding=0.16)
     marker.fill.solid(); marker.fill.fore_color.rgb = color
     marker.line.fill.background()
@@ -337,7 +343,7 @@ def add_key_message(slide, x, y, w, text, *, style="editorial"):
     return box
 
 
-def add_numbered_row(slide, x, y, w, number, title, body=None):
+def add_numbered_row(slide, x, y, w, number, title, body=None, *, row_h=None):
     typography = _type_for(slide)
     segments = [
         (f"{number:02}   ", {
@@ -368,7 +374,19 @@ def add_numbered_row(slide, x, y, w, number, title, body=None):
         # 折り返し推定にも含めて過小評価を防ぐ。
         content_pt += estimate_paragraph_height_pt("      " + body, typography.small.pt,
                                                     text_pt, line_spacing=1.08)
-    add_hairline(slide, x, y + Inches(content_pt / 72) + Inches(0.14), w)
+    content_h = Inches(content_pt / 72)
+    offset = content_h + Inches(0.14)
+    if row_h is not None:
+        # row_hが項目数に応じて縮められている場合、文字高さ基準のオフセット
+        # のままだと次の行の番号・タイトルへ罫線が食い込む。次の行が始まる
+        # 手前に収まるようクランプする。
+        safe_offset = row_h - Inches(0.08)
+        if safe_offset < content_h + Inches(0.04):
+            # 本文自体が行の高さぎりぎりで、線を安全に置ける余白がない。
+            # 中途半端な位置に引いて文字に被せるより、線を省略する。
+            return
+        offset = min(offset, safe_offset)
+    add_hairline(slide, x, y + offset, w)
 
 
 def add_item_list(slide, x, y, w, h, items, *, bullet="•", body_gap=3,

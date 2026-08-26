@@ -4,9 +4,9 @@ from pptx.util import Inches, Pt
 
 from .builder import DeckBuilder
 from .charts import add_native_chart
-from .components import (add_background_zone, add_card, add_hairline,
-                         add_item_list, add_key_message, add_numbered_row,
-                         add_panel, add_section_lead)
+from .components import (SECTION_LEAD_GAP, add_background_zone, add_card,
+                         add_hairline, add_item_list, add_key_message,
+                         add_numbered_row, add_panel, add_section_lead)
 from .preflight import require_valid_content
 from .images import add_image_contain
 from .tables import add_data_table
@@ -184,8 +184,8 @@ def render_process_with_gates(builder, spec, page):
     phase_row, work_row, gate_row, conclusion = area.rows(
         [0.72, 2.35, 1.1, 0.62], gap=Inches(0.19))
     phases = spec.get("phases", [])
-    columns = phase_row.columns([phase.get("weight", 1) for phase in phases],
-                                gap="tight")
+    phase_weights = [phase.get("weight", 1) for phase in phases] or [1]
+    columns = phase_row.columns(phase_weights, gap="tight")
     tones = ["brand-soft", "neutral", "teal-soft"]
     for index, (phase, region) in enumerate(zip(phases, columns)):
         add_background_zone(slide, region.x, region.y, region.w, region.h,
@@ -195,19 +195,23 @@ def render_process_with_gates(builder, spec, page):
                     size=_type(slide).body, color=PALETTE.text_primary,
                     bold=True, align=PP_ALIGN.CENTER)
 
-    work_columns = work_row.columns(
-        [phase.get("weight", 1) for phase in phases], gap="tight")
+    work_columns = work_row.columns(phase_weights, gap="tight")
     for index, (phase, region) in enumerate(zip(phases, work_columns)):
         add_textbox(slide, region.x, region.y + Inches(0.18), region.w,
                     Inches(0.28), phase.get("label", f"{index + 1:02}"),
                     size=_type(slide).small, color=PALETTE.blue, bold=True)
+        # phasesは最大6分割まで想定する狭い列のため、他の箇条書きと同じ
+        # 全角ダッシュ「—」だと項目テキストに対して不自然に長く見える。
+        # 中黒「・」は幅が狭く、狭い列でも項目とのバランスが崩れない。
         add_item_list(slide, region.x, region.y + Inches(0.62), region.w,
                       region.h - Inches(0.65), phase.get("items", []),
-                      bullet="—", body_gap=5)
+                      bullet="・", body_gap=5)
 
     add_hairline(slide, gate_row.x, gate_row.y + Inches(0.4), gate_row.w,
                  color=PALETTE.line_neutral, width=1)
     gates = spec.get("gates", [])
+    gate_row_right = gate_row.x + gate_row.w
+    label_w = Inches(1.75)
     for gate in gates:
         position = max(0.0, min(1.0, float(gate.get("position", 0))))
         x = gate_row.x + int(gate_row.w * position)
@@ -216,13 +220,19 @@ def render_process_with_gates(builder, spec, page):
                                         Inches(0.11), Inches(0.11))
         marker.fill.solid(); marker.fill.fore_color.rgb = PALETTE.blue
         marker.line.fill.background()
-        label_w = Inches(1.75)
-        label_x = min(max(gate_row.x, x - label_w / 2),
-                      gate_row.x + gate_row.w - label_w)
+        # 中央揃えのまま単純に行の外へクランプすると、点の中心とラベルの
+        # 中心がズレて「点から離れて見える」（端の点で顕著）。端に近い点は
+        # 点の位置を起点にラベルを片側へ伸ばし、常に点と対応が付くようにする。
+        if x - label_w // 2 < gate_row.x:
+            label_x, align = x, PP_ALIGN.LEFT
+        elif x + label_w // 2 > gate_row_right:
+            label_x, align = x - label_w, PP_ALIGN.RIGHT
+        else:
+            label_x, align = x - label_w // 2, PP_ALIGN.CENTER
         add_textbox(slide, int(label_x), gate_row.y + Inches(0.58), label_w,
                     Inches(0.34), gate.get("title", ""),
                     size=_type(slide).small, color=PALETTE.text_primary,
-                    bold=True, align=PP_ALIGN.CENTER)
+                    bold=True, align=align)
     add_key_message(slide, conclusion.x, conclusion.y, conclusion.w,
                     spec["primary_message"],
                     style=spec.get("conclusion_style", "editorial"))
@@ -305,10 +315,18 @@ def render_org_layers(builder, spec, page):
         add_background_zone(slide, region.x, region.y, region.w, region.h,
                             tone=tones[index % len(tones)], rounded=True)
         inner = region.inset(Inches(0.3), Inches(0.14))
+        # 見出し分のオフセットを固定0.46inのままにすると、layers数が増えて
+        # 行の高さが縮んだ際に本文用の残りスペースをほぼ食い潰してしまう。
+        # 行の高さに対する上限付き割合で縮めるが、add_section_leadの縦棒
+        # マーカー自体も同じ値で縮め、offset = marker_h + GAPで揃えることで
+        # マーカーが本文へ被らないことを構造的に保証する（マーカーだけ
+        # 固定のまま offset だけ縮めると、マーカーが本文へ被る）。
+        marker_h = min(Inches(0.38), max(Inches(0.22), int(inner.h * 0.34)))
         add_section_lead(slide, inner.x, inner.y, inner.w,
-                         layer.get("heading", ""))
-        add_paragraph_textbox(slide, inner.x, inner.y + Inches(0.46),
-                              inner.w, inner.h - Inches(0.46), [
+                         layer.get("heading", ""), marker_h=marker_h)
+        header_offset = marker_h + SECTION_LEAD_GAP
+        add_paragraph_textbox(slide, inner.x, inner.y + header_offset,
+                              inner.w, inner.h - header_offset, [
             {"segments": [(layer.get("title", ""), {
                 "size": typography.body, "color": PALETTE.text_primary,
                 "bold": True, "font": typography.body_font,
@@ -454,7 +472,6 @@ def render_numbered_list(builder, spec, page):
     position = spec.get("message_position", "top")
     default_style = "plain" if position == "top" else "solid"
     style = spec.get("message_style", default_style)
-    row_h = Inches(0.9)
 
     if position == "top":
         add_key_message(slide, area.x, area.y, area.w,
@@ -465,12 +482,15 @@ def render_numbered_list(builder, spec, page):
         list_top = area.y
         list_bottom = area.y + area.h - Inches(1.1)
 
-    block_h = row_h * max(0, len(items))
     available = max(0, list_bottom - list_top)
+    # 項目数が多いとrow_h固定(0.9in)ではブロックがスライド外へはみ出すため、
+    # 利用可能な高さに収まるよう縮める（項目数が少ない通常時は0.9inのまま）。
+    row_h = Inches(0.9) if not items else min(Inches(0.9), available // len(items))
+    block_h = row_h * max(0, len(items))
     y = list_top + max(0, (available - block_h) // 2)
     for index, item in enumerate(items, 1):
         add_numbered_row(slide, area.x, y, area.w, index,
-                         item.get("title", ""), item.get("body"))
+                         item.get("title", ""), item.get("body"), row_h=row_h)
         y += row_h
 
     if position == "bottom":

@@ -20,7 +20,9 @@ from .theme import PALETTE
 
 _WHITE = RGBColor(0xFF, 0xFF, 0xFF)
 
-ICON_NAMES = {"check", "warning", "people", "document", "clock", "target"}
+ICON_NAMES = {"check", "warning", "people", "document", "clock", "target",
+             "growth", "cost", "calendar", "idea", "location", "building",
+             "globe", "shield"}
 
 
 def _flat(shape):
@@ -152,6 +154,84 @@ def _draw_target(slide, x, y, size, color):
     _oval(slide, 0.36, 0.36, 0.64, 0.64, x=x, y=y, size=size, fill=color)
 
 
+def _draw_growth(slide, x, y, size, color):
+    _oval(slide, 0, 0, 1, 1, x=x, y=y, size=size, fill=color)
+    for bar_x, top in ((0.27, 0.58), (0.44, 0.46), (0.61, 0.32)):
+        _rounded_rect(slide, bar_x, top, bar_x + 0.12, 0.72, x=x, y=y,
+                      size=size, fill=_WHITE, rounding=0.25)
+
+
+def _draw_cost(slide, x, y, size, color):
+    # 円+横棒1本は「禁止」記号と紛らわしいため、コインを横から見た
+    # 積み重ねで表す（白い楕円を3枚、色の輪郭線で個々の縁を見せる）。
+    _oval(slide, 0, 0, 1, 1, x=x, y=y, size=size, fill=color)
+    for coin_y in (0.56, 0.46, 0.36):
+        _oval(slide, 0.24, coin_y, 0.76, coin_y + 0.16, x=x, y=y, size=size,
+              fill=_WHITE, line=color, line_width=Pt(size.pt * 0.045))
+
+
+def _draw_calendar(slide, x, y, size, color):
+    _oval(slide, 0, 0, 1, 1, x=x, y=y, size=size, fill=color)
+    _rounded_rect(slide, 0.22, 0.26, 0.78, 0.8, x=x, y=y, size=size,
+                  fill=_WHITE, rounding=0.14)
+    _rounded_rect(slide, 0.22, 0.26, 0.78, 0.4, x=x, y=y, size=size,
+                  fill=color, rounding=0.05)
+    _rounded_rect(slide, 0.32, 0.16, 0.4, 0.32, x=x, y=y, size=size,
+                  fill=color, rounding=0.5)
+    _rounded_rect(slide, 0.6, 0.16, 0.68, 0.32, x=x, y=y, size=size,
+                  fill=color, rounding=0.5)
+
+
+def _draw_idea(slide, x, y, size, color):
+    _oval(slide, 0, 0, 1, 1, x=x, y=y, size=size, fill=color)
+    _oval(slide, 0.28, 0.14, 0.72, 0.58, x=x, y=y, size=size, fill=_WHITE)
+    _rounded_rect(slide, 0.4, 0.54, 0.6, 0.72, x=x, y=y, size=size,
+                  fill=_WHITE, rounding=0.3)
+    _rounded_rect(slide, 0.43, 0.74, 0.57, 0.8, x=x, y=y, size=size,
+                  fill=_WHITE, rounding=0.5)
+
+
+def _draw_location(slide, x, y, size, color):
+    # 円と三角形の重なりが浅いと分離した「風船」に見えるため、同じ幅で
+    # 深く重ね、先端まで伸ばして1本のピン形状に見せる。
+    _oval(slide, 0, 0, 1, 1, x=x, y=y, size=size, fill=color)
+    _oval(slide, 0.24, 0.14, 0.76, 0.66, x=x, y=y, size=size, fill=_WHITE)
+    _preset(slide, MSO_SHAPE.ISOSCELES_TRIANGLE, 0.24, 0.42, 0.76, 0.88,
+           x=x, y=y, size=size, fill=_WHITE)
+    _oval(slide, 0.42, 0.28, 0.58, 0.44, x=x, y=y, size=size, fill=color)
+
+
+def _draw_building(slide, x, y, size, color):
+    _oval(slide, 0, 0, 1, 1, x=x, y=y, size=size, fill=color)
+    _rounded_rect(slide, 0.26, 0.18, 0.74, 0.82, x=x, y=y, size=size,
+                  fill=_WHITE, rounding=0.08)
+    for row_y in (0.3, 0.48, 0.66):
+        for col_x in (0.35, 0.565):
+            _rounded_rect(slide, col_x, row_y, col_x + 0.08, row_y + 0.1,
+                          x=x, y=y, size=size, fill=color, rounding=0.2)
+
+
+def _draw_globe(slide, x, y, size, color):
+    _oval(slide, 0, 0, 1, 1, x=x, y=y, size=size, fill=color)
+    _oval(slide, 0.16, 0.16, 0.84, 0.84, x=x, y=y, size=size,
+          line=_WHITE, line_width=Pt(size.pt * 0.07))
+    _rounded_rect(slide, 0.16, 0.465, 0.84, 0.535, x=x, y=y, size=size,
+                  fill=_WHITE, rounding=0.5)
+    _oval(slide, 0.35, 0.16, 0.65, 0.84, x=x, y=y, size=size,
+          line=_WHITE, line_width=Pt(size.pt * 0.06))
+
+
+def _draw_shield(slide, x, y, size, color):
+    _oval(slide, 0, 0, 1, 1, x=x, y=y, size=size, fill=color)
+    shield = _preset(slide, MSO_SHAPE.REGULAR_PENTAGON, 0.24, 0.14, 0.76, 0.82,
+                     x=x, y=y, size=size, fill=_WHITE)
+    shield.rotation = 180
+    _hand_between(slide, (0.4, 0.48), (0.48, 0.58), 0.09,
+                 x=x, y=y, size=size, color=color)
+    _hand_between(slide, (0.48, 0.58), (0.64, 0.36), 0.09,
+                 x=x, y=y, size=size, color=color)
+
+
 _DRAWERS = {
     "check": _draw_check,
     "warning": _draw_warning,
@@ -159,13 +239,22 @@ _DRAWERS = {
     "document": _draw_document,
     "clock": _draw_clock,
     "target": _draw_target,
+    "growth": _draw_growth,
+    "cost": _draw_cost,
+    "calendar": _draw_calendar,
+    "idea": _draw_idea,
+    "location": _draw_location,
+    "building": _draw_building,
+    "globe": _draw_globe,
+    "shield": _draw_shield,
 }
 
 
 def add_icon(slide, x, y, size, name, *, color=PALETTE.blue):
     """アイコンを(x, y)を左上、一辺sizeの正方形として描く。
 
-    nameは check/warning/people/document/clock/target のいずれか。
+    nameは check/warning/people/document/clock/target/growth/cost/calendar/
+    idea/location/building/globe/shield のいずれか。
     いずれも「colorの円チップ＋白い図形」で構成し、どんな背景の上でも
     視認できるようにしている。装飾ではなく、状態・分類を示す場合に使う。
     """

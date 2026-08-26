@@ -217,19 +217,24 @@ def add_text_list(slide, x, y, w, h, items, *, marker="bullet", bullet_char="・
 
 
 def Tag(slide, x, y, w, h, text, *, fill=None, line=PALETTE.grey_500,
-        color=None, size=None, bold=True):
-    """ステータス・分類を示す小さなピル型ラベル（Atom層）。
+        color=None, size=None, bold=True, pill=True):
+    """ステータス・分類を示す小さなラベル（Atom層）。
 
     fill未指定（既定）は枠線のみのバッジ（表紙の開示区分など）。fillを
     指定すると単色塗りの状態チップになる（KPI/ステータス表示向け）。
-    角丸は高さの半分に固定し、常に完全な丸薬型にする（Box/Markerの
-    radiusスケールとは別に、Tagは形が意味を持つため固定にする）。
+    既定では角丸を高さの半分に固定し、完全な丸薬型にする。
+
+    pill=Falseの場合は角のある矩形にする。表紙の開示区分バッジ
+    （「部外秘」等）は社内文書の型として角ありで固定運用したいという
+    実務要件のための例外で、それ以外の一般的なTagはpill=True（既定）
+    のままにする。
     """
     typography = _type_for(slide)
     size = size or typography.small
     color = color or (PALETTE.white if fill else PALETTE.text_secondary)
-    tag = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y, w, h)
-    _flat(tag, radius=h / 2)
+    shape_type = MSO_SHAPE.ROUNDED_RECTANGLE if pill else MSO_SHAPE.RECTANGLE
+    tag = slide.shapes.add_shape(shape_type, x, y, w, h)
+    _flat(tag, radius=h / 2 if pill else None)
     if fill is not None:
         tag.fill.solid()
         tag.fill.fore_color.rgb = fill

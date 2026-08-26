@@ -126,7 +126,10 @@ def add_cover(slide, title, *, subtitle=None, department="", created=None,
     meta_x, meta_w = Inches(9.2), Inches(3.45)
     badge_x, badge_y, badge_w = Inches(11.42), Inches(0.32), Inches(1.22)
     if classification:
-        Tag(slide, badge_x, badge_y, badge_w, Inches(0.3), classification)
+        # 開示区分バッジは社内文書の型として角ありで固定運用する
+        # （実務要件。他の一般的なTagはpill=Trueの丸薬型のまま）。
+        Tag(slide, badge_x, badge_y, badge_w, Inches(0.3), classification,
+           pill=False)
     if department:
         add_textbox(slide, meta_x, Inches(0.72), meta_w, Inches(0.24), department,
                     size=typography.small, color=PALETTE.text_secondary,

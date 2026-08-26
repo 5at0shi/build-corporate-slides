@@ -1,25 +1,41 @@
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.oxml.ns import qn
 from pptx.oxml.xmlchemy import OxmlElement
-from pptx.util import Inches
+from pptx.util import Inches, Pt
 
 from .theme import PALETTE
 from .typography import set_run
 
+_HEADER_RULE = (PALETTE.text_primary, Pt(1.4))
+_ROW_RULE = (PALETTE.line_neutral, Pt(0.75))
 
-def _set_border(cell, color="D7DEE6", width="6350"):
+
+def _set_cell_borders(cell, *, top=None, bottom=None, left=None, right=None):
+    """セルの罫線を辺ごとに設定する。Noneの辺は罫線なしにする。
+
+    表全体に同じ罫線を四辺一律で引くと、ヘッダーと本文の境界も列の区切りも
+    同じ強さになり、構造が読みにくく・のっぺりして見える（縦線は本文の
+    余白で区切りを示せば十分で、design-system.mdも「縦線は必要最小限」と
+    定めている）。ヘッダー下だけ強い罫線、本文行は薄い横線のみ、縦線は
+    引かないという役割分担にするため、辺ごとに個別指定できるようにする。
+    """
     properties = cell._tc.get_or_add_tcPr()
-    for tag in ("a:lnL", "a:lnR", "a:lnT", "a:lnB"):
+    for tag, spec in (("a:lnL", left), ("a:lnR", right),
+                      ("a:lnT", top), ("a:lnB", bottom)):
         existing = properties.find(qn(tag))
         if existing is not None:
             properties.remove(existing)
         line = OxmlElement(tag)
-        line.set("w", width)
-        fill = OxmlElement("a:solidFill")
-        value = OxmlElement("a:srgbClr")
-        value.set("val", color)
-        fill.append(value)
-        line.append(fill)
+        if spec is None:
+            line.append(OxmlElement("a:noFill"))
+        else:
+            color, width = spec
+            line.set("w", str(int(width)))
+            fill = OxmlElement("a:solidFill")
+            value = OxmlElement("a:srgbClr")
+            value.set("val", str(color))
+            fill.append(value)
+            line.append(fill)
         properties.append(line)
 
 
@@ -39,7 +55,7 @@ def add_data_table(slide, region, columns, rows, *, highlight_key="_highlight"):
         highlighted = bool(row_data and row_data.get(highlight_key))
         for col_index, column in enumerate(columns):
             cell = table.cell(row_index, col_index)
-            cell.margin_left = cell.margin_right = Inches(0.12)
+            cell.margin_left = cell.margin_right = Inches(0.16)
             cell.margin_top = cell.margin_bottom = Inches(0.06)
             cell.vertical_anchor = MSO_ANCHOR.MIDDLE
             cell.fill.solid()
@@ -60,5 +76,7 @@ def add_data_table(slide, region, columns, rows, *, highlight_key="_highlight"):
                            PALETTE.text_primary),
                     bold=(row_index == 0 or highlighted),
                     font=typography.body_font)
-            _set_border(cell)
+            # 縦線は引かない（列の区切りは余白で示す）。ヘッダー下だけ強い
+            # 罫線を引いて本文と分離し、本文行は薄い横線だけで区切る。
+            _set_cell_borders(cell, bottom=_HEADER_RULE if row_index == 0 else _ROW_RULE)
     return shape

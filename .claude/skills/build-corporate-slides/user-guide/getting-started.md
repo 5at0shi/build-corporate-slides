@@ -18,7 +18,7 @@
 
 ## 設定ファイル（`.slide-skill-config.yaml`）
 
-ワークスペース直下に置く。存在しない場合は同フォルダの`.slide-skill-config.example.yaml`をコピーして使う。
+ワークスペース直下に置く。存在しない場合は[`.slide-skill-config.example.yaml`](.slide-skill-config.example.yaml)をコピーして使う。
 
 | キー | 意味 | 例 |
 |---|---|---|

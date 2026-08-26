@@ -9,7 +9,7 @@ description: 社内向けPowerPoint資料の構成設計、作成、レビュー
 
 ## 最初に行うこと
 
-1. ワークスペース直下の `.slide-skill-config.yaml` を読む。なければ [`.slide-skill-config.example.yaml`](.slide-skill-config.example.yaml) を基準にし、既定値を使う。
+1. ワークスペース直下の `.slide-skill-config.yaml` を読む。なければ [`.slide-skill-config.example.yaml`](user-guide/.slide-skill-config.example.yaml) を基準にし、既定値を使う。
 2. `paths` をワークスペース基準で解決し、必要なディレクトリだけ作る。
 3. 依頼が構成検討、実制作、既存資料の修正のどれかを判断する。
 
@@ -52,7 +52,7 @@ slides/
 
 ## CREATE
 
-1. 確定したSlide Planを基に、内容と意味構造を `slides/work/slide_content.yaml`、描画の入口を `slides/work/generate_pptx.py` に分けて維持する。新規作成では [`.slide-content.example.yaml`](.slide-content.example.yaml) と [`assets/generate_pptx.py`](assets/generate_pptx.py) を出発点にできる。
+1. 確定したSlide Planを基に、内容と意味構造を `slides/work/slide_content.yaml`、描画の入口を `slides/work/generate_pptx.py` に分けて維持する。新規作成では [`.slide-content.example.yaml`](user-guide/.slide-content.example.yaml) と [`assets/generate_pptx.py`](assets/generate_pptx.py) を出発点にできる。
 2. 各ページを [`renderer-catalog.md`](references/renderer-catalog.md) へ照合する。該当する意味ベースrendererを優先し、内容に合わないページだけ `DeckBuilder` とlayout primitivesで個別構築する。rendererへ無理に押し込まない。
 3. `DeckBuilder.from_workspace(ROOT)` を入口にし、config、パス、部署名、開示範囲、ロゴ、フォント、標準modeを自動反映する。config項目を生成コードで重複管理しない。
 4. 編集可能なテキスト、表、図形、チャートを優先し、原則としてスライド全体を画像化しない。

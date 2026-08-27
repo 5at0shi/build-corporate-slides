@@ -4,7 +4,7 @@ from collections import Counter
 KNOWN_TYPES = {
     "cover", "comparison", "evidence_and_decision",
     "scope_and_exclusions", "process_with_gates",
-    "table_with_conclusion", "chart_with_insight",
+    "table_with_conclusion", "table_with_insight", "chart_with_insight",
     "org_layers", "priority_actions", "stage_track", "numbered_list",
     "section_divider", "matrix", "stat_highlight", "funnel", "cycle",
 }
@@ -48,7 +48,7 @@ def inspect_content(content):
         if (slide_type not in {"cover", "section_divider"} and
                 not slide.get("primary_message")):
             warnings.append(f"{label}: primary_messageがありません")
-        if slide_type == "table_with_conclusion":
+        if slide_type in ("table_with_conclusion", "table_with_insight"):
             if not slide.get("columns") or not slide.get("rows"):
                 errors.append(f"{label}: columnsとrowsが必要です")
         if slide_type == "chart_with_insight":

@@ -1,7 +1,7 @@
 """スキルが標準搭載する部品を一覧できるショーケースデッキを生成する。
 
 配色・タイポグラフィ・基本コンポーネント・アイコン・ネイティブチャート・
-renderer 16種を、実際の描画関数を直接呼び出して本物の出力として並べる。
+renderer 17種を、実際の描画関数を直接呼び出して本物の出力として並べる。
 内容は常に実装と一致する（手書きの説明画像ではない）。デザインシステムや
 renderer/icon/chartを追加・変更したら、このスクリプトを再実行して
 参照を最新化する。
@@ -83,7 +83,7 @@ builder = DeckBuilder.from_workspace(WORKSPACE_ROOT)
 # ================================================================ 1. Cover
 builder.add_cover(
     "build-corporate-slidesスキル 機能一覧",
-    subtitle="配色・コンポーネント・アイコン・チャート・renderer 16種の実物見本",
+    subtitle="配色・コンポーネント・アイコン・チャート・renderer 17種の実物見本",
     eyebrow="CAPABILITY SHOWCASE",
     brand_side="right", brand_shape="diagonal")
 
@@ -405,6 +405,24 @@ catalog = [
              "note": "任意", "_highlight": True},
             {"item": "rows配列", "desc": "各要素が1行になる。件数の増減はrows配列を増減するだけでレイアウト再設計は不要", "note": "必須"}],
     }),
+    ("table_with_insight", "table_with_insight",
+     "表から複数の気づきを箇条書きで示す（chart_with_insightの表版）", {
+        "title": "table_with_insight: 四半期指標の推移から複数の気づきを示す", "density": "dense",
+        "primary_message": "Q3は量を優先した結果、質が犠牲になっている可能性がある。次四半期は受注率の回復を優先指標に据える",
+        "insight_heading": "読み取れること",
+        "insights": [
+            "Q2は商談数が減った一方、受注率は最も高かった（質を優先した営業活動の効果）",
+            "Q3は商談数が増えたが受注率が低下しており、対応の丁寧さが薄れている可能性がある",
+            "平均商談期間はQ2に短縮したが、Q3で再び伸びている"],
+        "columns": [{"key": "metric", "label": "指標", "weight": 1.4},
+                    {"key": "q1", "label": "Q1", "weight": 1},
+                    {"key": "q2", "label": "Q2", "weight": 1},
+                    {"key": "q3", "label": "Q3", "weight": 1}],
+        "rows": [
+            {"metric": "新規商談数", "q1": "120件", "q2": "98件", "q3": "145件"},
+            {"metric": "平均商談期間", "q1": "32日", "q2": "29日", "q3": "35日"},
+            {"metric": "受注率", "q1": "18%", "q2": "22%", "q3": "15%", "_highlight": True}],
+    }),
     ("chart_with_insight", "chart_with_insight (standard)", "グラフ全体を公平に読む", {
         "title": "chart_with_insight (standard): グラフと読み取りを公平に示す",
         "density": "standard", "variant": "standard",
@@ -514,15 +532,14 @@ catalog = [
             {"value": "+8%", "label": "解約率（増加=悪い結果）", "tone": "negative"},
             {"value": "12", "label": "導入部署数"}],
     }),
-    ("funnel", "funnel", "順を追って絞り込まれていく推移（ファネル分析等）", {
-        "title": "funnel: 絞り込みの推移を帯の幅で示す", "density": "standard",
-        "primary_message": "stagesは値の大きい順に並べる。帯の幅はおおよその絞り込み具合を示す",
+    ("funnel", "funnel", "順を追って絞り込まれていく推移（営業パイプライン、TAM/SAM/SOM等）", {
+        "title": "funnel: 営業パイプラインの絞り込みを帯の幅で示す", "density": "standard",
+        "primary_message": "商談化率（問い合わせ→商談）が最大のボトルネック。次四半期はここの転換率改善に注力する",
         "stages": [
-            {"title": "stages配列", "value": 100, "value_label": "value(大)から順に並べる"},
-            {"title": "帯の幅は値に応じる", "value": 42,
-             "value_label": "厳密な比率でなく、平方根で圧縮した幅"},
-            {"title": "正確な比率が要点なら", "value": 12,
-             "value_label": "chart_with_insightの棒グラフを使う"}],
+            {"title": "問い合わせ", "value": 420, "value_label": "420件"},
+            {"title": "商談", "value": 95, "value_label": "95件（転換率 23%）"},
+            {"title": "提案", "value": 38, "value_label": "38件"},
+            {"title": "受注", "value": 12, "value_label": "12件"}],
     }),
     ("cycle", "cycle", "繰り返し・循環するプロセス（PDCA等）", {
         "title": "cycle: 繰り返すプロセスを円周上のCard群で示す", "density": "standard",
@@ -537,7 +554,7 @@ catalog = [
 
 page = 8
 RENDERERS["section_divider"](builder, {
-    "title": "renderer カタログ（16種）", "kicker": "SECTION DIVIDER",
+    "title": "renderer カタログ（17種）", "kicker": "SECTION DIVIDER",
     "subtitle": "各typeの最小構成の例。件数・文言・配色は指示に応じて自由に調整でき、"
                "これが唯一の形ではない",
 }, page)

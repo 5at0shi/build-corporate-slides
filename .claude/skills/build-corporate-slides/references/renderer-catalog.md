@@ -10,6 +10,7 @@ rendererは完成テンプレートではなく、頻出する意味構造を編
 | `scope_and_exclusions` | 対象範囲と対象外を同時に示す | 標準 | 対象の意味単位＋対象外の一括リスト |
 | `process_with_gates` | フェーズ、作業、判断時点 | 標準 | フェーズとゲートを別レイヤーにする |
 | `table_with_conclusion` | 条件、比較、評価を表で読む | 標準 | ネイティブPowerPoint table＋結論 |
+| `table_with_insight` | 表から複数の気づきを箇条書きで示す（chart_with_insightの表版） | 標準 | ネイティブPowerPoint table＋読み取れることの箇条書き＋結論 |
 | `chart_with_insight` | グラフと読み取りを示す | `standard`, `conclusion-led` | `chart`指定でネイティブPowerPointグラフ（数値・系列名を編集可）、`image`指定でPNG画像 |
 | `org_layers` | 意思決定・運営など縦の責任階層と、横に並ぶ実行部門 | 標準 | 階層バンド＋実行部門ごとのCard |
 | `priority_actions` | 優先度付きの課題と、対応する方針 | 標準 | 優先度付きリスト＋淡色の対応方針パネル |
@@ -27,7 +28,7 @@ rendererは完成テンプレートではなく、頻出する意味構造を編
 - 片側を補助領域として弱めるなら `comparison: asymmetric`。
 - 結論が一つで根拠が複数なら `evidence_and_decision`。
 - 順番だけでなく承認時点が重要なら `process_with_gates`。
-- セル編集と行追加が想定される情報は `table_with_conclusion`。
+- セル編集と行追加が想定される情報は `table_with_conclusion`。結論を1文に絞れず、表から複数の気づきを箇条書きで示したいなら `table_with_insight`（`chart_with_insight`のグラフを表に差し替えたもの。骨格は共通で、insightsに複数の気づきを列挙し、primary_messageで最後に結論を1文添える）。
 - グラフ全体を公平に読むなら `chart_with_insight: standard`、一つの主張が主役なら `conclusion-led`。
   - 実データから作る棒・積み上げ棒・折れ線・円・散布図は`chart`（`type: column|stacked_column|bar|line|pie|scatter`）を使い、ネイティブPowerPointグラフにする（数値をPowerPoint上で直接編集できる）。パワーポイント生成側で用意したPNGしかない場合だけ`image`を使う。原則として`chart`を優先する。
     - `column`/`stacked_column`/`bar`/`line`/`pie`は`categories`と`series`（`[{"name": ..., "values": [...]}]`）を組み合わせるカテゴリ型。

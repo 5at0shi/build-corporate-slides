@@ -259,6 +259,22 @@ def _render_chart_visual(builder, slide, spec, region):
         add_image_contain(slide, image_path, region)
 
 
+def _visual_with_insight(slide, area, spec, render_visual):
+    """「主要な視覚要素＋読み取れることの箇条書き＋結論」という、
+    chart_with_insight(standard)とtable_with_insightで共通する骨格。
+    視覚要素そのものの描画だけをrender_visual(region)へ委譲することで、
+    グラフ・表のどちらでも同じ構造を再利用する。
+    """
+    visual_and_notes, conclusion = area.rows([4.35, 0.72], gap=Inches(0.24))
+    visual, notes = visual_and_notes.columns([1.8, 0.8], gap="wide")
+    render_visual(visual)
+    add_section_lead(slide, notes.x, notes.y, notes.w,
+                     spec.get("insight_heading", "読み取れること"))
+    add_item_list(slide, notes.x, notes.y + Inches(0.65), notes.w,
+                  notes.h - Inches(0.7), spec.get("insights", []), bullet="—")
+    _conclude(slide, conclusion, spec)
+
+
 def render_chart_with_insight(builder, spec, page):
     slide, area = builder.add_slide(
         spec["title"], density=spec.get("density", "standard"), page=page)
@@ -280,14 +296,23 @@ def render_chart_with_insight(builder, spec, page):
                           inner.h - Inches(2.4), spec["insights"], bullet="—")
         _render_chart_visual(builder, slide, spec, chart)
     else:
-        chart_and_notes, conclusion = area.rows([4.35, 0.72], gap=Inches(0.24))
-        chart, notes = chart_and_notes.columns([1.8, 0.8], gap="wide")
-        _render_chart_visual(builder, slide, spec, chart)
-        add_section_lead(slide, notes.x, notes.y, notes.w,
-                         spec.get("insight_heading", "読み取れること"))
-        add_item_list(slide, notes.x, notes.y + Inches(0.65), notes.w,
-                      notes.h - Inches(0.7), spec.get("insights", []), bullet="—")
-        _conclude(slide, conclusion, spec)
+        _visual_with_insight(
+            slide, area, spec,
+            lambda region: _render_chart_visual(builder, slide, spec, region))
+
+
+def render_table_with_insight(builder, spec, page):
+    """table_with_conclusionが「結論は1文に絞る」のに対し、表から複数の
+    気づきを箇条書きで示したい場合に使う（chart_with_insightの表版）。
+    骨格は_visual_with_insightをそのまま共有し、視覚要素だけadd_data_table
+    に差し替える。
+    """
+    slide, area = builder.add_slide(
+        spec["title"], density=spec.get("density", "dense"), page=page)
+    _visual_with_insight(
+        slide, area, spec,
+        lambda region: add_data_table(
+            slide, region, spec.get("columns", []), spec.get("rows", [])))
 
 
 def render_org_layers(builder, spec, page):
@@ -684,6 +709,7 @@ RENDERERS = {
     "scope_and_exclusions": render_scope_and_exclusions,
     "process_with_gates": render_process_with_gates,
     "table_with_conclusion": render_table_with_conclusion,
+    "table_with_insight": render_table_with_insight,
     "chart_with_insight": render_chart_with_insight,
     "org_layers": render_org_layers,
     "priority_actions": render_priority_actions,

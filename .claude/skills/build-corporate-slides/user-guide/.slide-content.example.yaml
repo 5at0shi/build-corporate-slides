@@ -139,6 +139,44 @@ slides:
         measure: "利用率と担当者ヒアリング"
         decision: "参考"
 
+  - id: department_results
+    type: table_with_insight
+    density: dense
+    title: "部門別のPoC結果から、展開時の優先順位を考える"
+    primary_message: "効果は部門で差がある。展開順は効果の大きさでなく、定着のしやすさも合わせて判断する"
+    insight_heading: "読み取れること"
+    insights:
+      - "法務部は削減率が最も高いが、継続利用率は最も低い（定着に課題がある）"
+      - "営業部は削減率・利用率ともに安定しており、次の展開先として扱いやすい"
+      - "人事部は検証件数が少なく、効果の判断にはもう1四半期の観察が必要"
+    columns:
+      - key: dept
+        label: "部門"
+        weight: 1.2
+      - key: reduction
+        label: "所要時間削減率"
+        weight: 1
+      - key: usage
+        label: "継続利用率"
+        weight: 1
+      - key: count
+        label: "検証件数"
+        weight: 1
+    rows:
+      - dept: "営業部"
+        reduction: "-34%"
+        usage: "88%"
+        count: "24件"
+        _highlight: true
+      - dept: "法務部"
+        reduction: "-45%"
+        usage: "52%"
+        count: "12件"
+      - dept: "人事部"
+        reduction: "-28%"
+        usage: "70%"
+        count: "6件"
+
   - id: chart_result
     type: chart_with_insight
     variant: standard

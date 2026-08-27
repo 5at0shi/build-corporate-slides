@@ -532,9 +532,15 @@ catalog = [
             {"value": "+8%", "label": "解約率（増加=悪い結果）", "tone": "negative"},
             {"value": "12", "label": "導入部署数"}],
     }),
-    ("funnel", "funnel", "順を追って絞り込まれていく推移（営業パイプライン、TAM/SAM/SOM等）", {
-        "title": "funnel: 営業パイプラインの絞り込みを帯の幅で示す", "density": "standard",
-        "primary_message": "商談化率（問い合わせ→商談）が最大のボトルネック。次四半期はここの転換率改善に注力する",
+    ("funnel", "funnel", "順を追って絞り込まれていく推移（営業パイプライン、TAM/SAM/SOM等）。insights指定で気づきを併記できる", {
+        "title": "funnel: 営業パイプラインの絞り込みと、そこから読み取れることを示す",
+        "density": "standard",
+        "primary_message": "次四半期は商談化率の改善を最優先指標に据える",
+        "insight_heading": "読み取れること",
+        "insights": [
+            "問い合わせ→商談の転換率が23%と、他の段階（40%前後）より明らかに低い",
+            "提案後の受注率（32%）自体は業界平均並みで、後工程に大きな問題はない",
+            "最大のボトルネックは初期対応。営業担当への一次対応の割り振り速度を見直す"],
         "stages": [
             {"title": "問い合わせ", "value": 420, "value_label": "420件"},
             {"title": "商談", "value": 95, "value_label": "95件（転換率 23%）"},

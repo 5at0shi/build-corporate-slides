@@ -648,27 +648,39 @@ def render_funnel(builder, spec, page):
     帯の幅は正確な比率ではなくおおよその絞り込み具合を示す構造表現の
     ため、比率そのものを厳密に伝えたい場合はchart_with_insightの
     棒グラフを使う。
+
+    insightsを指定すると、帯を_visual_with_insightの視覚要素として
+    右側に気づきの箇条書きを添える（table_with_insight/chart_with_insight
+    と同じ骨格）。段の値だけでなく、そこから読み取れる複数の気づきを
+    合わせて示したい場合はこちらを使う。省略時は帯が全幅を使う。
     """
     slide, area = builder.add_slide(
         spec["title"], density=spec.get("density", "standard"), page=page)
     typography = _type_for(slide)
-    stack_row, conclusion = area.rows([4.7, 0.62], gap=Inches(0.22))
     stages = spec.get("stages", [])
     tones = ["brand-soft", "teal-soft", "neutral", "brand-soft"]
-    contents = ProportionalStack(slide, stack_row, stages, skin="zone",
-                                 tones=tones, gap=Inches(0.12))
-    for stage, inner in zip(stages, contents):
-        add_paragraph_textbox(slide, inner.x, inner.y, inner.w, inner.h, [
-            {"segments": [(stage.get("title", ""), {
-                "size": typography.body, "color": PALETTE.text_primary,
-                "bold": True, "font": typography.body_font,
-            })], "space_after": 3, "align": PP_ALIGN.CENTER},
-            {"segments": [(stage.get("value_label", ""), {
-                "size": typography.small, "color": PALETTE.text_secondary,
-                "font": typography.body_font,
-            })], "align": PP_ALIGN.CENTER},
-        ], vertical_anchor=MSO_ANCHOR.MIDDLE)
-    _conclude(slide, conclusion, spec)
+
+    def draw_stack(region):
+        contents = ProportionalStack(slide, region, stages, skin="zone",
+                                     tones=tones, gap=Inches(0.12))
+        for stage, inner in zip(stages, contents):
+            add_paragraph_textbox(slide, inner.x, inner.y, inner.w, inner.h, [
+                {"segments": [(stage.get("title", ""), {
+                    "size": typography.body, "color": PALETTE.text_primary,
+                    "bold": True, "font": typography.body_font,
+                })], "space_after": 3, "align": PP_ALIGN.CENTER},
+                {"segments": [(stage.get("value_label", ""), {
+                    "size": typography.small, "color": PALETTE.text_secondary,
+                    "font": typography.body_font,
+                })], "align": PP_ALIGN.CENTER},
+            ], vertical_anchor=MSO_ANCHOR.MIDDLE)
+
+    if spec.get("insights"):
+        _visual_with_insight(slide, area, spec, draw_stack)
+    else:
+        stack_row, conclusion = area.rows([4.7, 0.62], gap=Inches(0.22))
+        draw_stack(stack_row)
+        _conclude(slide, conclusion, spec)
 
 
 def render_cycle(builder, spec, page):

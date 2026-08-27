@@ -231,21 +231,20 @@ def _draw_globe(slide, x, y, size, color):
 
 
 def _draw_shield(slide, x, y, size, color):
-    # REGULAR_PENTAGON（正五角形）は先端の内角が広く鈍いため盾に見えず、
-    # 上の角も鋭く尖って見えた。ROUND_2_SAME_RECTANGLE（上2角を丸めた
-    # 矩形）とISOSCELES_TRIANGLE（下端の尖り）を継ぎ目なく重ね、丸い肩と
-    # 鋭い先端を持つ盾らしいシルエットにする（location pinと同じ、複数の
-    # 定型プリセットを重ねて複合形状を作る手法）。
+    # 正五角形はキャンバス中央(0.14-0.82)に置くと、下端の尖りぶんだけ
+    # 視覚的な重心が上寄りに感じられる（先端は面積が小さく「軽い」ため）。
+    # 上下0.04ぶん下へずらし、キャンバス内でのバランスを取る。
     _oval(slide, 0, 0, 1, 1, x=x, y=y, size=size, fill=color)
-    _preset(slide, MSO_SHAPE.ROUND_2_SAME_RECTANGLE, 0.27, 0.14, 0.73, 0.46,
-           x=x, y=y, size=size, fill=_WHITE, rounding=0.35)
-    _preset(slide, MSO_SHAPE.ISOSCELES_TRIANGLE, 0.27, 0.46, 0.73, 0.84,
-           x=x, y=y, size=size, fill=_WHITE)
-    _hand_between(slide, (0.35, 0.3), (0.43, 0.38), 0.085,
+    shield = _preset(slide, MSO_SHAPE.REGULAR_PENTAGON, 0.24, 0.18, 0.76, 0.86,
+                     x=x, y=y, size=size, fill=_WHITE)
+    shield.rotation = 180
+    _hand_between(slide, (0.4, 0.52), (0.48, 0.62), 0.09,
                  x=x, y=y, size=size, color=color)
-    _hand_between(slide, (0.43, 0.38), (0.61, 0.22), 0.085,
+    _hand_between(slide, (0.48, 0.62), (0.64, 0.4), 0.09,
                  x=x, y=y, size=size, color=color)
-    _oval(slide, 0.3875, 0.3375, 0.4725, 0.4225, x=x, y=y, size=size, fill=color)
+    # 2本のhand_betweenの継ぎ目を、同半径の円で確実に滑らかにする
+    # （checkと同じ理由）。
+    _oval(slide, 0.435, 0.575, 0.525, 0.665, x=x, y=y, size=size, fill=color)
 
 
 _DRAWERS = {

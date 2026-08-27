@@ -27,6 +27,19 @@ def _gap(value):
     return value
 
 
+def _positive_weights(weights):
+    """重みの合計が0以下なら等分へ落とす。
+
+    weightはYAMLから来る値（process_with_gatesのphases[].weight等）のため、
+    全て0や負が渡されうる。合計0でそのまま除算するとZeroDivisionErrorで
+    デッキ全体の生成が止まる。合計が正であれば個々の0はそのまま扱う
+    （[0, 1]で片方を潰すのは意図した指定でありうるため）。
+    """
+    if not weights:
+        return [1]
+    return list(weights) if sum(weights) > 0 else [1] * len(weights)
+
+
 @dataclass(frozen=True)
 class Region:
     x: int
@@ -42,6 +55,7 @@ class Region:
 
     def columns(self, weights, gap="standard"):
         gap = _gap(gap)
+        weights = _positive_weights(weights)
         total_gap = gap * (len(weights) - 1)
         unit = (self.w - total_gap) / sum(weights)
         result, cursor = [], self.x
@@ -53,6 +67,7 @@ class Region:
 
     def rows(self, weights, gap=Inches(0.18)):
         gap = _gap(gap)
+        weights = _positive_weights(weights)
         total_gap = gap * (len(weights) - 1)
         unit = (self.h - total_gap) / sum(weights)
         result, cursor = [], self.y

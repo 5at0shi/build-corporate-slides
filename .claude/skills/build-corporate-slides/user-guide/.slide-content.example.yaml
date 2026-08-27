@@ -213,6 +213,58 @@ slides:
       - value: "91%"
         label: "継続利用の意向"
 
+  - id: cost_bridge
+    type: waterfall
+    density: standard
+    title: "全社展開後の年間コストは、削減効果が追加費用を上回る"
+    primary_message: "削減効果1.8億に対し追加費用は0.7億で、年1.1億の改善になる"
+    bars:
+      - label: "現行の年間費用"
+        value: 620
+        kind: total
+        value_label: "6.2億"
+      - label: "作業時間の削減"
+        value: -180
+        value_label: "-1.8億"
+        tone: positive
+      - label: "ライセンス費"
+        value: 48
+        value_label: "+0.48億"
+        tone: negative
+      - label: "研修・サポート"
+        value: 22
+        value_label: "+0.22億"
+        tone: negative
+      - label: "展開後の年間費用"
+        value: 510
+        kind: total
+        value_label: "5.1億"
+
+  - id: expansion_issues
+    type: issue_tree
+    density: standard
+    title: "展開判断で答えを出すべき論点を分解する"
+    primary_message: "効果はPoCで確認済み。残る論点は運用コストと管理体制に絞られる"
+    root:
+      label: "論点"
+      title: "全社展開に踏み切ってよいか"
+      body: "効果・コスト・管理の3方向へ分解する"
+    branches:
+      - title: "効果は再現するか"
+        body: "PoC 3部門の結果が他部門でも出るか"
+        items:
+          - "業務の定型度合いの違い"
+          - "利用者の習熟にかかる期間"
+      - title: "コストは見合うか"
+        body: "削減効果と追加費用の差分"
+        items:
+          - "ライセンス費用の総額"
+          - "研修・サポートの運営費"
+      - title: "管理を保てるか"
+        items:
+          - "入力可能な情報範囲の線引き"
+          - "利用状況の監査手段"
+
   - id: next_use_cases
     type: matrix
     density: standard
@@ -276,9 +328,39 @@ slides:
       - label: "STEP2"
         title: "部門展開"
         body: "類似業務を持つ部門へ順次拡大"
+        items:
+          - "対象部門ごとに推進担当者を任命"
+          - "利用状況を月次で共有"
       - label: "STEP3"
         title: "全社展開"
         body: "ガイドライン整備後、全部門で利用可能にする"
+
+  - id: rollout_schedule
+    type: timeline
+    density: standard
+    title: "展開の各作業がいつ重なるかを、四半期の軸で示す"
+    primary_message: "ガイドライン整備を先行させ、第3四半期の全社展開に間に合わせる"
+    periods: ["Q1", "Q2", "Q3", "Q4"]
+    rows:
+      - label: "ガイドライン"
+        title: "入力範囲の整理と規程改定"
+        start: 1
+        end: 2
+      - label: "部門展開"
+        title: "類似業務を持つ4部門へ順次展開"
+        start: 2
+        end: 3
+        tone: teal
+      - label: "研修"
+        title: "研修動画の作成と配信"
+        start: 2
+        end: 4
+        tone: neutral
+      - label: "全社展開"
+        title: "全部門で利用可能にする"
+        start: 3
+        end: 4
+        tone: brand
 
   - id: adoption_funnel
     type: funnel

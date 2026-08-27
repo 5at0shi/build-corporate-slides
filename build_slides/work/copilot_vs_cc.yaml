@@ -1,0 +1,178 @@
+deck:
+  title: "GitHub Copilot と Claude Code の比較"
+  mode: business
+
+slides:
+  - id: cover
+    type: cover
+    title: "GitHub Copilot と Claude Code をどう使い分けるか"
+    subtitle: "できることの重なりと違い、課金モデルの前提、社内での配置方針"
+    eyebrow: "TOOL SELECTION"
+    brand_side: left
+    brand_shape: diagonal
+
+  - id: premise
+    type: numbered_list
+    density: standard
+    message_position: top
+    title: "比較の前提"
+    primary_message: "両者はいまや同じ領域で競合している。「補完 対 エージェント」という古い対比は成立しない"
+    items:
+      - title: "どちらも自律実行するエージェントを持つ"
+        body: "計画・編集・テスト・PR作成まで一連で行える点は共通している"
+      - title: "違いは能力の有無ではなく、置かれている場所"
+        body: "Copilotはリポジトリの中、Claude Codeは端末と作業環境の側に軸足がある"
+      - title: "併用は前提として考える"
+        body: "排他的に1つへ寄せる判断は、どちらの強みも捨てることになる"
+
+  - id: matrix
+    type: matrix
+    density: standard
+    rows: 2
+    cols: 2
+    title: "作業の性質による使い分け"
+    primary_message: "定型で範囲が閉じた作業はCopilot、探索を伴い環境をまたぐ作業はClaude Codeが向く"
+    x_axis:
+      low: "作業範囲: リポジトリ内で閉じる"
+      high: "作業範囲: 環境・ツールをまたぐ"
+    y_axis:
+      low: "自律度: 人が逐次確認"
+      high: "自律度: まとめて任せる"
+    cells:
+      - label: "Copilot"
+        title: "Issue から PR まで任せる"
+        body: "課題を割り当てて背後で実装させる。GitHubの中で完結する"
+      - label: "Claude Code"
+        title: "調査・設計から実装まで任せる"
+        body: "複数リポジトリ、CI、外部サービスを横断する作業"
+        emphasis: true
+      - label: "Copilot"
+        title: "補完とインラインの提案"
+        body: "手を動かしながら書く。クレジットを消費しない"
+      - label: "Claude Code"
+        title: "対話しながら直す"
+        body: "端末で試しながら進める。ローカルの実行結果を見て判断する"
+
+  - id: features
+    type: table_with_conclusion
+    density: dense
+    title: "できることの対応関係"
+    primary_message: "機能の重なりは大きい。差が出るのは、組織の作法をどこまでツールへ持ち込めるかという点"
+    columns:
+      - key: area
+        label: "領域"
+        weight: 1.5
+      - key: copilot
+        label: "GitHub Copilot"
+        weight: 2.4
+      - key: cc
+        label: "Claude Code"
+        weight: 2.4
+    rows:
+      - area: "自律実行"
+        copilot: "コーディングエージェントがIssueからPRを作る。CLIにはPlan・Autopilotモードがある"
+        cc: "CLIが標準。計画モードと自動承認モードを持ち、作業環境の中で完結する"
+      - area: "並列作業"
+        copilot: "CLIがExplore・Task・Code Review・Planの専用サブエージェントを持つ"
+        cc: "サブエージェントを自分で定義できる。ツール・モデル・権限を個別に制限できる"
+      - area: "組織の作法"
+        copilot: "AGENTS.md とカスタムエージェントでリポジトリ単位に定義する"
+        cc: "SkillsとCLAUDE.mdで定義する。個人・プロジェクト・組織配布の3階層を持つ"
+        _highlight: true
+      - area: "コードレビュー"
+        copilot: "エージェント型レビューが指摘し、そのまま修正PRを生成できる"
+        cc: "レビュー機能はTeam・Enterpriseプラン。CIイベントに反応する運用も組める"
+      - area: "外部連携"
+        copilot: "GitHub公式MCPサーバーを内蔵し、カスタムMCPも使える"
+        cc: "MCPに対応。フックで任意のコマンドを工程へ差し込める"
+      - area: "統制"
+        copilot: "コンテンツ除外・監査ログ・ポリシー管理をBusiness以上で提供"
+        cc: "managed settingsで組織配布。サーバー管理設定はサブスクリプション契約が前提"
+
+  - id: strength
+    type: comparison
+    density: dense
+    variant: balanced
+    title: "それぞれが明確に強い領域"
+    primary_message: "GitHubの中で完結する運用はCopilot、環境と作法を自分たちで組み立てる運用はClaude Codeに寄せる"
+    left:
+      heading: "Copilotが強い領域"
+      items:
+        - title: "GitHub上の作業との一体化"
+          body: "Issue、PR、レビュー、Actionsと同じ画面と権限の中で動く"
+        - title: "補完の運用コストの低さ"
+          body: "コード補完とNext Editはクレジットを消費せず、全プランに含まれる"
+        - title: "既存のGitHub統制をそのまま使える"
+          body: "監査ログとポリシーがGitHub Enterpriseの仕組みに載る"
+    right:
+      heading: "Claude Codeが強い領域"
+      items:
+        - title: "作業環境そのものを扱える"
+          body: "端末、複数リポジトリ、外部ツールを横断して1つの作業として進められる"
+        - title: "組織の作法を構造化して配布できる"
+          body: "Skillsは必要なときだけ読み込まれるため、量が増えても常時コストにならない"
+        - title: "実行の制御を細かく設計できる"
+          body: "サブエージェント単位でツール・モデル・権限・メモリを分けられる"
+
+  - id: cost
+    type: stat_highlight
+    density: standard
+    title: "課金の前提が2026年6月に変わった"
+    primary_message: "Copilotは席料の中に従量枠を持つ形になった。単純な席数比較では費用を見誤る"
+    stat:
+      value: "1credit = $0.01"
+      label: "Copilotは2026年6月1日にAIクレジットへ移行"
+      detail: "従来のプレミアムリクエスト単位を置き換え、トークン消費に応じて課金される"
+    supporting:
+      - value: "1,900"
+        label: "Business（$19/人月）に含まれるクレジット"
+      - value: "3,900"
+        label: "Enterprise（$39/人月）に含まれるクレジット"
+      - value: "0"
+        label: "コード補完・Next Editの消費クレジット"
+
+  - id: adoption
+    type: stage_track
+    density: standard
+    title: "社内での配置の進め方"
+    primary_message: "両方を同時に全社展開せず、役割を決めてから広げる"
+    connectors: true
+    stages:
+      - label: "STEP 1"
+        title: "役割を決める"
+        items:
+          - "リポジトリ内の定型作業はCopilot"
+          - "横断・探索型はClaude Code"
+      - label: "STEP 2"
+        title: "作法を書く"
+        items:
+          - "AGENTS.md とSkillsを整える"
+          - "レビュー基準を明文化する"
+      - label: "STEP 3"
+        title: "統制を先に敷く"
+        items:
+          - "監査ログとポリシーを有効化"
+          - "モデルと権限の既定値を固定"
+      - label: "STEP 4"
+        title: "実績で配分を見直す"
+        items:
+          - "クレジット消費を月次で確認"
+          - "併用の比率を四半期で調整"
+
+  - id: decision
+    type: evidence_and_decision
+    density: dense
+    title: "推奨する方針"
+    primary_message: "併用を前提に、作業の性質で振り分ける。どちらか一方への統一は費用も効果も悪化させる"
+    evidence_heading: "この判断の根拠"
+    evidence:
+      - title: "能力の重なりが大きく、優劣で決まらない"
+        body: "自律実行・並列サブエージェント・MCP・カスタム作法は、いずれも両者が持っている"
+      - title: "強みの源泉が構造的に違う"
+        body: "CopilotはGitHubとの一体化、Claude Codeは環境の横断と作法の構造化にある。時間で埋まる差ではない"
+      - title: "費用の形が異なる"
+        body: "Copilotは席料に従量枠を内包し、補完は無償枠。使い方によって実効単価が大きく変わる"
+      - title: "統制の置き場所が違う"
+        body: "GitHub側で統制するか、端末の設定配布で統制するかは、既存の運用体制で決まる"
+    decision_heading: "推奨"
+    decision_detail: "GitHub上で完結する定型作業にCopilot、環境を横断する探索型の作業にClaude Codeを割り当てる。まず1部門で3か月併用し、クレジット消費と作業時間の実績を見てから配分を決める。"

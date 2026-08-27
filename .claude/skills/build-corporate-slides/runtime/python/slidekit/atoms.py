@@ -33,10 +33,12 @@ def _flat(shape, *, rounding=None, radius=None):
     style = shape._element.find(qn("p:style"))
     if style is not None:
         shape._element.remove(style)
-    if radius is not None and len(shape.adjustments):
+    if radius is not None and len(shape.adjustments) and min(shape.width, shape.height) > 0:
         # ROUNDED_RECTANGLEのadj値は図形の短辺に対する割合として解釈されるため、
         # 同じ値でも縦横比が違う図形同士では角丸の見え方が揃わない。
         # 絶対の角丸半径を保つよう、短辺から都度adj値を逆算する。
+        # 短辺が0の図形（領域が足りず潰れた場合）は角丸に意味がなく、
+        # 逆算がゼロ除算になるため計算ごと飛ばす。
         shape.adjustments[0] = min(radius / min(shape.width, shape.height), 0.5)
     elif rounding is not None and len(shape.adjustments):
         shape.adjustments[0] = rounding
@@ -50,7 +52,15 @@ def _filled_shape(slide, shape_type, x, y, w, h, *, radius=None, rounding=None,
     Box/Marker/add_hairlineが共有する最小単位の手順。fill/line未指定は
     それぞれ透明/枠線なしになる。radius（絶対値）とrounding（相対値）は
     _flatにそのまま渡す。
+
+    w/hは0未満を0へ丸める。呼び出し側は利用可能な領域から余白や見出し分を
+    引いて寸法を決めるため、項目数が極端に多いページでは引きすぎて負に
+    なりうる。python-pptxは負の寸法をValueErrorで弾き、デッキ全体の生成が
+    そこで止まってしまう。1つの図形が潰れる方が、生成そのものが失敗するより
+    被害が小さい（項目数の多さ自体はpreflightが警告し、はみ出しは
+    validate_pptxが検出する）。
     """
+    w, h = max(0, w), max(0, h)
     shape = slide.shapes.add_shape(shape_type, x, y, w, h)
     _flat(shape, radius=radius, rounding=rounding)
     if fill is not None:

@@ -92,6 +92,85 @@ def _check_chart_stability(add_native_chart, TYPE_BUSINESS):
                 series=[{"name": "s1", "points": [{"x": 1.0}]}])
 
 
+def _check_edge_case_stability(content):
+    """項目数・文字量・重みの極端な値でも、生成が例外で止まらないことを確認する。
+
+    preflightが止めない入力は必ず描画できる、というのがこのスキルの契約。
+    レイアウトは利用可能な領域から余白や見出し分を引いて寸法を決めるため、
+    項目が多いと引きすぎて負になり、重みが全て0だとゼロ除算になりうる。
+    どちらもデッキ全体の生成が失敗するため、退化した見た目に落とすことで
+    回避している（過去にorg_layers 7件以上、stat_highlight 40件以上、
+    phases/columnsのweight=0で実際に落ちていた）。
+    """
+    import copy
+    from slidekit import DeckBuilder
+    from slidekit.preflight import inspect_content
+    from slidekit.renderers import RENDERERS
+
+    base = {}
+    for slide in content["slides"]:
+        base.setdefault(slide["type"], slide)
+    # ここで見るのはレイアウトの安定性のため、外部PNGへの依存は外して
+    # ネイティブchartへ置き換える（画像の有無で結果が変わらないように）。
+    if "image" in base.get("chart_with_insight", {}):
+        chart_spec = copy.deepcopy(base["chart_with_insight"])
+        chart_spec.pop("image")
+        chart_spec["chart"] = {"type": "column", "categories": ["A", "B"],
+                               "series": [{"name": "s", "values": [1, 2]}]}
+        base["chart_with_insight"] = chart_spec
+    long_text = "非常に長い説明文がここに入ります。" * 20
+    skip_text = {"type", "id", "density", "variant", "message_position"}
+
+    for slide_type, spec in sorted(base.items()):
+        for count in (0, 1, 7, 25, 60):
+            for long_form in (False, True):
+                trial = copy.deepcopy(spec)
+                for key, value in list(trial.items()):
+                    if isinstance(value, list) and value:
+                        trial[key] = [copy.deepcopy(value[i % len(value)])
+                                      for i in range(count)]
+                    elif isinstance(value, list):
+                        trial[key] = []
+                    elif long_form and isinstance(value, str) and key not in skip_text:
+                        trial[key] = long_text
+                errors, _ = inspect_content(
+                    {"deck": content["deck"], "slides": [trial]})
+                if errors:
+                    continue  # preflightが止める入力は描画対象外
+                for mode in ("business", "dense", "large-room"):
+                    try:
+                        RENDERERS[slide_type](
+                            DeckBuilder(Path.cwd(), mode=mode), trial, 1)
+                    except Exception as exc:  # noqa: BLE001
+                        raise AssertionError(
+                            f"{slide_type}: 項目{count}件 / 長文={long_form} / "
+                            f"{mode} で生成が失敗しました: "
+                            f"{type(exc).__name__}: {exc}") from exc
+
+    # 重み・件数の退化した値（YAML由来で起こりうる）でも落ちないこと。
+    degenerate = [
+        {"type": "process_with_gates", "title": "T", "primary_message": "M",
+         "density": "dense",
+         "phases": [{"title": "p", "label": "P", "weight": 0, "items": ["x"]},
+                    {"title": "q", "label": "Q", "weight": 0, "items": ["y"]}],
+         "gates": [{"title": "g", "position": 0.5}]},
+        {"type": "table_with_conclusion", "title": "T", "primary_message": "M",
+         "columns": [{"key": "a", "label": "A", "weight": 0},
+                     {"key": "b", "label": "B", "weight": 0}],
+         "rows": [{"a": "1", "b": "2"}]},
+        {"type": "funnel", "title": "T", "primary_message": "M",
+         "stages": [{"title": "a", "value": 0, "value_label": "0"},
+                    {"title": "b", "value": 0, "value_label": "0"}]},
+    ]
+    for trial in degenerate:
+        try:
+            RENDERERS[trial["type"]](DeckBuilder(Path.cwd()), trial, 1)
+        except Exception as exc:  # noqa: BLE001
+            raise AssertionError(
+                f"{trial['type']}: 退化した重み・値で生成が失敗しました: "
+                f"{type(exc).__name__}: {exc}") from exc
+
+
 def main() -> int:
     skill_root = Path(__file__).resolve().parents[1]
     sys.path.insert(0, str(skill_root / "runtime" / "python"))
@@ -179,7 +258,9 @@ def main() -> int:
              "actions": ["ログを記録する"]},
             {"id": "stage", "type": "stage_track", "title": "段階的に広げる",
              "density": "standard", "primary_message": "基準を満たせば進む",
-             "stages": [{"label": "STEP1", "title": "PoC", "body": "検証"}]},
+             "stages": [{"label": "STEP1", "title": "PoC", "body": "検証"},
+                        {"label": "STEP2", "title": "展開",
+                         "items": ["対象部門を広げる"]}]},
             {"id": "list", "type": "numbered_list", "title": "依頼事項",
              "density": "standard", "primary_message": "ご承認をお願いします",
              "message_position": "bottom",
@@ -205,6 +286,27 @@ def main() -> int:
                  {"title": "サイト訪問", "value": 12000, "value_label": "12,000"},
                  {"title": "資料請求", "value": 3400, "value_label": "3,400"},
                  {"title": "成約", "value": 210, "value_label": "210"}]},
+            {"id": "timeline", "type": "timeline", "title": "期間で示す",
+             "density": "standard", "primary_message": "設計と移行を並行させる",
+             "periods": ["Q1", "Q2", "Q3"],
+             "rows": [{"label": "設計", "title": "要件の確定",
+                      "start": 1, "end": 2},
+                     {"label": "移行", "title": "変換ツールの開発",
+                      "start": 2, "end": 3, "tone": "teal"}]},
+            {"id": "waterfall", "type": "waterfall", "title": "増減要因を示す",
+             "density": "standard", "primary_message": "原価上昇を価格改定で吸収する",
+             "bars": [{"label": "前年度", "value": 42, "kind": "total"},
+                     {"label": "数量増", "value": 11},
+                     {"label": "原材料費", "value": -14},
+                     {"label": "今年度", "value": 39, "kind": "total"}]},
+            {"id": "issue_tree", "type": "issue_tree", "title": "論点を分解する",
+             "density": "standard", "primary_message": "原価低減に手をつけられるかで決まる",
+             "root": {"label": "論点", "title": "利益をどう戻すか",
+                     "body": "売上と原価に分ける"},
+             "branches": [
+                 {"title": "売上を増やす", "body": "既存と新規",
+                  "items": ["単価の引き上げ", "解約率の低減"]},
+                 {"title": "原価を下げる", "items": ["調達先の再編"]}]},
             {"id": "cycle", "type": "cycle", "title": "繰り返しを示す",
              "density": "standard", "primary_message": "改善を継続する",
              "steps": [
@@ -227,6 +329,19 @@ def main() -> int:
         "content が KNOWN_TYPES を網羅していません: "
         f"{KNOWN_TYPES - set(s['type'] for s in content['slides'])}")
     assert logo_path_from_config(config, Path.cwd()).is_file()
+
+    # cover/section_divider以外の全rendererは spec["primary_message"] を直接
+    # 参照するため、欠けたまま描画へ進むとKeyErrorで落ちる。preflightが必ず
+    # errorで止める（＝警告どまりにしない）ことを型ごとに確認する。
+    for slide in content["slides"]:
+        if slide["type"] in {"cover", "section_divider"}:
+            continue
+        without_message = {k: v for k, v in slide.items() if k != "primary_message"}
+        missing_errors, _ = inspect_content(
+            {"deck": content["deck"], "slides": [without_message]})
+        assert any("primary_message" in e for e in missing_errors), (
+            f"{slide['type']}: primary_message欠落がerrorになっていません "
+            "(描画時にKeyErrorで落ちます)")
 
     with tempfile.TemporaryDirectory(prefix="slidekit-test-") as temp:
         root = Path(temp)
@@ -310,6 +425,7 @@ def main() -> int:
             assert not mode_warnings, (mode, mode_warnings)
 
     _check_chart_stability(add_native_chart, TYPE_BUSINESS)
+    _check_edge_case_stability(content)
     print("OK: slidekit self test")
     return 0
 

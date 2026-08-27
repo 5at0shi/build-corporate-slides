@@ -7,6 +7,7 @@ KNOWN_TYPES = {
     "table_with_conclusion", "table_with_insight", "chart_with_insight",
     "org_layers", "priority_actions", "stage_track", "numbered_list",
     "section_divider", "matrix", "stat_highlight", "funnel", "cycle",
+    "timeline", "waterfall", "issue_tree",
 }
 
 
@@ -45,9 +46,12 @@ def inspect_content(content):
         density = slide.get("density", "standard")
         if density not in {"standard", "dense"}:
             errors.append(f"{label}: densityはstandardまたはdenseです")
+        # cover/section_divider以外の全rendererは spec["primary_message"] を
+        # 直接参照する（結論用の領域を必ず確保するため）。欠けたまま描画へ
+        # 進むとKeyErrorで落ちるので、警告ではなくerrorとして生成前に止める。
         if (slide_type not in {"cover", "section_divider"} and
                 not slide.get("primary_message")):
-            warnings.append(f"{label}: primary_messageがありません")
+            errors.append(f"{label}: primary_messageがありません")
         if slide_type in ("table_with_conclusion", "table_with_insight"):
             if not slide.get("columns") or not slide.get("rows"):
                 errors.append(f"{label}: columnsとrowsが必要です")
@@ -98,6 +102,41 @@ def inspect_content(content):
                 errors.append(f"{label}: stat.valueが必要です")
         if slide_type == "funnel" and not slide.get("stages"):
             errors.append(f"{label}: stagesが必要です")
+        if slide_type == "timeline":
+            periods, timeline_rows = slide.get("periods"), slide.get("rows")
+            if not periods or not timeline_rows:
+                errors.append(f"{label}: periodsとrowsが必要です")
+            elif len(periods) > 8:
+                warnings.append(
+                    f"{label}: periodsが多く({len(periods)}件)、1目盛りの幅が"
+                    "狭くなります。8件以下にするか、期間の粒度を上げてください")
+        if slide_type == "waterfall":
+            bars = slide.get("bars")
+            if not bars or len(bars) < 3:
+                # 開始・増減・終了の3本が揃って初めて「AからBへの変化」に
+                # なる。2本以下は増減の分解ではなく単なる比較のため、
+                # comparisonやchart_with_insightの方が適切。
+                errors.append(f"{label}: barsは3件以上必要です（開始・増減・終了）")
+            elif not any(bar.get("kind") == "total" for bar in bars):
+                warnings.append(
+                    f"{label}: kind=\"total\"の棒がありません。開始値・終了値を"
+                    "totalとして置かないと、増減が何に対する増減か読めません")
+            if bars and len(bars) > 9:
+                warnings.append(
+                    f"{label}: barsが多く({len(bars)}件)、1本の幅が狭くなります。"
+                    "要因をまとめるか、ページを分割してください")
+        if slide_type == "issue_tree":
+            branches = slide.get("branches")
+            if not slide.get("root") or not branches:
+                errors.append(f"{label}: rootとbranchesが必要です")
+            elif len(branches) > 5:
+                warnings.append(
+                    f"{label}: branchesが多く({len(branches)}件)、枝1つの高さが"
+                    "狭くなります。5件以下へまとめてください")
+            elif sum(len(b.get("items", [])) for b in branches) > 12:
+                warnings.append(
+                    f"{label}: 内訳(items)の合計が多く、1行の高さが狭くなります。"
+                    "12件以下へ絞るか、枝ごとにページを分けてください")
         if slide_type == "cycle":
             steps = slide.get("steps")
             if not steps or len(steps) < 2:
@@ -129,7 +168,7 @@ def inspect_content(content):
         for key in ("items", "left", "right", "scope", "exclusions",
                     "phases", "gates", "evidence", "insights", "rows",
                     "layers", "execution", "issues", "actions", "stages",
-                    "cells", "supporting", "steps"):
+                    "cells", "supporting", "steps", "bars", "branches"):
             value = slide.get(key)
             if isinstance(value, list):
                 item_count += len(value)

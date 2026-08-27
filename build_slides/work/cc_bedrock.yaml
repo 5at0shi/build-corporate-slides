@@ -1,0 +1,177 @@
+deck:
+  title: "Claude Code 導入経路の比較"
+  mode: business
+
+slides:
+  - id: cover
+    type: cover
+    title: "Claude Code の導入経路を決める"
+    subtitle: "Anthropic直接契約とAmazon Bedrock経由の機能差、運用上の論点、推奨する構成"
+    eyebrow: "TECHNOLOGY EVALUATION"
+    brand_side: right
+    brand_shape: diagonal
+
+  - id: framing
+    type: numbered_list
+    density: standard
+    message_position: top
+    title: "この資料で答えを出すこと"
+    primary_message: "Claude Codeは同じCLIだが、認証経路によって使える機能が変わる。どちらを選ぶかは要件で決まる"
+    items:
+      - title: "何が同じで、何が違うのか"
+        body: "CLIとローカルで完結する機能は全経路で同じ。差が出るのはサーバー側の機能"
+      - title: "その差は業務に影響するか"
+        body: "欠ける機能に代替手段があるかどうかで、影響の大きさが変わる"
+      - title: "どちらを選ぶか"
+        body: "既存のAWS契約・データ所在・統制要件の3点で判断する"
+
+  - id: unchanged
+    type: stat_highlight
+    density: standard
+    title: "開発作業そのものは、経路によらず同じものが使える"
+    primary_message: "日々のコーディング体験を決める機能は全経路で共通。差が出るのは周辺の機能に限られる"
+    stat:
+      value: "同一"
+      label: "CLI・IDE拡張・サブエージェント・Skills・MCP・フック"
+      detail: "CLAUDE.mdメモリ、プラグイン、チェックポイント、サンドボックス、OpenTelemetryメトリクスも全経路で利用できる"
+      tone: positive
+    supporting:
+      - value: "1M"
+        label: "トークンの文脈長（Sonnet 5等、Bedrockでも利用可）"
+      - value: "3社"
+        label: "選べるクラウド（AWS / Google / Microsoft）"
+      - value: "IAM"
+        label: "Bedrockでは既存のAWS認証をそのまま使う"
+
+  - id: gaps
+    type: table_with_conclusion
+    density: dense
+    title: "Bedrock経由で使えない機能と、その代替手段"
+    primary_message: "欠ける機能の多くには代替がある。代替が無いのはWeb検索・Advisor・分析ダッシュボードの3つ"
+    columns:
+      - key: feature
+        label: "機能"
+        weight: 1.6
+      - key: direct
+        label: "Anthropic直接"
+        weight: 1.0
+        align: center
+      - key: bedrock
+        label: "Bedrock経由"
+        weight: 1.0
+        align: center
+      - key: alt
+        label: "代替手段と影響"
+        weight: 2.8
+    rows:
+      - feature: "Web検索"
+        direct: "利用可"
+        bedrock: "利用不可"
+        alt: "URLを指定するWebFetchで代替する。調査の起点をAIに任せられない"
+        _highlight: true
+      - feature: "Fast mode"
+        direct: "利用可"
+        bedrock: "利用不可"
+        alt: "代替なし。応答の速さのみの差で、出力の品質は変わらない"
+      - feature: "Advisor"
+        direct: "利用可"
+        bedrock: "利用不可"
+        alt: "代替なし"
+      - feature: "セッション間メッセージ・Channels"
+        direct: "利用可"
+        bedrock: "利用不可"
+        alt: "複数セッションの連携が必要な作業は直接契約側で行う"
+      - feature: "分析ダッシュボード"
+        direct: "利用可"
+        bedrock: "利用不可"
+        alt: "AWS側のコスト・利用状況の仕組みで代替する（粒度は異なる）"
+      - feature: "サーバー管理設定"
+        direct: "利用可"
+        bedrock: "利用不可"
+        alt: "managed settingsファイルの配布で統制する"
+      - feature: "クラウド実行環境"
+        direct: "利用可"
+        bedrock: "利用不可"
+        alt: "GitHub ActionsまたはGitLab CI/CDで代替する"
+      - feature: "定期実行（/loop）"
+        direct: "間隔の自動判断可"
+        bedrock: "明示指定のみ"
+        alt: "/loop every 2 hours のように間隔を明示すれば同じ動作になる"
+      - feature: "Auto mode"
+        direct: "全モデル"
+        bedrock: "一部モデル"
+        alt: "Sonnet 5、Opus 4.7以降、Fable 5に限られる"
+
+  - id: subscription_only
+    type: comparison
+    density: dense
+    variant: balanced
+    title: "サブスクリプション契約でしか使えない機能"
+    primary_message: "Bedrock経由で欠けるものの多くは、APIキー契約でも同様に使えない。境界は「Bedrockかどうか」ではなく「claude.aiアカウントかどうか」にある"
+    left:
+      heading: "claude.aiアカウントが必要"
+      items:
+        - title: "ブラウザ・モバイル・Slack上のClaude Code"
+          body: "手元の端末以外から作業を始める使い方はここに含まれる"
+        - title: "Routines（定期タスク）とRemote Control"
+          body: "スケジュール実行と遠隔操作"
+        - title: "Code Review と Ultrareview"
+          body: "Code ReviewはTeam・Enterpriseプランのみ"
+        - title: "Artifacts・Computer use・音声入力"
+          body: "プランごとに利用可否が分かれる"
+    right:
+      heading: "経路を問わず使える"
+      items:
+        - title: "CLIとAgent SDK"
+          body: "自動化の入口はどの経路でも同じものが使える"
+        - title: "サブエージェントとSkills"
+          body: "社内の作法をコード化する仕組みは共通"
+        - title: "フック・コマンド・プラグイン"
+          body: "組織固有のワークフローを組み込める"
+        - title: "MCPサーバー"
+          body: "claude.aiのコネクタ連携だけはサブスクリプション限定"
+
+  - id: operations
+    type: priority_actions
+    density: dense
+    title: "Bedrockで運用する場合に先に決めておくこと"
+    primary_message: "モデルのピン留めを最優先で決める。未指定のまま配布すると、想定と違うモデルと単価で全社が動く"
+    issues_heading: "つまずきやすい点"
+    issues:
+      - priority: "最優先"
+        title: "モデルを固定していない"
+        body: "エイリアスは組み込みの既定値に解決される。既定はOpusのため、意図せず高い単価で動く"
+      - priority: "高"
+        title: "リージョンと推論プロファイル"
+        body: "クロスリージョン推論プロファイルの接頭辞が地域で変わる。有効化していないと400エラーになる"
+      - priority: "高"
+        title: "プロンプトキャッシュの可否"
+        body: "リージョンとモデルによって使えない。効かないとトークン消費が数倍になる"
+      - priority: "中"
+        title: "SSOの認証ループ"
+        body: "TLS検査プロキシ配下でawsAuthRefreshがループする。手動ログイン運用に切り替える"
+    actions_heading: "先に決めること"
+    actions:
+      - "ANTHROPIC_DEFAULT_OPUS_MODEL等でモデルIDを明示的にピン留めする"
+      - "利用リージョンを決め、必要な推論プロファイルを有効化する"
+      - "キャッシュのトークン数が0でないことを配布前に実測する"
+      - "IAMポリシーにListInferenceProfilesとGetInferenceProfileを含める"
+      - "Claude Code専用のAWSアカウントを用意し、費用と権限を分離する"
+
+  - id: decision
+    type: evidence_and_decision
+    density: dense
+    title: "推奨する構成"
+    primary_message: "統制要件が明確な組織はBedrockを主経路とし、調査を伴う業務だけ直接契約を併用する"
+    evidence_heading: "この判断の根拠"
+    evidence:
+      - title: "開発作業の中核に差がない"
+        body: "CLI、サブエージェント、Skills、MCP、フックはすべて共通。日々の生産性を決める部分は経路で変わらない"
+      - title: "欠ける機能の大半に代替がある"
+        body: "定期実行は間隔の明示、クラウド実行はCI、統制はmanaged settingsで置き換えられる"
+      - title: "代替が無いのは調査系に集中している"
+        body: "Web検索が使えない影響は、外部情報を能動的に集める業務で最も大きい"
+      - title: "既存のAWS統制をそのまま使える"
+        body: "IAM、Guardrails、監査、データ所在の要件を新しい仕組みを増やさずに満たせる"
+    decision_heading: "推奨"
+    decision_detail: "全社標準はBedrock経由とし、モデルのピン留めとリージョン設定を配布前に確定する。外部調査を日常的に行う部門にはAnthropic直接契約を追加で用意し、2経路の併存を前提に運用ルールを作る。"

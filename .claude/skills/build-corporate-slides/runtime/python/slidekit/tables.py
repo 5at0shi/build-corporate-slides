@@ -40,14 +40,20 @@ def _set_cell_borders(cell, *, top=None, bottom=None, left=None, right=None):
 
 
 def add_data_table(slide, region, columns, rows, *, highlight_key="_highlight"):
+    if not columns:
+        # 列が無いと表として成立しない。python-pptx内部のゼロ除算になる前に、
+        # 原因の分かるメッセージで止める（YAML経由ではpreflightが先に検出する）。
+        raise ValueError("add_data_table: columnsが空です")
     typography = slide._slidekit_typography
     shape = slide.shapes.add_table(len(rows) + 1, len(columns),
                                    region.x, region.y, region.w, region.h)
     table = shape.table
+    # weightはYAML由来のため全て0になりうる。合計0での除算を避けて等幅へ落とす。
     total_weight = sum(column.get("weight", 1) for column in columns)
     for index, column in enumerate(columns):
-        table.columns[index].width = int(
-            region.w * column.get("weight", 1) / total_weight)
+        share = (column.get("weight", 1) / total_weight if total_weight > 0
+                 else 1 / len(columns))
+        table.columns[index].width = int(region.w * share)
 
     for row_index in range(len(rows) + 1):
         table.rows[row_index].height = int(region.h / (len(rows) + 1))

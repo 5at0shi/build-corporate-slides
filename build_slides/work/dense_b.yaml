@@ -1,0 +1,158 @@
+deck:
+  title: "海外拠点 統合再編"
+  mode: business
+
+slides:
+  - id: cover
+    type: cover
+    title: "アジア5拠点の統合再編"
+    subtitle: "拠点別損益・機能重複・再編シナリオと必要投資"
+    eyebrow: "GLOBAL STRATEGY"
+    brand_side: left
+    brand_shape: diagonal
+
+  # 3x3の全マスにラベル+見出し+本文。matrixの限界に近い密度
+  - id: portfolio
+    type: matrix
+    density: dense
+    rows: 3
+    cols: 3
+    title: "拠点別の位置づけと再編方針"
+    primary_message: "収益性・成長性ともに低いマニラとバンコクを統合し、成長性の高いホーチミンへ機能を集約する"
+    x_axis:
+      low: "市場成長性: 低"
+      high: "市場成長性: 高"
+    y_axis:
+      low: "拠点収益性: 低"
+      high: "拠点収益性: 高"
+    cells:
+      - label: "維持"
+        title: "シンガポール（統括）"
+        body: "営業利益率18%。地域統括機能は維持し、間接部門の集約先とする"
+      - label: "強化"
+        title: "ジャカルタ"
+        body: "営業利益率14%・市場成長率9%。人員を2年で1.4倍へ増やす"
+      - label: "最重点"
+        title: "ホーチミン"
+        body: "営業利益率12%・市場成長率15%。統合後の製造・開発の中核とする"
+        emphasis: true
+      - label: "維持"
+        title: "クアラルンプール"
+        body: "営業利益率7%。現状維持とし、追加投資は行わない"
+      - label: "要改善"
+        title: "台北"
+        body: "営業利益率4%。固定費が重く、オフィス縮小で損益分岐点を下げる"
+      - label: "移管検討"
+        title: "深セン"
+        body: "営業利益率6%だが成長率11%。開発機能のホーチミン移管を検討する"
+      - label: "統合"
+        title: "バンコク"
+        body: "営業赤字1.2億。営業機能をジャカルタへ移し、拠点は閉鎖する"
+      - label: "統合"
+        title: "マニラ"
+        body: "営業赤字0.8億。バックオフィス機能をシンガポールへ集約する"
+      - label: "監視"
+        title: "ヤンゴン（駐在員事務所）"
+        body: "情報収集に限定。市場環境が改善するまで本格進出は見送る"
+
+  # 5列×8行、セル内に長文。dense表の実用上限に近い密度
+  - id: pl
+    type: table_with_conclusion
+    density: dense
+    title: "拠点別の損益と固定費構造"
+    primary_message: "赤字2拠点の統合で年間2.4億の固定費を削減できるが、初年度は退職金・原状回復費で1.1億の一時費用が発生する"
+    columns:
+      - key: site
+        label: "拠点"
+        weight: 1.3
+      - key: revenue
+        label: "売上"
+        weight: 1
+        align: center
+      - key: profit
+        label: "営業損益"
+        weight: 1
+        align: center
+      - key: fixed
+        label: "年間固定費"
+        weight: 1
+        align: center
+      - key: plan
+        label: "再編方針と根拠"
+        weight: 3.2
+    rows:
+      - site: "シンガポール"
+        revenue: "84億"
+        profit: "+15.1億"
+        fixed: "12.4億"
+        plan: "地域統括を維持。マニラのバックオフィスを受け入れ、要員を18名増やす"
+      - site: "ジャカルタ"
+        revenue: "62億"
+        profit: "+8.7億"
+        fixed: "9.1億"
+        plan: "バンコクの営業機能を受け入れ、担当地域をインドシナ半島まで広げる"
+      - site: "ホーチミン"
+        revenue: "48億"
+        profit: "+5.8億"
+        fixed: "7.6億"
+        plan: "製造・開発の中核とする。設備投資14億と要員120名の増強が必要"
+        _highlight: true
+      - site: "クアラルンプール"
+        revenue: "31億"
+        profit: "+2.2億"
+        fixed: "5.4億"
+        plan: "現状維持。追加投資は行わず、既存顧客の維持に専念する"
+      - site: "深セン"
+        revenue: "29億"
+        profit: "+1.7億"
+        fixed: "6.2億"
+        plan: "開発機能のホーチミン移管を検討。移管可否は技術者の定着率次第"
+      - site: "台北"
+        revenue: "22億"
+        profit: "+0.9億"
+        fixed: "5.8億"
+        plan: "オフィスを2フロアから1フロアへ縮小し、固定費を年1.1億削減する"
+      - site: "バンコク"
+        revenue: "14億"
+        profit: "-1.2億"
+        fixed: "4.3億"
+        plan: "拠点を閉鎖し営業機能をジャカルタへ移管。退職金など一時費用0.7億"
+      - site: "マニラ"
+        revenue: "9億"
+        profit: "-0.8億"
+        fixed: "3.1億"
+        plan: "バックオフィスをシンガポールへ集約。一時費用0.4億、削減効果は年2.7億"
+
+  # 左右5項目・長文＋結論。asymmetricで密度を上げる
+  - id: risks
+    type: comparison
+    density: dense
+    variant: asymmetric
+    title: "統合実行時のリスクと打ち手"
+    primary_message: "最大のリスクは現地キーパーソンの離職。統合発表前に個別の処遇提示を完了させる"
+    left:
+      heading: "想定されるリスク"
+      items:
+        - title: "現地キーパーソンの離職"
+          body: "バンコク・マニラの管理職12名のうち、統合後の処遇が不明なまま発表すると半数が離職する見込み"
+        - title: "顧客の離反"
+          body: "バンコクの主要顧客18社は担当者との関係が強く、担当変更で年間3億の売上が失われる可能性がある"
+        - title: "法規制・労働争議"
+          body: "インドネシアとタイは解雇規制が厳しく、手続きに最短でも5か月を要する"
+        - title: "移管先の受け入れ能力"
+          body: "ホーチミンは採用市場が逼迫しており、120名の増員に18か月かかる見込み"
+        - title: "システム統合の遅延"
+          body: "拠点ごとに異なる会計システムを使っており、統合には別途1.8億の投資が必要"
+    right:
+      heading: "打ち手"
+      items:
+        - title: "処遇の個別提示を先行"
+          body: "発表2週間前までに管理職12名へ提示を完了する"
+        - title: "顧客への同時訪問"
+          body: "現担当と新担当が3か月間は同行する"
+        - title: "現地法務の事前確認"
+          body: "手続き期間を計画へ織り込み、前倒しで着手する"
+        - title: "採用の前倒し"
+          body: "統合決定前から採用を開始し、6か月分を先行確保する"
+        - title: "会計システムは後回し"
+          body: "初年度は現行併用とし、統合は次年度テーマへ回す"

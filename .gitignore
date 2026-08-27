@@ -7,8 +7,21 @@ __pycache__/
 .DS_Store
 
 # Generated deliverables — regenerate via each project's generate_pptx.py
-build_slides/output/
+build_slides/output/*
+# 確認用に作ったサンプルデッキは、リポジトリから見えるようにGitへ含める
+!build_slides/output/dense_*.pdf
+!build_slides/output/nvidia_fy26.pdf
+!build_slides/output/cc_bedrock.pdf
+!build_slides/output/copilot_vs_cc.pdf
+!build_slides/output/skills_agents.pdf
 build_slides/work/render/
+# 作業領域のYAMLは動作確認用のスクラッチ（同梱の例からいつでも作り直せる）
+build_slides/work/*.yaml
+!build_slides/work/dense_*.yaml
+!build_slides/work/nvidia_fy26.yaml
+!build_slides/work/cc_bedrock.yaml
+!build_slides/work/copilot_vs_cc.yaml
+!build_slides/work/skills_agents.yaml
 build_slides/work/*/render/
 
 # Human-provided input material (photos, maps, etc.) — workspace-specific,

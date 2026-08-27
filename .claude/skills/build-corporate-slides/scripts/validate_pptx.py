@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "runtime" / "python
 from slidekit.textmetrics import char_width_factor  # noqa: E402
 
 
+_STACK_TOLERANCE = Inches(0.06)
 _THIN_W = Inches(0.12)
 _THIN_H = Inches(0.16)
 
@@ -154,8 +155,17 @@ def _check_table(shape, slide_no, issues, warnings):
     をここで別途確認する。
     """
     table = shape.table
+    # 行ごとに「最も高さを要するセル」を求め、表全体の実際の高さを見積もる。
+    # PowerPointは行の高さを内容に合わせて自動的に広げる（縮めない）ため、
+    # python-pptxが持つ宣言上の高さが枠内でも、描画時には下へ伸びて後続の
+    # 行がページ外へ押し出され、そのまま見えなくなる。宣言値だけを見る
+    # スライド外チェックでは検出できないので、ここで推定して確かめる。
+    declared_pt = 0.0
+    estimated_total_pt = 0.0
     for row_index in range(len(table.rows)):
         row_height_pt = Emu(table.rows[row_index].height).pt
+        declared_pt += row_height_pt
+        tallest_pt = row_height_pt
         for col_index in range(len(table.columns)):
             cell = table.cell(row_index, col_index)
             text = cell.text_frame.text
@@ -170,11 +180,25 @@ def _check_table(shape, slide_no, issues, warnings):
             estimated = _estimate_text_height_pt(cell.text_frame, col_width_pt)
             if estimated is None:
                 continue
+            tallest_pt = max(tallest_pt, estimated)
             if estimated > row_height_pt * 1.15:
                 snippet = text.strip().replace("\n", " ")[:24]
                 warnings.append(
                     f"slide {slide_no}: 表のセルが行の高さからはみ出す可能性 "
                     f"'{snippet}' (推定{estimated:.0f}pt / 行{row_height_pt:.0f}pt)")
+        estimated_total_pt += tallest_pt
+
+    # 表全体が確保した高さを超えると、はみ出した分だけ後ろの行が下へ押し出され、
+    # ページ下端の結論やスライド外へ隠れて読めなくなる（データが消える）。
+    # 見た目が窮屈になるだけの個別セルの警告とは重大度が違うためissueにする。
+    if declared_pt > 0 and estimated_total_pt > declared_pt * 1.05:
+        overflow_pt = estimated_total_pt - declared_pt
+        lost_rows = max(1, int(overflow_pt / (declared_pt / len(table.rows))))
+        issues.append(
+            f"slide {slide_no}: 表が確保した高さに収まりません "
+            f"(推定{estimated_total_pt:.0f}pt / 確保{declared_pt:.0f}pt)。"
+            f"末尾およそ{lost_rows}行がページ下端へ押し出されて見えなくなります。"
+            "行数を減らすか、セルの文言を短くするか、ページを分割してください")
 
 
 def _check_text_overflow(slide, slide_no, warnings):
@@ -234,7 +258,17 @@ def validate(path: Path) -> tuple[list[str], list[str]]:
         _check_text_overflow(slide, slide_no, warnings)
         _check_decoration_overlap(slide, slide_no, warnings)
         short_shapes = [s for s in text_shapes if len(s.text.strip()) <= 24]
-        if len(text_shapes) >= 16 and len(short_shapes) / len(text_shapes) >= 0.65:
+        # 「文章の過剰分割」は、1つのtextboxで済む文章が同じ左端に縦へ
+        # 積まれる形で現れる。一方、グラフの目盛りやデータラベルのように
+        # 横へ散らばる短いtextboxは位置そのものが情報であり、分割が必要
+        # （waterfallの棒ごとの値・項目ラベル等）。左端が揃った塊の大きさ
+        # で判定し、横並びのラベル群を過剰分割と誤検知しない。
+        stacked = 0
+        for shape in short_shapes:
+            group = sum(1 for other in short_shapes
+                        if abs(other.left - shape.left) <= _STACK_TOLERANCE)
+            stacked = max(stacked, group)
+        if len(text_shapes) >= 16 and stacked / len(text_shapes) >= 0.65:
             warnings.append(
                 f"slide {slide_no}: 短いtextboxが多く、文章の過剰分割の可能性 "
                 f"({len(text_shapes)} text shapes)")

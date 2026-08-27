@@ -38,6 +38,21 @@ def main() -> int:
     if missing:
         print("不足キー: " + ", ".join(missing), file=sys.stderr)
         return 1
+
+    # python.executableが実在しない場合に黙って別環境へ切り替えるのを防ぐ
+    # （powerpoint-production.md「実行環境」）。フォールバック自体は許容
+    # されるため停止はせず、報告だけを必ず出す。
+    executable = config.get("python", {}).get("executable")
+    if executable:
+        resolved = Path(executable)
+        if not resolved.is_absolute():
+            resolved = args.config.resolve().parent / resolved
+        if not resolved.is_file():
+            print(f"警告: python.executable が見つかりません: {executable}",
+                  file=sys.stderr)
+            print("  別のPythonを使う場合は、どれを使ったかを必ず報告すること"
+                  "（黙って切り替えない）。", file=sys.stderr)
+
     print("OK")
     return 0
 

@@ -15,7 +15,12 @@ description: 社内向けPowerPoint資料の構成設計、作成、レビュー
 
 設定済みの `python.executable` がある場合は必ずそれを優先する。別のvenvを作成・選択したり、依存関係を勝手にインストールしたりしない。不足時は [`runtime/python/requirements.txt`](runtime/python/requirements.txt) と照合して報告する。標準利用環境は個人PCでの閲覧、事前配布、オンライン会議の画面共有であり、遠距離投影を暗黙に想定しない。
 
-CREATE前に、設定されたPythonで [`scripts/check_config.py`](scripts/check_config.py) と [`scripts/check_environment.py`](scripts/check_environment.py) を実行する。不足設定・依存があれば生成を始めず、差分を報告する。
+CREATE前に、設定されたPythonで次を実行する。不足設定・依存があれば生成を始めず、差分を報告する。`check_config.py` は検証するconfigのパスを引数に取る。
+
+```bash
+<python> .claude/skills/build-corporate-slides/scripts/check_config.py .slide-skill-config.yaml
+<python> .claude/skills/build-corporate-slides/scripts/check_environment.py
+```
 
 ## Workspace Contract
 
@@ -67,7 +72,7 @@ build_slides/
 
 生成方式の選択、依存関係、検証は [powerpoint-production.md](references/powerpoint-production.md)、YAMLの責務は [content-model.md](references/content-model.md)、renderer選択は [renderer-catalog.md](references/renderer-catalog.md)、視覚判断は [visual-quality.md](references/visual-quality.md)、色・Componentの具体的な選択は [design-system.md](references/design-system.md) を読む。
 
-レイアウトを決める前に、内容に該当する場合だけ [layout-patterns.md](references/examples/layout-patterns.md) を読む。例は完成テンプレートではなく、選択基準とDesign DNAを示す。表紙やセクション見出しは既存の個別例も確認する。画像、ロゴ、PNGグラフを使う場合は [image-handling.md](references/image-handling.md) も読む。
+レイアウトを決める前に、内容に該当する場合だけ [layout-patterns.md](references/examples/layout-patterns.md) を読む。例は完成テンプレートではなく、選択基準とDesign DNAを示す。表紙を作る場合は [cover-modern-brand-field.md](references/examples/cover-modern-brand-field.md)、セクション見出しとグラフを組む場合は [section-lead-chart.md](references/examples/section-lead-chart.md) も読む。画像、ロゴ、PNGグラフを使う場合は [image-handling.md](references/image-handling.md) も読む。
 
 ## REVISE
 

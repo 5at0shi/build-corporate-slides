@@ -5,7 +5,7 @@ from .atoms import Connector
 from .builder import DeckBuilder
 from .charts import add_native_chart
 from .components import (SECTION_LEAD_GAP, add_background_zone,
-                         add_item_list, add_key_message,
+                         add_emphasis_zone, add_item_list, add_key_message,
                          add_panel, add_section_lead)
 from .fragments import BoxGrid, MarkerOverlay, ProportionalStack, RadialLayout
 from .layout import Region
@@ -39,6 +39,26 @@ def _adaptive_gap(items, available_h, *, base_gap, per_item_pt):
                                base_gap=base_gap))
 
 
+def _lead_list(slide, region, heading, items, *, color=PALETTE.line_brand,
+              bullet="•", bottom_pad=Inches(0.06)):
+    """見出し(add_section_lead)＋その下のリスト(add_item_list)という、
+    複数rendererで繰り返される組み合わせをまとめる。リストはHEADING_BLOCK_H
+    ぶん見出しの下から始まる。
+    """
+    add_section_lead(slide, region.x, region.y, region.w, heading, color=color)
+    add_item_list(slide, region.x, region.y + HEADING_BLOCK_H, region.w,
+                  region.h - HEADING_BLOCK_H - bottom_pad, items, bullet=bullet)
+
+
+def _conclude(slide, conclusion, spec, *, default_style="subtle"):
+    """rendererの末尾で結論(primary_message)を示す定型パターン。
+    add_key_messageへ橋渡しするだけで、renderer固有の意味は持たない。
+    """
+    return add_key_message(slide, conclusion.x, conclusion.y, conclusion.w,
+                           spec["primary_message"],
+                           style=spec.get("conclusion_style", default_style))
+
+
 def render_cover(builder, spec, page):
     brand_width = spec.get("brand_width")
     builder.add_cover(
@@ -56,30 +76,18 @@ def render_cover(builder, spec, page):
 def render_comparison(builder, spec, page):
     slide, area = builder.add_slide(
         spec["title"], density=spec.get("density", "standard"), page=page)
-    typography = _type_for(slide)
     body, conclusion = area.rows([4.35, 0.72], gap=Inches(0.24))
     variant = spec.get("variant", "balanced")
     weights = [1, 1] if variant == "balanced" else [1.08, 0.92]
     left, right = body.columns(weights, gap="wide")
     if variant == "asymmetric":
-        add_background_zone(slide, right.x - Inches(0.18), right.y - Inches(0.08),
-                            right.w + Inches(0.36), right.h + Inches(0.12),
-                            tone="neutral", rounded=True)
+        add_emphasis_zone(slide, right, tone="neutral")
     left_items = _items(spec.get("left", {}))
     right_items = _items(spec.get("right", {}))
-    add_section_lead(slide, left.x, left.y, left.w,
-                     _heading(spec.get("left", {}), "左側"))
-    add_section_lead(slide, right.x, right.y, right.w,
-                     _heading(spec.get("right", {}), "右側"),
-                     color=PALETTE.accent_secondary)
-    add_item_list(slide, left.x, left.y + HEADING_BLOCK_H, left.w,
-                  left.h - HEADING_BLOCK_H - Inches(0.06), left_items)
-    add_item_list(slide, right.x, right.y + HEADING_BLOCK_H, right.w,
-                  right.h - HEADING_BLOCK_H - Inches(0.06),
-                  right_items, bullet="—")
-    add_key_message(slide, conclusion.x, conclusion.y, conclusion.w,
-                    spec["primary_message"],
-                    style=spec.get("conclusion_style", "subtle"))
+    _lead_list(slide, left, _heading(spec.get("left", {}), "左側"), left_items)
+    _lead_list(slide, right, _heading(spec.get("right", {}), "右側"), right_items,
+              color=PALETTE.accent_secondary, bullet="—")
+    _conclude(slide, conclusion, spec)
 
 
 def render_evidence_and_decision(builder, spec, page):
@@ -209,9 +217,7 @@ def render_process_with_gates(builder, spec, page):
     gates = spec.get("gates", [])
     MarkerOverlay(slide, gate_row, gates, track_y=Inches(0.4),
                  marker_color=PALETTE.blue, label_color=PALETTE.text_primary)
-    add_key_message(slide, conclusion.x, conclusion.y, conclusion.w,
-                    spec["primary_message"],
-                    style=spec.get("conclusion_style", "editorial"))
+    _conclude(slide, conclusion, spec, default_style="editorial")
 
 
 def render_table_with_conclusion(builder, spec, page):
@@ -220,9 +226,7 @@ def render_table_with_conclusion(builder, spec, page):
     table_region, conclusion = area.rows([4.35, 0.72], gap=Inches(0.24))
     add_data_table(slide, table_region, spec.get("columns", []),
                    spec.get("rows", []))
-    add_key_message(slide, conclusion.x, conclusion.y, conclusion.w,
-                    spec["primary_message"],
-                    style=spec.get("conclusion_style", "subtle"))
+    _conclude(slide, conclusion, spec)
 
 
 def _render_chart_visual(builder, slide, spec, region):
@@ -269,9 +273,7 @@ def render_chart_with_insight(builder, spec, page):
                          spec.get("insight_heading", "読み取れること"))
         add_item_list(slide, notes.x, notes.y + Inches(0.65), notes.w,
                       notes.h - Inches(0.7), spec.get("insights", []), bullet="—")
-        add_key_message(slide, conclusion.x, conclusion.y, conclusion.w,
-                        spec["primary_message"],
-                        style=spec.get("conclusion_style", "subtle"))
+        _conclude(slide, conclusion, spec)
 
 
 def render_org_layers(builder, spec, page):
@@ -340,9 +342,7 @@ def render_org_layers(builder, spec, page):
                 "font": typography.body_font,
             })]},
         ], vertical_anchor=MSO_ANCHOR.MIDDLE)
-    add_key_message(slide, conclusion.x, conclusion.y, conclusion.w,
-                    spec["primary_message"],
-                    style=spec.get("conclusion_style", "subtle"))
+    _conclude(slide, conclusion, spec)
 
 
 def render_priority_actions(builder, spec, page):
@@ -388,19 +388,11 @@ def render_priority_actions(builder, spec, page):
     add_paragraph_textbox(slide, left.x, left.y + HEADING_BLOCK_H, left.w,
                           left.h - HEADING_BLOCK_H - Inches(0.1), paragraphs)
 
-    add_background_zone(slide, right.x - Inches(0.18), right.y - Inches(0.08),
-                        right.w + Inches(0.36), right.h + Inches(0.12),
-                        tone="neutral", rounded=True)
-    add_section_lead(slide, right.x, right.y, right.w,
-                     spec.get("actions_heading", "対応方針"),
-                     color=PALETTE.accent_secondary)
-    add_item_list(slide, right.x, right.y + HEADING_BLOCK_H, right.w,
-                  right.h - HEADING_BLOCK_H - Inches(0.1),
-                  actions, bullet="—")
+    add_emphasis_zone(slide, right, tone="neutral")
+    _lead_list(slide, right, spec.get("actions_heading", "対応方針"), actions,
+              color=PALETTE.accent_secondary, bullet="—", bottom_pad=Inches(0.1))
 
-    add_key_message(slide, conclusion.x, conclusion.y, conclusion.w,
-                    spec["primary_message"],
-                    style=spec.get("conclusion_style", "subtle"))
+    _conclude(slide, conclusion, spec)
 
 
 def render_stage_track(builder, spec, page):
@@ -443,9 +435,7 @@ def render_stage_track(builder, spec, page):
         add_textbox(slide, note_row.x, note_row.y, note_row.w, note_row.h,
                     spec["note"], size=typography.small,
                     color=PALETTE.text_secondary)
-    add_key_message(slide, conclusion.x, conclusion.y, conclusion.w,
-                    spec["primary_message"],
-                    style=spec.get("conclusion_style", "subtle"))
+    _conclude(slide, conclusion, spec)
 
 
 def render_numbered_list(builder, spec, page):
@@ -555,9 +545,7 @@ def render_matrix(builder, spec, page):
                     x_axis.get("high", ""), size=typography.small,
                     color=PALETTE.text_secondary, bold=True, align=PP_ALIGN.RIGHT)
 
-    add_key_message(slide, conclusion.x, conclusion.y, conclusion.w,
-                    spec["primary_message"],
-                    style=spec.get("conclusion_style", "subtle"))
+    _conclude(slide, conclusion, spec)
 
 
 def render_stat_highlight(builder, spec, page):
@@ -604,9 +592,7 @@ def render_stat_highlight(builder, spec, page):
                 label_size=typography.small, label_color=PALETTE.text_secondary,
                 label_bold=False, vertical_anchor=MSO_ANCHOR.MIDDLE)
 
-    add_key_message(slide, conclusion.x, conclusion.y, conclusion.w,
-                    spec["primary_message"],
-                    style=spec.get("conclusion_style", "subtle"))
+    _conclude(slide, conclusion, spec)
 
 
 def render_funnel(builder, spec, page):
@@ -637,9 +623,7 @@ def render_funnel(builder, spec, page):
                 "font": typography.body_font,
             })], "align": PP_ALIGN.CENTER},
         ], vertical_anchor=MSO_ANCHOR.MIDDLE)
-    add_key_message(slide, conclusion.x, conclusion.y, conclusion.w,
-                    spec["primary_message"],
-                    style=spec.get("conclusion_style", "subtle"))
+    _conclude(slide, conclusion, spec)
 
 
 def render_cycle(builder, spec, page):
@@ -670,9 +654,7 @@ def render_cycle(builder, spec, page):
                 "bold": True, "font": typography.body_font,
             })], "align": PP_ALIGN.CENTER},
         ], vertical_anchor=MSO_ANCHOR.MIDDLE)
-    add_key_message(slide, conclusion.x, conclusion.y, conclusion.w,
-                    spec["primary_message"],
-                    style=spec.get("conclusion_style", "subtle"))
+    _conclude(slide, conclusion, spec)
 
 
 RENDERERS = {

@@ -204,6 +204,19 @@ def add_background_zone(slide, x, y, w, h, *, tone="brand-soft",
                fill=tones[tone], line=None)
 
 
+def add_emphasis_zone(slide, region, *, tone="neutral"):
+    """columns()等で切り出した列を、外側へわずかにはみ出す淡色の面で
+    包み、隣接する列より強調して見せる（comparisonのasymmetric variant
+    とpriority_actionsの対応方針列が共有していた同一の操作を集約した）。
+
+    上下は非対称（上0.08in・下0.04in）にはみ出す。section_leadの見出し
+    マーカーの上に余白を作りつつ、下は詰めすぎないための調整。
+    """
+    outer = region.inset(Inches(-0.18), Inches(-0.08), Inches(-0.18), Inches(-0.04))
+    return add_background_zone(slide, outer.x, outer.y, outer.w, outer.h,
+                               tone=tone, rounded=True)
+
+
 def add_panel(slide, x, y, w, h, *, tone="neutral", rounded=True,
              inset_x=Inches(0.32), inset_y=Inches(0.24)):
     """背景面を描き、内側の余白を差し引いたRegionを返す。

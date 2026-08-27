@@ -9,6 +9,8 @@ __pycache__/
 # Generated deliverables — regenerate via each project's generate_pptx.py
 build_slides/output/
 build_slides/work/render/
+# 作業領域のYAMLは動作確認用のスクラッチ（同梱の例からいつでも作り直せる）
+build_slides/work/*.yaml
 build_slides/work/*/render/
 
 # Human-provided input material (photos, maps, etc.) — workspace-specific,

@@ -110,13 +110,17 @@ def add_hairline(slide, x, y, w, *, color=PALETTE.grey_300, width=0.75):
 
 
 def _arrow_head(tag):
+    # w/len（矢じりの幅・長さ）は明示指定する。省略時の既定値はレンダラー
+    # 依存で、環境によって見え方がぶれるため（outerShdwと同じ理由）。
     element = OxmlElement(f"a:{tag}")
     element.set("type", "triangle")
+    element.set("w", "lg")
+    element.set("len", "lg")
     return element
 
 
 def Connector(slide, x1, y1, x2, y2, *, style="straight", arrow="end",
-             color=PALETTE.line_neutral, width=Pt(1.25)):
+             color=PALETTE.line_neutral, width=Pt(1.75)):
     """2点を結ぶ線（矢印可）を描く。
 
     横に並べたBox同士を「順番につながっている」と示すなど、要素間の
@@ -127,6 +131,8 @@ def Connector(slide, x1, y1, x2, y2, *, style="straight", arrow="end",
     自動経路で直角に曲がる線。始点・終点の相対位置から経路が決まる）。
     arrow: "end"（終点のみ矢印、既定）、"both"（両端）、"none"（矢印
     なし。区切り線ではなく関係を示す用途のまま矢印だけ外したい場合）。
+    矢じりの形（triangle）・大きさ（lg/lg）はパラメータ化せず固定する。
+    他の形状・大きさを必要とする実需が出てから検討する。
     """
     connector_type = MSO_CONNECTOR.ELBOW if style == "elbow" else MSO_CONNECTOR.STRAIGHT
     shape = slide.shapes.add_connector(connector_type, x1, y1, x2, y2)

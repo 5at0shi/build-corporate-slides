@@ -14,7 +14,9 @@
 2. **CREATE** — 確定した構成をもとにPowerPointを生成する。`build_slides/work/slide_content.yaml`（内容）と`build_slides/work/generate_pptx.py`（生成コード）が残る。
 3. **REVISE** — 修正はYAMLの文言・数値を直すか、生成コードのレイアウトを直して再生成する。手作業でPowerPointを直接編集することは基本的にしない（再生成すると消えるため）。
 
-修正を頼むときは「4ページ目のBackground Zoneをもう少し広げて」のように、部位の名称を使うと伝わりやすい。名称の一覧は[`capability-showcase.pdf`](capability-showcase.pdf)の各部品のキャプション（関数名）を参照する。モードの違い（後述）は[`mode-guide.pdf`](mode-guide.pdf)で実物のサイズ比較ができる。
+修正を頼むときは「4ページ目のBackground Zoneをもう少し広げて」のように、部位の名称を使うと伝わりやすい。名称の一覧は[`capability-showcase.pdf`](capability-showcase.pdf)の各部品のキャプション（関数名）を参照する。モードの違い（後述）も同じPDFの3ページ目で実寸サイズを比較できる。
+
+なお、[`capability-showcase.pdf`](capability-showcase.pdf)に載っているのは各構成要素の最小構成の例であり、これだけが作れる形ではない。文言・配色・件数はもちろん、フィールドの組み合わせ方も指示に応じて自由に調整できる。この見本にない構成が必要な場合も、内容を具体的に説明すればAIが個別に対応できることが多い。
 
 ## 設定ファイル（`.slide-skill-config.yaml`）
 
@@ -43,7 +45,7 @@
 - **dense**: 表や比較など情報量が多い"ページだけ"に使う。資料全体をdenseにはしない。
 - **large-room**: 大会議室・講演など遠距離投影が明示された場合だけ使う。通常の社内資料では使わない。
 
-実際の文字サイズ・見た目の違いは[`mode-guide.pdf`](mode-guide.pdf)で確認できる。本文（body）は`business`で12ptを基準にしている（[`design-system.md`](../references/design-system.md)参照）。
+実際の文字サイズ・見た目の違いは[`capability-showcase.pdf`](capability-showcase.pdf)の3ページ目（タイポグラフィ）で確認できる。本文（body）は`business`で12ptを基準にしている（[`design-system.md`](../references/design-system.md)参照）。
 
 ## うまくいかないときは
 

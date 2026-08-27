@@ -19,7 +19,7 @@ SKILL = Path(__file__).resolve().parents[1]
 WORKSPACE_ROOT = Path.cwd()
 sys.path.insert(0, str(SKILL / "runtime" / "python"))
 
-from pptx.enum.text import MSO_ANCHOR, PP_ALIGN  # noqa: E402
+from pptx.enum.text import PP_ALIGN  # noqa: E402
 from pptx.util import Inches, Pt  # noqa: E402
 
 from slidekit import DeckBuilder, PALETTE  # noqa: E402
@@ -29,7 +29,7 @@ from slidekit.components import (add_background_zone, add_card,  # noqa: E402
                                  add_item_list, add_key_message,
                                  add_section_lead)
 from slidekit.icons import ICON_NAMES, add_icon  # noqa: E402
-from slidekit.layout import Region, content_region  # noqa: E402
+from slidekit.layout import Region  # noqa: E402
 from slidekit.renderers import RENDERERS  # noqa: E402
 from slidekit.theme import TYPE_BUSINESS, TYPE_DENSE, TYPE_LARGE_ROOM  # noqa: E402
 from slidekit.typography import add_paragraph_textbox, add_text_list, add_textbox  # noqa: E402
@@ -93,8 +93,14 @@ slide, area = builder.add_slide("配色（Semantic Color Roles）",
 caption(slide, area.x, area.y, area.w,
        "色は役割（semantic role）で選ぶ。同じ役割は常に同じ色を使い、"
        "デッキ全体の一貫性を保つ。", size=12)
-block = centered_block(area, Inches(2.9), top_offset=Inches(0.5))
-grid = block.rows([1, 1], gap=Inches(0.5))
+
+structural_heading_y = area.y + Inches(0.5)
+caption(slide, area.x, structural_heading_y, area.w,
+       "構造的な役割 — ブランドカラーに連動する既定の文字・線・面",
+       size=11, bold=True, color=PALETTE.text_secondary)
+grid_area = Region(area.x, structural_heading_y + Inches(0.34), area.w,
+                   Inches(2.15))
+grid = grid_area.rows([1, 1], gap=Inches(0.35))
 colors = [
     ("text_primary", "見出し・本文の主文字"),
     ("text_secondary", "注記・補足"),
@@ -116,36 +122,72 @@ for row_index, row in enumerate(grid):
         swatch(slide, region.x, region.y, region.w, Inches(0.7),
               getattr(PALETTE, name), name, desc)
 
+sign_heading_y = grid_area.y + grid_area.h + Inches(0.4)
+caption(slide, area.x, sign_heading_y, area.w,
+       "符号・重大度ロール — ブランドカラーとは独立。良い/悪い/注意の"
+       "意味でのみ使い、装飾としては使わない（背景の淡色版はp.4）",
+       size=11, bold=True, color=PALETTE.text_secondary)
+sign_row = Region(area.x, sign_heading_y + Inches(0.34), area.w, Inches(1.06))
+sign_cols = sign_row.columns([1] * 5, gap="standard")
+sign_colors = [
+    ("positive", "良い結果・達成・承認"),
+    ("negative", "悪い結果・リスク・未達"),
+    ("warning", "注意・要確認"),
+]
+for offset, (name, desc) in enumerate(sign_colors, start=1):
+    region = sign_cols[offset]
+    swatch(slide, region.x, region.y, region.w, Inches(0.7),
+          getattr(PALETTE, name), name, desc)
+
 # ======================================================= 3. Typography
 slide, area = builder.add_slide("タイポグラフィ（3モード）",
                                 kicker="THEME.PY: typography_for()", page=3)
 caption(slide, area.x, area.y, area.w,
-       "businessの本文は12ptを基準にする。denseは情報量が"
-       "多いページだけに使い、large-roomは遠距離投影が明示された場合だけ"
-       "使う。実物大の比較は mode-guide.pdf を参照。", size=12)
-modes = [("business（標準）", TYPE_BUSINESS), ("dense", TYPE_DENSE),
-        ("large-room", TYPE_LARGE_ROOM)]
-mode_block = centered_block(area, Inches(2.2), top_offset=Inches(0.85))
+       "deck.modeで選ぶ。businessの本文は12ptを基準にする。"
+       "denseは情報量が多いページだけに使い、large-roomは遠距離投影が"
+       "明示された場合だけ使う（deck.mode自体はbusinessのまま個別ページに"
+       "density: denseを指定できる）。以下は実際のpt数で描いた実寸サンプル。",
+       size=11.5)
+modes = [
+    ("business（標準）", TYPE_BUSINESS,
+     "個人PC閲覧・事前配布・画面共有が前提。通常の社内資料はすべてこれ。"),
+    ("dense", TYPE_DENSE,
+     "表・比較など情報量が多いページだけに使う。資料全体はdenseにしない。"),
+    ("large-room", TYPE_LARGE_ROOM,
+     "大会議室・講演など遠距離投影が明示された場合だけ使う。"),
+]
+mode_block = Region(area.x, area.y + Inches(0.86), area.w, Inches(4.5))
 mode_cols = mode_block.columns([1, 1, 1], gap="wide")
-for (label, type_), region in zip(modes, mode_cols):
-    add_background_zone(slide, region.x, region.y, region.w, Inches(2.2),
+sample_rows = [
+    ("Title", "サンプル見出し", "title"),
+    ("Section", "セクション見出し", "section"),
+    ("Body", "本文サンプル Sample 123", "body"),
+    ("Small", "注記・出典サンプル", "small"),
+]
+for (label, type_, when), region in zip(modes, mode_cols):
+    add_background_zone(slide, region.x, region.y, region.w, mode_block.h,
                         tone="neutral", rounded=True)
-    inner = region.inset(Inches(0.24), Inches(0.2))
-    add_paragraph_textbox(slide, inner.x, inner.y, inner.w, inner.h, [
-        {"segments": [(label, {"size": Pt(13), "color": PALETTE.text_primary,
-                               "bold": True, "font": FONT})], "space_after": 8},
-        {"segments": [(f"title {type_.title.pt:g}pt", {
-            "size": Pt(11), "color": PALETTE.text_secondary, "font": FONT})],
-         "space_after": 4},
-        {"segments": [(f"section {type_.section.pt:g}pt", {
-            "size": Pt(11), "color": PALETTE.text_secondary, "font": FONT})],
-         "space_after": 4},
-        {"segments": [(f"body {type_.body.pt:g}pt", {
-            "size": Pt(11), "color": PALETTE.text_secondary, "font": FONT})],
-         "space_after": 4},
-        {"segments": [(f"small {type_.small.pt:g}pt", {
-            "size": Pt(11), "color": PALETTE.text_secondary, "font": FONT})]},
-    ])
+    inner = region.inset(Inches(0.26), Inches(0.22))
+    y = inner.y
+    add_textbox(slide, inner.x, y, inner.w, Inches(0.3), label,
+               size=Pt(14), color=PALETTE.text_primary, bold=True, font=FONT)
+    y += Inches(0.36)
+    add_paragraph_textbox(slide, inner.x, y, inner.w, Inches(0.6), [
+        {"segments": [(when, {"size": Pt(9.5), "color": PALETTE.text_secondary,
+                              "font": FONT})], "line_spacing": 1.2}])
+    y += Inches(0.62)
+    for row_label, sample_text, attr in sample_rows:
+        size = getattr(type_, attr)
+        add_textbox(slide, inner.x, y, inner.w, Inches(0.16),
+                   f"{row_label}  {size.pt:g}pt", size=Pt(8.5),
+                   color=PALETTE.blue, bold=True, font=FONT)
+        y += Inches(0.2)
+        sample_h = Inches(size.pt / 72 + 0.08)
+        add_textbox(slide, inner.x, y, inner.w, sample_h,
+                   sample_text, size=size,
+                   color=PALETTE.text_primary,
+                   bold=(attr in ("title", "section")), font=FONT)
+        y += sample_h + Inches(0.16)
 
 # =============================================== 4. Components: 面・パネル
 slide, area = builder.add_slide("コンポーネント（面・パネル）",
@@ -375,6 +417,7 @@ renderer_specs = [
     ("stage_track", "現在から将来への段階的な進行（ロードマップ等）", {
         "title": "stage_track: 段階的な進行を同格のCardで示す", "density": "standard",
         "primary_message": "stagesは配列の順に横並びの同格Cardになる",
+        "connectors": False,
         "stages": [
             {"label": "STEP1", "title": "stages配列", "body": "label/title/bodyを持つ段階を順に並べる"},
             {"label": "STEP2", "title": "同格のCard", "body": "各段階は優劣なく並列に見せる"},
@@ -432,7 +475,8 @@ renderer_specs = [
 page = 8
 RENDERERS["section_divider"](builder, {
     "title": "renderer カタログ（16種）", "kicker": "SECTION DIVIDER",
-    "subtitle": "renderer-catalog.mdの各typeを、実際の最小構成で見せる",
+    "subtitle": "各typeの最小構成の例。件数・文言・配色は指示に応じて自由に調整でき、"
+               "これが唯一の形ではない",
 }, page)
 renderer_footer("section_divider", "複数テーマを扱う資料の章区切り")
 page += 1
@@ -514,6 +558,22 @@ RENDERERS["stat_highlight"](builder, {
         {"value": "12", "label": "導入部署数"}],
 }, page)
 renderer_footer("stat_highlight (KPI dashboard)", "toneは数値の符号でなく意味で指定する（-42%でもtone: positiveになり得る）")
+page += 1
+
+# stage_trackの矢印（Connector）はconnectors:trueの時だけ現れるオプションの
+# 見た目であり、他15種の基本例では使っていない（矢印が既定の見た目だと
+# 誤解させないため）。矢印そのものの見本はここで独立して見せる。
+RENDERERS["stage_track"](builder, {
+    "title": "stage_track (connectors: true): 矢印で順序を明示する",
+    "density": "standard",
+    "connectors": True,
+    "primary_message": "段階の間に順序・因果があることを強調したい場合だけconnectors:trueにする",
+    "stages": [
+        {"label": "STEP1", "title": "既定はconnectors: false", "body": "他の15種のカタログ例と同じ矢印なしの見た目"},
+        {"label": "STEP2", "title": "矢印はここでだけ使う", "body": "この構造図に限り、順序性を強めたいときに選べるオプション"},
+        {"label": "STEP3", "title": "太さ・矢じりは固定", "body": "Atom層のConnectorが一貫した太さで描く"}],
+}, page)
+renderer_footer("stage_track (connectors: true)", "矢印表現はここだけの限定的なオプション。cycleの円周矢印は構造上必須のため別枠")
 page += 1
 
 output = builder.save(SKILL / "user-guide" / "capability-showcase.pptx")

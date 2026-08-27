@@ -1,7 +1,7 @@
 """スキルが標準搭載する部品を一覧できるショーケースデッキを生成する。
 
 配色・タイポグラフィ・基本コンポーネント・アイコン・ネイティブチャート・
-renderer 15種を、実際の描画関数を直接呼び出して本物の出力として並べる。
+renderer 16種を、実際の描画関数を直接呼び出して本物の出力として並べる。
 内容は常に実装と一致する（手書きの説明画像ではない）。デザインシステムや
 renderer/icon/chartを追加・変更したら、このスクリプトを再実行して
 参照を最新化する。
@@ -83,7 +83,7 @@ builder = DeckBuilder.from_workspace(WORKSPACE_ROOT)
 # ================================================================ 1. Cover
 builder.add_cover(
     "build-corporate-slidesスキル 機能一覧",
-    subtitle="配色・コンポーネント・アイコン・チャート・renderer 15種の実物見本",
+    subtitle="配色・コンポーネント・アイコン・チャート・renderer 16種の実物見本",
     eyebrow="CAPABILITY SHOWCASE",
     brand_side="right", brand_shape="diagonal")
 
@@ -421,11 +421,20 @@ renderer_specs = [
             {"title": "正確な比率が要点なら", "value": 12,
              "value_label": "chart_with_insightの棒グラフを使う"}],
     }),
+    ("cycle", "繰り返し・循環するプロセス（PDCA等）", {
+        "title": "cycle: 繰り返すプロセスを円周上のCard群で示す", "density": "standard",
+        "primary_message": "stepsを時計回りに配置し、最後尾から先頭へも矢印で結んで輪にする",
+        "steps": [
+            {"label": "STEP1", "title": "steps配列"},
+            {"label": "STEP2", "title": "円周上に配置"},
+            {"label": "STEP3", "title": "隣接を矢印で連結"},
+            {"label": "STEP4", "title": "4〜6件が目安"}],
+    }),
 ]
 
 page = 8
 RENDERERS["section_divider"](builder, {
-    "title": "renderer カタログ（15種）", "kicker": "SECTION DIVIDER",
+    "title": "renderer カタログ（16種）", "kicker": "SECTION DIVIDER",
     "subtitle": "renderer-catalog.mdの各typeを、実際の最小構成で見せる",
 }, page)
 renderer_footer("section_divider", "複数テーマを扱う資料の章区切り")

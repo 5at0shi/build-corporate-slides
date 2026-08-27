@@ -7,7 +7,7 @@ from .charts import add_native_chart
 from .components import (SECTION_LEAD_GAP, add_background_zone,
                          add_item_list, add_key_message,
                          add_panel, add_section_lead)
-from .fragments import BoxGrid, MarkerOverlay, ProportionalStack
+from .fragments import BoxGrid, MarkerOverlay, ProportionalStack, RadialLayout
 from .layout import Region
 from .preflight import require_valid_content
 from .images import add_image_contain
@@ -642,6 +642,39 @@ def render_funnel(builder, spec, page):
                     style=spec.get("conclusion_style", "subtle"))
 
 
+def render_cycle(builder, spec, page):
+    """繰り返し・循環するプロセス（PDCA等）を、円周上に並べた同格のCard群
+    と、隣接する項目を結ぶ矢印で示す（最後尾から先頭へも矢印で結び輪に
+    する）。stage_trackの一方向の進行とは異なり、繰り返しであることが
+    要点の場合に使う。stepsは4〜6件程度を目安にする（多いと隣接する
+    Card同士の間隔が狭くなり、矢印やテキストが読みにくくなる）。
+    """
+    slide, area = builder.add_slide(
+        spec["title"], density=spec.get("density", "standard"), page=page)
+    typography = _type_for(slide)
+    circle_row, conclusion = area.rows([4.7, 0.62], gap=Inches(0.24))
+    size = min(circle_row.w, circle_row.h)
+    square = Region(circle_row.x + (circle_row.w - size) // 2,
+                    circle_row.y + (circle_row.h - size) // 2, size, size)
+    steps = spec.get("steps", [])
+    tones = ["brand-soft", "teal-soft", "neutral", "brand-soft", "teal-soft", "neutral"]
+    contents = RadialLayout(slide, square, steps, tones=tones)
+    for index, (step, inner) in enumerate(zip(steps, contents)):
+        add_paragraph_textbox(slide, inner.x, inner.y, inner.w, inner.h, [
+            {"segments": [(step.get("label", f"STEP {index + 1}"), {
+                "size": typography.small, "color": PALETTE.blue,
+                "bold": True, "font": typography.body_font,
+            })], "space_after": 2, "align": PP_ALIGN.CENTER},
+            {"segments": [(step.get("title", ""), {
+                "size": typography.body, "color": PALETTE.text_primary,
+                "bold": True, "font": typography.body_font,
+            })], "align": PP_ALIGN.CENTER},
+        ], vertical_anchor=MSO_ANCHOR.MIDDLE)
+    add_key_message(slide, conclusion.x, conclusion.y, conclusion.w,
+                    spec["primary_message"],
+                    style=spec.get("conclusion_style", "subtle"))
+
+
 RENDERERS = {
     "cover": render_cover,
     "comparison": render_comparison,
@@ -658,6 +691,7 @@ RENDERERS = {
     "matrix": render_matrix,
     "stat_highlight": render_stat_highlight,
     "funnel": render_funnel,
+    "cycle": render_cycle,
 }
 
 

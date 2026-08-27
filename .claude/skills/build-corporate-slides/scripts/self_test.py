@@ -199,6 +199,11 @@ def main() -> int:
                  {"title": "サイト訪問", "value": 12000, "value_label": "12,000"},
                  {"title": "資料請求", "value": 3400, "value_label": "3,400"},
                  {"title": "成約", "value": 210, "value_label": "210"}]},
+            {"id": "cycle", "type": "cycle", "title": "繰り返しを示す",
+             "density": "standard", "primary_message": "改善を継続する",
+             "steps": [
+                 {"label": "STEP1", "title": "Plan"}, {"label": "STEP2", "title": "Do"},
+                 {"label": "STEP3", "title": "Check"}, {"label": "STEP4", "title": "Act"}]},
             {"id": "chart", "type": "chart_with_insight", "title": "結果を示す",
              "density": "standard", "primary_message": "全体像を確認する",
              "image": "chart.png", "insight_heading": "読み取れること",

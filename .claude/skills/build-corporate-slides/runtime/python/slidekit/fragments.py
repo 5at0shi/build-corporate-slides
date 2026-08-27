@@ -2,10 +2,11 @@
 再利用可能な構造パターン。
 
 BoxGrid（regionをR×Cのグリッドに分割しBoxを並べる）、ProportionalStack
-（値に比例した幅の帯を積む）、MarkerOverlay（線上の位置にMarker＋
-ラベルを重ねる）など、複数のrendererで同じ形が繰り返し必要になった
-構造をここに集約する。Fragment自体はページの意味（何のためのグラフ
-か等）を持たず、rendererがこれらを組み合わせてページを構築する。
+（値に比例した幅の帯を積む）、RadialLayout（円周上に配置し矢印で結ぶ）、
+MarkerOverlay（線上の位置にMarker＋ラベルを重ねる）など、複数の
+rendererで同じ形が繰り返し必要になった構造をここに集約する。Fragment
+自体はページの意味（何のためのグラフか等）を持たず、rendererがこれら
+を組み合わせてページを構築する。
 
 命名はビジネス用語を使わない（「階層」「ゲート」等はrenderer側の語彙）。
 形だけで再利用できることがFragment層の価値のため。同じ操作（矩形を
@@ -13,10 +14,12 @@ BoxGrid（regionをR×Cのグリッドに分割しBoxを並べる）、Proportio
 名前・実装を用意しない。次元数(rows/cols)は同じ操作のパラメータに
 過ぎず、本質的に異なる構造ではないため。
 """
-from pptx.enum.text import PP_ALIGN
-from pptx.util import Inches
+import math
 
-from .atoms import Marker, add_hairline
+from pptx.enum.text import PP_ALIGN
+from pptx.util import Inches, Pt
+
+from .atoms import Connector, Marker, add_hairline
 from .components import add_background_zone, add_card
 from .layout import Region
 from .theme import PALETTE
@@ -124,6 +127,71 @@ def ProportionalStack(slide, region, items, *, value_key="value", min_ratio=0.18
         width = int(row_region.w * ratio)
         x = row_region.x + (row_region.w - width) // 2
         cell = Region(x, row_region.y, width, row_region.h)
+        _skinned_cell(slide, cell, items, index, skin=skin, tones=tones)
+        content_regions.append(cell.inset(inset_x, inset_y))
+    return content_regions
+
+
+def RadialLayout(slide, region, items, *, box_w=Inches(1.5), box_h=Inches(0.9),
+                 skin="zone", tones=None, start_angle=-90, clockwise=True,
+                 connector_color=PALETTE.grey_500, connector_width=Pt(1.75),
+                 inset_x=Inches(0.16), inset_y=Inches(0.1)):
+    """regionの中心を軸にitemsを円周上へ均等配置し、隣接する項目同士を
+    最後尾から先頭へも矢印で結ぶ（循環プロセス: PDCA等）。
+
+    BoxGrid（格子に等分割）・ProportionalStack（値に比例した幅で積む）
+    とは別の、「円周上の位置へ配置する」という3つ目の配置操作（角度・
+    半径という、他の2つには無い座標系を使うため）。矢印はConnectorの
+    直線をそのまま使う（曲線の弧は環境間で見え方がぶれやすいため、
+    まずは直線で多角形状のループを作る）。
+
+    円周上の隣接2点は矢印で直接結ぶ。矢じり側がBoxに隠れて見えなく
+    ならないよう、両端を「中心からその方向でBox（矩形）の外へ出る
+    ちょうどの距離」だけ手前で止める（内接円半径のような一律の近似だと、
+    横長のBoxに浅い角度で接続する矢印で不足し、Boxの下に完全に隠れて
+    消えることがあるため。矩形と光線の交差なので方向ごとに正確に計算
+    できる）。
+
+    返り値はBoxGridと同じく内側の余白を差し引いたRegionのリスト
+    （items順）。
+    """
+    n = max(1, len(items))
+    cx = region.x + region.w // 2
+    cy = region.y + region.h // 2
+    radius = min(region.w, region.h) // 2 - max(box_w, box_h) // 2
+    half_w, half_h = box_w / 2, box_h / 2
+    direction = 1 if clockwise else -1
+
+    centers = []
+    for index in range(n):
+        angle = math.radians(start_angle + direction * index * 360 / n)
+        centers.append((cx + int(radius * math.cos(angle)),
+                        cy + int(radius * math.sin(angle))))
+
+    if n >= 2:
+        for index in range(n):
+            x1, y1 = centers[index]
+            x2, y2 = centers[(index + 1) % n]
+            dx, dy = x2 - x1, y2 - y1
+            dist = math.hypot(dx, dy) or 1
+            ux, uy = dx / dist, dy / dist
+            # 中心から方向(ux, uy)へ進んだとき、矩形(half_w×half_h)の外へ
+            # 出るのに必要な距離（光線と矩形の交差）。
+            exits = []
+            if abs(ux) > 1e-9:
+                exits.append(half_w / abs(ux))
+            if abs(uy) > 1e-9:
+                exits.append(half_h / abs(uy))
+            clearance = min(exits) if exits else half_w
+            if dist <= clearance * 2:
+                continue
+            Connector(slide, x1 + int(ux * clearance), y1 + int(uy * clearance),
+                     x2 - int(ux * clearance), y2 - int(uy * clearance),
+                     color=connector_color, width=connector_width)
+
+    content_regions = []
+    for index, (px, py) in enumerate(centers):
+        cell = Region(px - box_w // 2, py - box_h // 2, box_w, box_h)
         _skinned_cell(slide, cell, items, index, skin=skin, tones=tones)
         content_regions.append(cell.inset(inset_x, inset_y))
     return content_regions

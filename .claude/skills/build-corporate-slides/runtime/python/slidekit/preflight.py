@@ -6,7 +6,7 @@ KNOWN_TYPES = {
     "scope_and_exclusions", "process_with_gates",
     "table_with_conclusion", "chart_with_insight",
     "org_layers", "priority_actions", "stage_track", "numbered_list",
-    "section_divider", "matrix", "stat_highlight", "funnel",
+    "section_divider", "matrix", "stat_highlight", "funnel", "cycle",
 }
 
 
@@ -98,6 +98,14 @@ def inspect_content(content):
                 errors.append(f"{label}: stat.valueが必要です")
         if slide_type == "funnel" and not slide.get("stages"):
             errors.append(f"{label}: stagesが必要です")
+        if slide_type == "cycle":
+            steps = slide.get("steps")
+            if not steps or len(steps) < 2:
+                errors.append(f"{label}: stepsは2件以上必要です")
+            elif len(steps) > 6:
+                warnings.append(
+                    f"{label}: stepsが多く({len(steps)}件)、隣接するCard同士の"
+                    "間隔が狭くなる可能性があります。6件以下を目安にしてください")
 
         text_values = list(_walk_text(slide))
         total_chars = sum(len(value) for value in text_values)
@@ -121,7 +129,7 @@ def inspect_content(content):
         for key in ("items", "left", "right", "scope", "exclusions",
                     "phases", "gates", "evidence", "insights", "rows",
                     "layers", "execution", "issues", "actions", "stages",
-                    "cells", "supporting"):
+                    "cells", "supporting", "steps"):
             value = slide.get(key)
             if isinstance(value, list):
                 item_count += len(value)

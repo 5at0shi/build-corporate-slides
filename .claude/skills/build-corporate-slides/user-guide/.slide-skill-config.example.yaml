@@ -23,6 +23,9 @@ typography:
 branding:
   logo:
     enabled: true
-    # 未指定時はSkill同梱の assets/logo-placeholder.png を使用する。
-    # 正式ロゴを使う場合: "./build_slides/input/company-logo.png"
+    # 通常はここを指定しなくてよい。input_dir直下に company-logo.png
+    # という名前で正式ロゴを置くだけで自動的に使われる（差し替える場合も
+    # 同じファイル名へ上書きするだけでよい）。どちらも無ければSkill同梱の
+    # assets/logo-placeholder.png を使用する。
+    # この既定の名前・場所を使いたくない場合だけ、ここへ別のパスを指定する。
     path:

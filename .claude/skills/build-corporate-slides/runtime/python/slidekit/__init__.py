@@ -14,6 +14,7 @@ from .typography import (add_paragraph_textbox, add_text_list,
 
 
 PLACEHOLDER_LOGO = Path(__file__).resolve().parents[3] / "assets" / "logo-placeholder.png"
+DEFAULT_LOGO_FILENAME = "company-logo.png"
 
 
 def new_presentation(mode="business", fonts=None):
@@ -26,21 +27,36 @@ def new_presentation(mode="business", fonts=None):
 
 
 def logo_path_from_config(config, workspace_root):
-    """configのロゴ設定を解決する。enabled時の欠落は黙って無視しない。"""
+    """configのロゴ設定を解決する。enabled時の欠落は黙って無視しない。
+
+    優先順位: (1) branding.logo.pathで明示指定された画像。指定している
+    のにファイルが無い場合はエラーにする（意図した指定を黙って無視
+    しないため）。(2) input_dir直下のcompany-logo.png。configを一切
+    編集しなくても、正式ロゴをこの決まった名前・場所に置くだけで
+    自動的に使われる（後で差し替える場合も、同じファイル名へ上書き
+    するだけで済む）。無ければ静かに次へ進む。(3) skill同梱の
+    プレースホルダー。
+    """
     settings = config.get("branding", {}).get("logo", {})
     if not settings.get("enabled", False):
         return None
+
     configured = settings.get("path")
     if configured:
         candidate = Path(configured)
         if not candidate.is_absolute():
             candidate = Path(workspace_root) / candidate
-    else:
-        candidate = PLACEHOLDER_LOGO
-    candidate = candidate.resolve()
-    if not candidate.is_file():
-        raise FileNotFoundError(f"ロゴ画像が見つかりません: {candidate}")
-    return candidate
+        candidate = candidate.resolve()
+        if not candidate.is_file():
+            raise FileNotFoundError(f"ロゴ画像が見つかりません: {candidate}")
+        return candidate
+
+    input_dir = config.get("paths", {}).get("input_dir", "./build_slides/input")
+    conventional = (Path(workspace_root) / input_dir / DEFAULT_LOGO_FILENAME).resolve()
+    if conventional.is_file():
+        return conventional
+
+    return PLACEHOLDER_LOGO
 
 
 from .builder import DeckBuilder  # noqa: E402
@@ -57,6 +73,7 @@ from .tables import add_data_table  # noqa: E402
 __all__ = [
     "LAYOUT", "PALETTE", "TYPE", "TYPE_BUSINESS", "TYPE_DENSE",
     "TYPE_LARGE_ROOM", "TYPE_PRESENTATION", "PLACEHOLDER_LOGO",
+    "DEFAULT_LOGO_FILENAME",
     "add_background_zone", "add_card", "add_cover", "add_item_list", "add_icon_list",
     "add_focus_panel",
     "add_panel", "add_section_divider",

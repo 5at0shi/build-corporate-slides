@@ -31,7 +31,9 @@
 | `deck.mode` | 資料全体の既定モード。詳しくは次項 | `business`（通常はこれ） |
 | `typography.headline_font` / `body_font` / `editorial_font` | 利用端末に導入済みの日本語フォント名 | `Hiragino Sans`、`Yu Gothic`など |
 | `branding.logo.enabled` | ロゴを表紙に出すか | `true` / `false` |
-| `branding.logo.path` | 正式ロゴ画像のパス。未指定時はskill同梱の仮ロゴを使う | `./build_slides/input/company-logo.png` |
+| `branding.logo.path` | 正式ロゴ画像のパス。通常は指定不要（次項） | `./build_slides/input/company-logo.png` |
+
+正式ロゴは`branding.logo.path`を編集しなくても、`paths.input_dir`直下に`company-logo.png`という名前で置くだけで自動的に使われる。後で差し替える場合も同じファイル名へ上書きするだけでよい（`branding.logo.path`はこの既定の名前・場所を使いたくない場合だけ指定する）。どちらも無ければskill同梱の仮ロゴを使う。
 
 `deck.mode`を変更しても個別ページのモードは変わらない。ページ単位で情報量が多い場合は、YAML側のそのスライドだけに`density: dense`を指定する（`deck.mode`自体は`business`のまま）。
 

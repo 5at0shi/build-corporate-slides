@@ -145,9 +145,167 @@ slides:
     density: standard
     title: "効果の全体像を確認し、継続判断につなげる"
     primary_message: "時間短縮だけでなく、品質と利用継続性を合わせて評価する"
-    image: "chart-standard.png"
+    # chartはネイティブPowerPointグラフとして生成され、数値をPowerPoint上で
+    # 直接編集できる（原則こちらを使う。事前生成PNGしかない場合だけimageを使う）。
+    chart:
+      type: column
+      categories: ["文書要約", "ドラフト作成", "議事録整理"]
+      series:
+        - name: "所要時間削減率(%)"
+          values: [42, 35, 38]
     insight_heading: "確認するポイント"
     insights:
       - "業務別の時間短縮率"
       - "修正量と品質評価"
       - "継続利用の意向"
+
+  - id: poc_result
+    type: stat_highlight
+    density: standard
+    title: "PoCは主要指標を満たし、本格展開の判断材料がそろった"
+    primary_message: "効果・安全性ともに継続基準を満たし、本格展開を提案する"
+    stat:
+      value: "-38%"
+      label: "対象業務の所要時間削減率"
+      detail: "10週間・3部門・のべ42名で検証"
+      tone: positive
+    supporting:
+      - value: "0件"
+        label: "情報漏えい・誤送信"
+      - value: "91%"
+        label: "継続利用の意向"
+
+  - id: next_use_cases
+    type: matrix
+    density: standard
+    title: "次に検証する候補ユースケースを整理する"
+    primary_message: "効果が大きく着手しやすいものから、次のPoCに進める"
+    x_axis:
+      low: "着手しやすさ: 低"
+      high: "着手しやすさ: 高"
+    y_axis:
+      low: "期待効果: 小"
+      high: "期待効果: 大"
+    cells:
+      - label: "優先"
+        title: "問い合わせ対応の下書き"
+        body: "定型的な回答が多く、効果を測定しやすい"
+        emphasis: true
+      - label: "検討"
+        title: "議事録の要約"
+        body: "効果は大きいが、機密区分の整理に時間がかかる"
+      - label: "保留"
+        title: "資料の多言語翻訳"
+        body: "対象業務が限られ、優先度は相対的に低い"
+      - label: "対象外"
+        title: "契約書のレビュー"
+        body: "法務判断を伴うため、当面は対象外とする"
+
+  - id: rollout_section
+    type: section_divider
+    title: "本格展開に向けて"
+    kicker: "SECTION 2"
+    subtitle: "PoCの結果を踏まえた、次のステップ"
+
+  - id: governance
+    type: org_layers
+    density: standard
+    title: "本格展開はガバナンス体制を明確にして進める"
+    primary_message: "意思決定と現場運用の責任を分け、拡大しても管理を保つ"
+    layers:
+      - heading: "意思決定"
+        title: "AI活用推進委員会"
+        body: "利用範囲の承認、リスク対応方針の決定を担う"
+      - heading: "運営"
+        title: "情報システム部門"
+        body: "利用状況のモニタリングと問い合わせ対応を担う"
+    execution_heading: "現場実行"
+    execution:
+      - title: "各部門の推進担当者"
+        body: "自部門での利用定着とフィードバック収集"
+      - title: "利用者"
+        body: "ガイドラインに沿った日常利用"
+
+  - id: rollout_stages
+    type: stage_track
+    density: standard
+    title: "PoCから全社利用まで、段階的に対象を広げる"
+    primary_message: "各段階の基準を満たしてから、次の範囲へ進む"
+    stages:
+      - label: "STEP1"
+        title: "PoC（実施済み）"
+        body: "3部門・文書業務に限定して検証"
+      - label: "STEP2"
+        title: "部門展開"
+        body: "類似業務を持つ部門へ順次拡大"
+      - label: "STEP3"
+        title: "全社展開"
+        body: "ガイドライン整備後、全部門で利用可能にする"
+
+  - id: adoption_funnel
+    type: funnel
+    density: standard
+    title: "利用定着までの人数の推移を追う"
+    primary_message: "説明会参加から継続利用まで、離脱要因を段階ごとに把握する"
+    stages:
+      - title: "説明会案内"
+        value: 320
+        value_label: "320名"
+      - title: "説明会参加"
+        value: 210
+        value_label: "210名 (66%)"
+      - title: "PoC参加"
+        value: 42
+        value_label: "42名 (13%)"
+      - title: "継続利用"
+        value: 38
+        value_label: "38名 (12%)"
+
+  - id: continuous_improvement
+    type: cycle
+    density: standard
+    title: "展開後も、利用状況を見ながら改善を続ける"
+    primary_message: "一度の展開で終わらせず、四半期ごとに運用を見直す"
+    steps:
+      - label: "STEP1"
+        title: "利用状況の把握"
+      - label: "STEP2"
+        title: "課題の洗い出し"
+      - label: "STEP3"
+        title: "ガイドライン改善"
+      - label: "STEP4"
+        title: "現場への展開"
+
+  - id: remaining_risks
+    type: priority_actions
+    density: standard
+    title: "本格展開に向けて対応が必要な課題を整理する"
+    primary_message: "最優先の課題から、展開までに対応方針を確定する"
+    issues:
+      - priority: "最優先"
+        title: "機密情報の入力制御"
+        body: "部門展開に伴い、入力可能な情報範囲の再整理が必要"
+      - priority: "高"
+        title: "問い合わせ対応の体制"
+        body: "利用者拡大に伴い、サポート窓口の拡充が必要"
+      - priority: "中"
+        title: "研修コンテンツの整備"
+        body: "新規部門向けの利用研修を用意する"
+    actions:
+      - "入力制御ガイドラインを部門展開前に確定する"
+      - "サポート窓口の体制を1名から3名へ拡充する"
+      - "研修動画を作成し、自己学習できるようにする"
+
+  - id: next_steps
+    type: numbered_list
+    density: standard
+    message_position: bottom
+    title: "本格展開に向けたご依頼事項"
+    primary_message: "上記3点について、次回会議までにご承認をお願いします"
+    items:
+      - title: "部門展開の対象範囲承認"
+        body: "第2四半期に展開する部門候補を確定する"
+      - title: "予算の追加確保"
+        body: "サポート体制拡充にかかる費用を承認する"
+      - title: "推進担当者の任命"
+        body: "各部門から1名、推進担当者を選任いただく"

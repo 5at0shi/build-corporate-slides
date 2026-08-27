@@ -1,5 +1,5 @@
-"""Atom層のうち、文字を扱う部分（図形はatoms.py、公開している部品名は
-components.py）。層構成の全体像はARCHITECTURE.mdを参照。
+"""Atom層のうち、文字を扱う部分（図形はatoms.py、図形と文字にまたがる
+部品はcomponents.py）。層構成の全体像はARCHITECTURE.mdを参照。
 
 単独のテキスト描画（add_textbox / add_paragraph_textbox / set_run）と、
 複数項目をまとめて1つのtextboxへ描くadd_text_list、テキストを含む定型

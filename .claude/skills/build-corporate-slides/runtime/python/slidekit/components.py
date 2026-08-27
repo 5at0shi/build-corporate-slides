@@ -1,9 +1,14 @@
-"""ページ内に置く部品のうち、ユーザー・AIが名前で指示する対象。
-Atom層に属する（層構成の全体像はARCHITECTURE.mdを参照）。
+"""ページ内に置く部品のうち、デザインシステム上の決定を名前へ畳み込んだ
+もの。Atom層に属する（層構成の全体像はARCHITECTURE.mdを参照）。
 
-「コンポーネント」は層の名前ではなく、Atom層のうち公開している部品の
-呼び名。capability-showcaseに実物を載せ、「4ページ目のBackground Zone
-を広げて」のように名指しできるのはここに定義された名前だけ。
+atoms.pyが見た目の値を引数で受け取る（Box(fill=..., radius=...)）のに
+対し、ここは意味の名前で呼ぶ（add_background_zone(tone="brand-soft")、
+add_key_message(style="editorial")）。図形と文字の両方を使う部品も
+ここへ置く（typography.pyがatoms.pyをimportしているため、これらを
+atoms.pyへ統合すると循環importになる）。
+
+「コンポーネント」は層の名前ではない。層はLayout/Atom/Fragment/Renderer
+の4つだけ。
 
 中身は2種類ある。どちらもAtom層であり、両者の間に階層はない。
 - Atomの名前付きプリセット: add_card / add_background_zone /

@@ -1,5 +1,6 @@
-"""Atom層のうち、図形を扱う部分（文字はtypography.py、公開している
-部品名はcomponents.py）。層構成の全体像はARCHITECTURE.mdを参照。
+"""Atom層のうち、図形を扱う部分。見た目は引数で受け取り、デザイン
+システム上の意味は持たない（tone/style等の意味の名前で呼ぶ部品は
+components.py、文字はtypography.py）。全体像はARCHITECTURE.mdを参照。
 
 Boxは「矩形領域＋見た目（塗り・枠線・角丸・影）」という1つの構造を
 表す。Card / Background Zone / Focus Panelは、この構造の見た目が違う

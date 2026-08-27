@@ -6,7 +6,8 @@ from pptx.util import Inches, Pt
 
 from .atoms import _filled_shape, add_hairline
 from .icons import add_icon
-from .textmetrics import (adaptive_gap_pt, estimate_item_list_height_pt,
+from .textmetrics import (adaptive_gap_pt, char_width_factor,
+                          estimate_item_list_height_pt,
                           estimate_paragraph_height_pt)
 from .theme import PALETTE, TYPE
 
@@ -85,8 +86,13 @@ def add_paragraph_textbox(slide, x, y, w, h, paragraphs, *,
     """複数の箇条書き・見出し・本文を一つの編集可能なtextboxへまとめる。
 
     paragraphsは {"segments": [(text, run_kwargs)], "space_after": 6,
-    "level": 0, "bullet": False} の配列。意味上ひとまとまりの文章を、
-    見た目上の行ごとに別shapeへ分割しないために使う。
+    "level": 0, "bullet": False, "hanging_indent": Emu} の配列。意味上
+    ひとまとまりの文章を、見た目上の行ごとに別shapeへ分割しないために使う。
+
+    hanging_indentを指定すると、行頭の記号（箇条書きの記号や連番等、
+    実体は先頭に付けた文字）の幅ぶんだけ、折り返した2行目以降を字下げ
+    する。指定しないと記号の直後で折り返した際、2行目が左端から始まり
+    記号に埋もれて見える。
     """
     shape = slide.shapes.add_textbox(x, y, w, h)
     tf = style_text_frame(shape.text_frame, margin=margin,
@@ -100,6 +106,11 @@ def add_paragraph_textbox(slide, x, y, w, h, paragraphs, *,
         paragraph.space_after = Pt(spec.get("space_after", 0))
         if spec.get("bullet"):
             paragraph.text = "• "
+        hanging_indent = spec.get("hanging_indent")
+        if hanging_indent:
+            pPr = paragraph._p.get_or_add_pPr()
+            pPr.set("marL", str(int(hanging_indent)))
+            pPr.set("indent", str(-int(hanging_indent)))
         for value, kwargs in spec.get("segments", []):
             run = paragraph.add_run()
             run.text = value
@@ -113,17 +124,32 @@ def _normalize_list_item(item):
     return item.get("title", ""), item.get("body")
 
 
+def _prefix_width(prefix, font_pt):
+    """prefix文字列がfont_ptで描画される概算の幅（Emu）。行頭記号ぶんの
+    折り返し2行目の字下げ幅として使う（実測レイアウトを持たないため、
+    char_width_factorのヒューリスティックで概算する）。
+    """
+    return Pt(sum(char_width_factor(ch) for ch in prefix) * font_pt)
+
+
 def _list_item_segments(marker, index, title, body, bullet_char, typography):
-    """1項目分のsegments（(text, run_kwargs)の配列）を組み立てる。"""
+    """1項目分のsegments（(text, run_kwargs)の配列）と、行頭記号（連番・
+    箇条書き記号）ぶんの折り返し字下げ幅（hanging_indent、Emu）を組み立てる。
+    """
     segments = []
+    hanging_indent = None
     if marker == "number":
-        segments.append((f"{index + 1:02}   ", {
+        prefix = f"{index + 1:02}   "
+        segments.append((prefix, {
             "size": typography.small, "color": PALETTE.blue,
             "bold": True, "font": typography.body_font,
         }))
         title_text, title_bold, indent = title, True, "      "
+        hanging_indent = _prefix_width(prefix, typography.small.pt)
     elif marker == "bullet":
-        title_text, title_bold, indent = f"{bullet_char}  {title}", True, "    "
+        prefix = f"{bullet_char}  "
+        title_text, title_bold, indent = f"{prefix}{title}", True, "    "
+        hanging_indent = _prefix_width(prefix, typography.body.pt)
     else:
         # "icon" / "none": 記号なしの本文（iconは呼び出し側が別図形で置く）
         title_text, title_bold, indent = title, False, "  "
@@ -136,7 +162,7 @@ def _list_item_segments(marker, index, title, body, bullet_char, typography):
             "size": typography.small, "color": PALETTE.text_secondary,
             "font": typography.body_font,
         }))
-    return segments
+    return segments, hanging_indent
 
 
 def add_text_list(slide, x, y, w, h, items, *, marker="bullet", bullet_char="・",
@@ -170,9 +196,11 @@ def add_text_list(slide, x, y, w, h, items, *, marker="bullet", bullet_char="・
         text_w_pt = w / 12700
         indent = "      " if marker == "number" else "    "
         for index, (title, body) in enumerate(normalized):
-            segments = _list_item_segments(marker, index, title, body, bullet_char, typography)
+            segments, hanging_indent = _list_item_segments(
+                marker, index, title, body, bullet_char, typography)
             add_paragraph_textbox(slide, x, cursor, w, Inches(0.76), [
-                {"segments": segments, "space_after": 0}
+                {"segments": segments, "space_after": 0,
+                 "hanging_indent": hanging_indent}
             ])
             # 罫線は固定オフセットではなく実際の文字高さに合わせる。行が
             # 短い場合、固定オフセットのままだと罫線が自分の行から離れ、
@@ -207,7 +235,8 @@ def add_text_list(slide, x, y, w, h, items, *, marker="bullet", bullet_char="・
         for index, ((title, body), name, item_h_pt) in enumerate(
                 zip(normalized, names, heights_pt)):
             add_icon(slide, x, cursor, size, name, color=color)
-            segments = _list_item_segments("icon", index, title, body, bullet_char, typography)
+            segments, _ = _list_item_segments(
+                "icon", index, title, body, bullet_char, typography)
             paragraphs.append({
                 "segments": segments,
                 "line_spacing": 1.15,
@@ -222,10 +251,12 @@ def add_text_list(slide, x, y, w, h, items, *, marker="bullet", bullet_char="・
         body_gap = int(adaptive_gap_pt(content_pt, len(items), h / 12700, base_gap=gap))
     paragraphs = []
     for index, (title, body) in enumerate(normalized):
-        segments = _list_item_segments(marker, index, title, body, bullet_char, typography)
+        segments, hanging_indent = _list_item_segments(
+            marker, index, title, body, bullet_char, typography)
         paragraphs.append({
             "segments": segments,
             "space_after": body_gap if index < len(items) - 1 else 0,
+            "hanging_indent": hanging_indent,
         })
     return add_paragraph_textbox(slide, x, y, w, h, paragraphs,
                                  vertical_anchor=vertical_anchor)

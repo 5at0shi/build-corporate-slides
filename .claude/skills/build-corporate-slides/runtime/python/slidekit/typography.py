@@ -1,3 +1,11 @@
+"""Atom層のうち、文字を扱う部分（図形はatoms.py、公開している部品名は
+components.py）。層構成の全体像はARCHITECTURE.mdを参照。
+
+単独のテキスト描画（add_textbox / add_paragraph_textbox / set_run）と、
+複数項目をまとめて1つのtextboxへ描くadd_text_list、テキストを含む定型
+部品（Tag / Stat）が同居する。いずれもAtom層で、上下関係はない
+（テキスト処理をこのファイルへ集約する方針による分け方）。
+"""
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.oxml.ns import qn

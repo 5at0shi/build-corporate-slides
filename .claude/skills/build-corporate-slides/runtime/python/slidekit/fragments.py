@@ -1,6 +1,5 @@
 """Fragment層: AtomとLayoutを組み合わせた、意味的にはまだ完結しない
-再利用可能な構造パターン。層構成の全体像はruntime/python/slidekit/
-ARCHITECTURE.mdを参照。
+再利用可能な構造パターン。層構成の全体像はARCHITECTURE.mdを参照。
 
 BoxGrid（regionをR×Cのグリッドに分割しBoxを並べる）、ProportionalStack
 （値に比例した幅の帯を積む）、RadialLayout（円周上に配置し矢印で結ぶ）、

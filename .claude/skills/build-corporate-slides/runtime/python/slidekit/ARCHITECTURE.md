@@ -1,43 +1,62 @@
 # slidekit の層構成
 
-`slidekit`は5層で構成する。下から上へ、Layout → Atom → Component → Fragment → Renderer の順に積み上がり、各層は自分より下の層だけに依存する（上の層を知らない）。この文書はその全体像を一箇所にまとめる唯一の場所。各モジュールのdocstringは自分の層だけを説明し、ここへ相互参照する。
+`slidekit`は4層で構成する。下から上へ **Layout → Atom → Fragment → Renderer** の順に積み上がり、各層は自分より下の層だけに依存する（上の層を知らない）。層の名前はこの4つだけで、同義語を作らない。
 
-## 層の一覧
+## 4つの層
 
-| 層 | ファイル | 何を持つか | ビジネス語彙 |
+| 層 | 何を持つか | ビジネス語彙 | ファイル |
 |---|---|---|---|
-| Layout | `layout.py` | `Region`。矩形の分割・inset計算のみ。描画は一切しない | 持たない |
-| Atom | `atoms.py`、`typography.py`の一部、`icons.py`、`charts.py`、`tables.py`、`images.py` | これ以上分解できない描画の最小単位（1個の図形、1個のアイコン、1個のグラフ、1個の表、1枚の画像） | 持たない |
-| Component | `components.py` | Atomのプリミティブ（主にBox）を人が指示に使える意味の通る名前でラップした部品群 | 部位名として持つ（「Background Zone」等） |
-| Fragment | `fragments.py` | AtomとLayoutを組み合わせた、意味的にはまだ完結しない再利用可能な構造パターン（BoxGrid、ProportionalStack等） | 持たない（形だけの再利用） |
-| Renderer | `renderers.py` | 上記すべてを組み合わせ、意味を持った1ページを完成させる17種の関数 | 持つ（「比較」「結論」「ゲート」等） |
+| **Layout** | 矩形領域(`Region`)の分割・余白計算。描画は一切しない | 持たない | `layout.py` |
+| **Atom** | 1ページを構成する部品。単独の図形・文字・アイコン・グラフ・表・画像と、それらの名前付きプリセット・定型的な組み合わせ | 持たない（`add_key_message`等の部品名のみ） | `atoms.py` `typography.py` `icons.py` `charts.py` `tables.py` `images.py` `components.py` |
+| **Fragment** | AtomとLayoutを組み合わせた、意味的にはまだ完結しない再利用可能な構造パターン | 持たない | `fragments.py` |
+| **Renderer** | 上記すべてを組み合わせ、意味を持った1ページを完成させる | **持つ**（「比較」「結論」「ゲート」等） | `renderers.py` `pageframe.py` |
 
-## 各層の役割
+### Layout
 
-**Layout** — `Region`は矩形領域そのものを表すデータであり、`rows()`/`columns()`/`inset()`で分割・余白計算をするだけ。色も線も文字も持たない。Atom以上のすべての層はRegion（またはx/y/w/h）を受け取って初めて描画位置を持てる。
+`Region`は矩形領域そのものを表すデータで、`rows()` / `columns()` / `inset()` で分割・余白計算をするだけ。色も線も文字も持たない。Atom以上のすべての層はRegion（またはx/y/w/h）を受け取って初めて描画位置を持つ。
 
-**Atom** — 「これ以上分解できない」描画の最小単位。ビジネス語彙を持たず、renderer/Fragment/Componentのコードから呼ばれる実装内部の概念で、ユーザー/AIが直接名指しする対象ではない。`atoms.py`のBox/Marker/Connector/add_hairlineが中核だが、1個のアイコン（`icons.py`のadd_icon）、1個のネイティブグラフ（`charts.py`のadd_native_chart）、1個の表（`tables.py`のadd_data_table）、1枚の画像配置（`images.py`のadd_image_contain）も同じ意味でAtomに含める——複数の部品を組み合わせた「構造」ではなく、単一の描画操作である点が共通するため。`typography.py`の`add_textbox`/`set_run`/`style_text_frame`、`Tag`/`Stat`も同様にAtom。
+### Atom
 
-**Component** — Atomのプリミティブを、人が指示に使える意味の通る名前でラップした部品群（`add_card`/`add_background_zone`/`add_focus_panel`/`add_key_message`/`add_section_lead`/`add_slide_title`/`add_cover`/`add_section_divider`/`add_panel`/`add_item_list`/`add_icon_list`）。「4ページ目のBackground Zoneをもう少し広げて」のようにユーザーが名指しする対象であり、capability-showcaseに実物を載せて公開しているのはこの層まで（Atom/Fragmentは公開しない。理由は下記「非公開の層」）。
+「1ページを構成する部品」の層。**この層の中に階層はない**。以下はすべて対等なAtomである。
 
-例外的な事情として、`add_item_list`/`add_icon_list`は実体を`typography.py`の`add_text_list`（複数項目をまとめて描く、より複雑な処理）へ委譲している。つまり`typography.py`はAtom層の最小プリミティブとComponent層寄りの複合処理の両方を含んでおり、ファイル境界が層境界と完全には一致しない。これは意図的な設計ではなく、テキスト関連の処理をtypography.pyへ集約した結果生じた既知のずれとして残している。
+- **単独の描画**: `Box` `Connector` `Marker` `add_hairline`（`atoms.py`）、`add_textbox` `add_paragraph_textbox`（`typography.py`）、`add_icon`、`add_native_chart`、`add_data_table`、`add_image_contain`
+- **Atomの名前付きプリセット**: `add_card` / `add_background_zone` / `add_focus_panel` は、いずれも`Box`へ引数を変えて委譲するだけ（`components.py`）
+- **少数のAtomの定型的な組み合わせ**: `add_section_lead`（Marker＋テキスト）、`add_key_message`（罫線またはBox＋テキスト）、`Tag`（Box＋テキスト）、`Stat`、`add_text_list`
 
-**Fragment** — AtomとLayoutを組み合わせた、意味的にはまだ完結しない再利用可能な構造パターン（BoxGrid、ProportionalStack、RadialLayout、MarkerOverlay）。複数のrendererで同じ形が繰り返し必要になった構造をここに集約する。命名はビジネス用語を使わない（「階層」「ゲート」等はrenderer側の語彙）。形だけで再利用できることがFragment層の価値であり、Componentと同様ユーザー/AIが直接名指しする対象ではない。
+ファイルの分け方は層ではなく**扱う媒体**による。図形は`atoms.py`、文字は`typography.py`、アイコンは`icons.py`、グラフは`charts.py`、表は`tables.py`、画像は`images.py`、そして**公開している部品の名前**は`components.py`にまとめる。
 
-**Renderer** — Layout/Atom/Component/Fragmentを組み合わせ、意味を持った1ページを完成させる最上層。ここで初めてビジネス語彙が現れる。1関数=1renderer type=YAMLの`type:`フィールド1つに対応し、これがユーザー/AIが実際にcontent-authoringで触るインターフェース（[`renderer-catalog.md`](../../../references/renderer-catalog.md)）。
+### Fragment
 
-## 非公開の層（Atom / Fragment）
+AtomとLayoutを組み合わせた、意味的にはまだ完結しない再利用可能な構造パターン（`BoxGrid` `ProportionalStack` `RadialLayout` `MarkerOverlay`）。複数のrendererで同じ形が繰り返し必要になった構造をここへ集約する。命名にビジネス用語を使わない（「階層」「ゲート」等はrenderer側の語彙）。形だけで再利用できることがこの層の価値。
 
-Atom層とFragment層は実装内部の語彙であり、user-guide/capability-showcaseにもreferences/にも実物を載せて公開しない。理由は、ユーザー/AIが実際に指示で使う語彙は「renderer type + そのフィールド」と「Componentの部位名」の2つに限られ、AtomやFragmentの名前（Box、BoxGrid等）を直接指示することは想定しないため。これは意図的な選択であり、抜け漏れではない。
+### Renderer
+
+Layout / Atom / Fragmentを組み合わせ、意味を持った1ページを完成させる最上層。**ここで初めてビジネス語彙が現れる。** 1関数 = 1 renderer type = YAMLの`type:`フィールド1つに対応し、これがユーザー・AIが実際に触るインターフェース（[`renderer-catalog.md`](../../../references/renderer-catalog.md)）。
+
+`pageframe.py`（表紙・章扉・ページヘッダー）も、content_region()の内側に置く部品ではなくスライド1枚の外枠そのものを描くため、この層に属する。`DeckBuilder`経由でのみ呼ぶ（renderer層が直接importしないのは循環importを避けるため）。
+
+## 「コンポーネント」は層ではない
+
+`components.py`の`add_card`や`add_background_zone`を**コンポーネント**と呼ぶが、これは層の名前ではなく、**Atom層のうちユーザー・AIへ公開している部品の呼び名**である。層（構造上の位置）と公開範囲（名前で指示できるか）は別の軸で、次のように直交する。
+
+| | 公開する（コンポーネント） | 公開しない |
+|---|---|---|
+| **Atom層** | `add_card` `add_background_zone` `add_key_message` `add_icon`（14種）`add_native_chart`（6種）など | `Box` `Connector` `Marker` `set_run` など |
+| **Fragment層** | なし | `BoxGrid` `ProportionalStack` など全部 |
+
+公開しているものだけをcapability-showcaseに実物として載せ、「4ページ目のBackground Zoneを広げて」のように名指しできる語彙とする。`Box`や`BoxGrid`のような実装内部の名前をユーザーが指示に使うことは想定しない。これは意図した選択であり、抜け漏れではない。
+
+なお`add_card`と`Box`は同じAtom層にある。両者の違いは「公開名を持つプリセットか、素のプリミティブか」だけで、上下関係ではない。
 
 ## 層に属さない補助モジュール
 
-以下はこの5層のどこにも属さない横断的な支援モジュール。
-- `theme.py`: PALETTE（色）、TYPE系（タイポグラフィスケール）などのデザイントークン。全層から参照される。
-- `builder.py`: `DeckBuilder`。config読み込み・パス解決・presentation生成を担う、renderer層の入口（オーケストレーション）。
-- `config.py` / `preflight.py`: workspace設定の読み込み、content YAMLの事前検証。
-- `textmetrics.py`: 文字幅・折り返し行数の概算ヒューリスティック。Component/Renderer層のレイアウト計算から呼ばれる。
+以下は4層のどこにも属さない、横断的な支援モジュール。
+
+- `theme.py`: `PALETTE`（色）、`TYPE`系（タイポグラフィスケール）などのデザイントークン。全層から参照される。
+- `builder.py`: `DeckBuilder`。config読み込み・パス解決・presentation生成と、`pageframe.py`の呼び出しを担うオーケストレーション。
+- `config.py` / `preflight.py`: workspace設定の読み込みと、content YAMLの事前検証。
+- `textmetrics.py`: 文字幅・折り返し行数の概算ヒューリスティック。Atom層とRenderer層のレイアウト計算から呼ばれる。
 
 ## この文書の位置づけ
 
-ここはコード（`runtime/python/slidekit/`）の実装アーキテクチャを説明する開発者向け文書であり、`references/`配下（PLAN/CREATE/REVISEでAIがcontent-authoringのために読むガイド）とは読者が異なる。層構成を変更した場合はこの文書と、変更した層のモジュールdocstringの両方を更新する。
+ここは`runtime/python/slidekit/`の実装アーキテクチャを説明する開発者向け文書であり、`references/`配下（PLAN/CREATE/REVISEでAIがcontent-authoringのために読むガイド）とは読者が異なる。層構成を変えた場合は、この文書と該当モジュールのdocstringの両方を更新する。

@@ -3,8 +3,7 @@
 
 Atom以上のすべての層はRegionを受け取って初めて描画位置を持てる。
 Regionを直接ユーザー/AIへ公開することはなく、renderer層がcontent_region()
-を起点に内部でだけ使う。層構成の全体像はruntime/python/slidekit/
-ARCHITECTURE.mdを参照。
+を起点に内部でだけ使う。層構成の全体像はARCHITECTURE.mdを参照。
 """
 from dataclasses import dataclass
 

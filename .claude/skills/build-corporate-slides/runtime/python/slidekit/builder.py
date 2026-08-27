@@ -1,7 +1,7 @@
 from datetime import date
 from pathlib import Path
 
-from .components import add_cover, add_section_divider, add_slide_title
+from .pageframe import add_cover, add_section_divider, add_slide_title
 from .config import load_workspace_config, workspace_paths
 from .layout import content_region
 from .theme import typography_for

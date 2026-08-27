@@ -2,10 +2,10 @@ from pathlib import Path
 
 from pptx import Presentation
 
-from .components import (add_background_zone, add_card, add_cover, add_item_list,
+from .components import (add_background_zone, add_card, add_item_list,
                          add_icon_list, add_focus_panel, add_hairline, add_key_message,
-                         add_panel, add_section_divider,
-                         add_section_lead, add_slide_title)
+                         add_panel, add_section_lead)
+from .pageframe import add_cover, add_section_divider, add_slide_title
 from .theme import (LAYOUT, PALETTE, TYPE, TYPE_BUSINESS, TYPE_DENSE,
                     TYPE_LARGE_ROOM, TYPE_PRESENTATION, rgb,
                     typography_for)

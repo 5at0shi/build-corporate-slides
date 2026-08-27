@@ -1,3 +1,14 @@
+"""Component層: Atom層のプリミティブ（主にBox）を、人が指示に使える
+意味の通る名前でラップした部品群。
+
+add_card/add_background_zone/add_focus_panel等はいずれも内部的には
+atoms.pyのBoxへ薄く委譲する（見た目=skinが違うだけ）。Atom層自体は
+「これ以上分解できない描画の最小単位」であり、ビジネス語彙を持たない
+実装内部の概念（renderer/Fragment層のコード以外からは直接呼ばれない
+想定）。一方Componentはユーザーやrenderer-catalog.md等が「部位」として
+名指しする対象であり、capability-showcaseに実物を載せて公開する層は
+常にこちら（Atomではない）。
+"""
 from datetime import date
 
 from pptx.dml.color import RGBColor

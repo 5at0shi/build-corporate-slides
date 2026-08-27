@@ -6,14 +6,14 @@ __pycache__/
 # OS
 .DS_Store
 
-# Generated deliverables — regenerate via slides/work/generate_pptx.py
-slides/output/
-slides/work/render/
-slides/work/*/render/
+# Generated deliverables — regenerate via each project's generate_pptx.py
+build_slides/output/
+build_slides/work/render/
+build_slides/work/*/render/
 
 # Human-provided input material (photos, maps, etc.) — workspace-specific,
 # often third-party copyrighted content not meant for the skill repo
-slides/input/
+build_slides/input/
 
 # Session-local runtime state (Claude Code scheduled wakeups)
 .claude/scheduled_tasks.lock

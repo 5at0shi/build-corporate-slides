@@ -9,10 +9,10 @@ renderer/componentの不具合を1件直すたびに、その不具合を再現�
 （レビュー用のPDFだけを見て、コードを読まなくても確認できるように）。
 
 使い方（ワークスペース直下から）:
-    ./.venv/bin/python slides/work/skill-regression-check/generate_pptx.py
+    ./.venv/bin/python build_slides/work/skill-regression-check/generate_pptx.py
     ./.claude/skills/build-corporate-slides/scripts/render_and_check.py \\
-        slides/output/skill-regression-check.pptx \\
-        --pdf slides/work/skill-regression-check/render/deck.pdf
+        build_slides/output/skill-regression-check.pptx \\
+        --pdf build_slides/work/skill-regression-check/render/deck.pdf
 """
 import sys
 from pathlib import Path

@@ -106,8 +106,8 @@ def main() -> int:
     config = {
         "python": {"executable": sys.executable},
         "paths": {
-            "input_dir": "./slides/input", "work_dir": "./slides/work",
-            "output_dir": "./slides/output",
+            "input_dir": "./build_slides/input", "work_dir": "./build_slides/work",
+            "output_dir": "./build_slides/output",
         },
         "organization": {
             "department": "テスト部", "classification": "部外秘",
@@ -226,7 +226,7 @@ def main() -> int:
         root = Path(temp)
         (root / ".slide-skill-config.yaml").write_text(
             yaml.safe_dump(config, allow_unicode=True), encoding="utf-8")
-        input_dir = root / "slides" / "input"
+        input_dir = root / "build_slides" / "input"
         input_dir.mkdir(parents=True, exist_ok=True)
         from PIL import Image
         Image.new("RGB", (400, 240), (230, 236, 245)).save(input_dir / "chart.png")
@@ -291,7 +291,7 @@ def main() -> int:
             root = Path(temp)
             (root / ".slide-skill-config.yaml").write_text(
                 yaml.safe_dump(mode_config, allow_unicode=True), encoding="utf-8")
-            mode_input_dir = root / "slides" / "input"
+            mode_input_dir = root / "build_slides" / "input"
             mode_input_dir.mkdir(parents=True, exist_ok=True)
             from PIL import Image as _Image
             _Image.new("RGB", (400, 240), (230, 236, 245)).save(

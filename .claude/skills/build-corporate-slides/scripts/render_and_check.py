@@ -84,8 +84,8 @@ def render_pages(pdf: Path, pages: Path) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description="PPTXをPDFとページPNGへレンダリングします")
     parser.add_argument("pptx", type=Path)
-    parser.add_argument("--pdf", type=Path, default=Path("slides/work/render/deck.pdf"))
-    parser.add_argument("--pages", type=Path, default=Path("slides/work/render/pages"))
+    parser.add_argument("--pdf", type=Path, default=Path("build_slides/work/render/deck.pdf"))
+    parser.add_argument("--pages", type=Path, default=Path("build_slides/work/render/pages"))
     args = parser.parse_args()
     try:
         render_pdf(args.pptx, args.pdf)

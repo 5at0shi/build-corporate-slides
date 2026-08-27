@@ -11,7 +11,7 @@
 ## 全体の流れ
 
 1. **PLAN** — 資料の目的・読み手・構成をAIと一緒に決める。まだPowerPointは作らない。
-2. **CREATE** — 確定した構成をもとにPowerPointを生成する。`slides/work/slide_content.yaml`（内容）と`slides/work/generate_pptx.py`（生成コード）が残る。
+2. **CREATE** — 確定した構成をもとにPowerPointを生成する。`build_slides/work/slide_content.yaml`（内容）と`build_slides/work/generate_pptx.py`（生成コード）が残る。
 3. **REVISE** — 修正はYAMLの文言・数値を直すか、生成コードのレイアウトを直して再生成する。手作業でPowerPointを直接編集することは基本的にしない（再生成すると消えるため）。
 
 修正を頼むときは「4ページ目のBackground Zoneをもう少し広げて」のように、部位の名称を使うと伝わりやすい。名称の一覧は[`capability-showcase.pdf`](capability-showcase.pdf)の各部品のキャプション（関数名）を参照する。モードの違い（後述）は[`mode-guide.pdf`](mode-guide.pdf)で実物のサイズ比較ができる。
@@ -23,15 +23,15 @@
 | キー | 意味 | 例 |
 |---|---|---|
 | `python.executable` | 生成に使うPythonの実行ファイル | `./.venv/bin/python`（Windowsは`./.venv/Scripts/python.exe`） |
-| `paths.input_dir` | 人間が渡す素材（グラフ画像・参考資料）の置き場所 | `./slides/input` |
-| `paths.work_dir` | 生成コードと中間成果物（YAML、レンダリング結果） | `./slides/work` |
-| `paths.output_dir` | 最終成果物（`deck.pptx`）の置き場所 | `./slides/output` |
+| `paths.input_dir` | 人間が渡す素材（グラフ画像・参考資料）の置き場所 | `./build_slides/input` |
+| `paths.work_dir` | 生成コードと中間成果物（YAML、レンダリング結果） | `./build_slides/work` |
+| `paths.output_dir` | 最終成果物（`deck.pptx`）の置き場所 | `./build_slides/output` |
 | `organization.department` | 表紙・各ページに出す部署名 | `企画部` |
 | `organization.classification` | 開示区分。表紙右上のバッジに表示 | `部外秘`、`社外秘`、空文字で非表示 |
 | `deck.mode` | 資料全体の既定モード。詳しくは次項 | `business`（通常はこれ） |
 | `typography.headline_font` / `body_font` / `editorial_font` | 利用端末に導入済みの日本語フォント名 | `Hiragino Sans`、`Yu Gothic`など |
 | `branding.logo.enabled` | ロゴを表紙に出すか | `true` / `false` |
-| `branding.logo.path` | 正式ロゴ画像のパス。未指定時はskill同梱の仮ロゴを使う | `./slides/input/company-logo.png` |
+| `branding.logo.path` | 正式ロゴ画像のパス。未指定時はskill同梱の仮ロゴを使う | `./build_slides/input/company-logo.png` |
 
 `deck.mode`を変更しても個別ページのモードは変わらない。ページ単位で情報量が多い場合は、YAML側のそのスライドだけに`density: dense`を指定する（`deck.mode`自体は`business`のまま）。
 

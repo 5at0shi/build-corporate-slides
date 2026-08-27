@@ -29,6 +29,12 @@ class Palette:
     positive: RGBColor = rgb("1E8A5F")
     negative: RGBColor = rgb("C0392B")
     warning: RGBColor = rgb("B25E09")
+    # 上記の淡色版。surface_brand_soft/surface_teal_softと同じ明度帯に揃え、
+    # 上に載せる文字はtext_primaryを使う（他の淡色面と同じ組み合わせ）。
+    # Box/Zoneの背景として使う（add_background_zoneのtone="negative-soft"等）。
+    surface_positive_soft: RGBColor = rgb("E1F4EA")
+    surface_negative_soft: RGBColor = rgb("FBE4E1")
+    surface_warning_soft: RGBColor = rgb("FCEADA")
 
     # v0.4との後方互換。新規コードではsemantic roleを使う。
     navy: RGBColor = rgb("102C49")

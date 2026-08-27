@@ -36,6 +36,8 @@
 
 これらはブランドカラーとは独立に固定する。読み手は「赤＝悪化」を慣習として読むため、ブランド色を変えても意味がズレてはならない。装飾用の汎用アクセント（単に色数を増やしたい、目を引きたい）としては使わない。数値の符号（文字列が"-"で始まるか）で自動判定しない。削減率のように、マイナスの数値が良い結果を意味することがあるため、内容の意味を判断できる側（contentを書く側）が`tone`として明示する（`stat_highlight`の`stat.tone`/`supporting[].tone`が現在の実装箇所）。
 
+淡色版（`surface_positive_soft`/`surface_negative_soft`/`surface_warning_soft`）もあり、`add_background_zone(tone="positive-soft"/"negative-soft"/"warning-soft")`でBox/Zoneの背景として使える（`BoxGrid`等のFragmentへ`tones`として渡す場合も同様）。特定のrendererに紐づく機能ではなく汎用のAtom/Component層の部品のため、リスクや悪化を示すセル・ゾーンが必要な場面であれば、どのrendererからでも使ってよい。
+
 ### ブランドカラーのカスタマイズについて
 
 現状、`PALETTE`は`theme.py`に固定された値で、config経由の上書きはできない（`typography`は`config.typography`で上書きできるが、色には対応する仕組みがまだない）。これは意図的な先送りであり、「今のところ複数ブランドでの利用実績がなく、需要が無いまま自動配色の仕組みを作ると過剰設計になる」という判断による。

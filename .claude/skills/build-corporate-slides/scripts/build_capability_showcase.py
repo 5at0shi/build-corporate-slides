@@ -175,20 +175,17 @@ caption(slide, top_cols[2].x, top_cols[2].y + Inches(1.58), top_cols[2].w,
 caption(slide, top_cols[2].x, top_cols[2].y + Inches(1.8), top_cols[2].w,
        "ページ内の重点対象。色・線・サイズで明確化。", size=9.5)
 
-bottom_cols = row[1].columns([1, 1, 1], gap="standard")
-tones = ["neutral", "teal-soft"]
+caption(slide, row[1].x, row[1].y, row[1].w,
+       'add_background_zone()のtone一覧（符号・重大度の淡色は汎用のAtom/Component層の部品）',
+       size=10, bold=True, color=PALETTE.text_secondary)
+bottom_cols = row[1].inset(top=Inches(0.3)).columns([1, 1, 1, 1, 1], gap="tight")
+tones = ["neutral", "teal-soft", "positive-soft", "negative-soft", "warning-soft"]
 for i, tone in enumerate(tones):
     region = bottom_cols[i]
-    add_background_zone(slide, region.x, region.y, region.w, Inches(1.1),
+    add_background_zone(slide, region.x, region.y, region.w, Inches(1.0),
                         tone=tone, rounded=True)
-    caption(slide, region.x, region.y + Inches(1.18), region.w,
-           f'add_background_zone(tone="{tone}")', size=11, bold=True,
-           color=PALETTE.text_primary)
-region = bottom_cols[2]
-add_focus_panel(slide, region.x, region.y, region.w, Inches(1.1), tone="brand")
-caption(slide, region.x, region.y + Inches(1.18), region.w,
-       'add_focus_panel(tone="brand")', size=11, bold=True,
-       color=PALETTE.text_primary)
+    caption(slide, region.x, region.y + Inches(1.08), region.w,
+           f'tone="{tone}"', size=10, bold=True, color=PALETTE.text_primary)
 
 # ============================================ 5. Components: テキスト・リスト
 slide, area = builder.add_slide("コンポーネント（テキスト・リスト）",

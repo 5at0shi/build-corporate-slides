@@ -195,6 +195,9 @@ def add_background_zone(slide, x, y, w, h, *, tone="brand-soft",
         "brand-soft": PALETTE.surface_brand_soft,
         "neutral": PALETTE.surface_subtle,
         "teal-soft": PALETTE.surface_teal_soft,
+        "positive-soft": PALETTE.surface_positive_soft,
+        "negative-soft": PALETTE.surface_negative_soft,
+        "warning-soft": PALETTE.surface_warning_soft,
     }
     if tone not in tones:
         raise ValueError(f"未定義のtoneです: {tone}")

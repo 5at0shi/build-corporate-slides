@@ -22,7 +22,8 @@ from .layout import Region
 from .preflight import require_valid_content
 from .images import add_image_contain
 from .tables import add_data_table
-from .textmetrics import adaptive_gap_pt, estimate_item_list_height_pt
+from .textmetrics import (adaptive_gap_pt, estimate_item_list_height_pt,
+                          estimate_paragraph_height_pt)
 from .theme import PALETTE
 from .typography import (Stat, _type_for, add_paragraph_textbox,
                          add_text_list, add_textbox)
@@ -170,18 +171,44 @@ def render_scope_and_exclusions(builder, spec, page):
     add_background_zone(slide, scope.x, scope.y, scope.w, scope.h,
                         tone="brand-soft", rounded=True)
     scope_inner = scope.inset(Inches(0.32), Inches(0.32))
-    add_section_lead(slide, scope_inner.x, scope_inner.y, scope_inner.w,
-                     spec.get("scope_heading", "対象範囲"))
     items = spec.get("scope", [])
     columns = scope_inner.columns([1] * max(1, len(items)), gap="standard")
+
+    # 見出し＋項目を1つのブロックとして、period行の上までの帯の中で上下中央
+    # へ置く。固定オフセットのままだとゾーン下部だけが大きく空いて間延びして
+    # 見える（visual-quality.md）。見出しだけ上に残して項目を動かすと見出しと
+    # 項目の結びつきが切れるため、evidence_and_decisionと同じくブロックごと
+    # 動かす。
+    typography = _type_for(slide)
+    heading_block_h = Inches(0.78)
+    label_block_h = Inches(0.44)
+    period_reserve = Inches(0.62) if spec.get("period") else Inches(0)
+    band_h = max(0, scope_inner.h - period_reserve)
+    column_w_pt = (columns[0].w / 12700) if columns else 0
+    content_pt = 0.0
+    for item in items:
+        height = estimate_paragraph_height_pt(
+            item.get("title", ""), typography.section.pt, column_w_pt,
+            line_spacing=1.08, space_after=7)
+        height += estimate_paragraph_height_pt(
+            item.get("body", ""), typography.small.pt, column_w_pt,
+            line_spacing=1.08)
+        content_pt = max(content_pt, height)
+    block_h = heading_block_h + label_block_h + Inches(content_pt / 72)
+    block_top = scope_inner.y + max(0, (band_h - block_h) // 2)
+    label_y = block_top + heading_block_h
+    text_y = label_y + label_block_h
+
+    add_section_lead(slide, scope_inner.x, block_top, scope_inner.w,
+                     spec.get("scope_heading", "対象範囲"))
     for index, item in enumerate(items):
         region = columns[index]
         label = item.get("label", f"{index + 1:02}")
-        add_textbox(slide, region.x, region.y + Inches(0.78), region.w,
+        add_textbox(slide, region.x, label_y, region.w,
                     Inches(0.28), label, size=_type_for(slide).small,
                     color=PALETTE.blue, bold=True)
-        add_paragraph_textbox(slide, region.x, region.y + Inches(1.22),
-                              region.w, Inches(2.5), [
+        add_paragraph_textbox(slide, region.x, text_y,
+                              region.w, max(Inches(0.4), band_h - label_block_h), [
             {"segments": [(item.get("title", ""), {
                 "size": _type_for(slide).section,
                 "color": PALETTE.text_primary,

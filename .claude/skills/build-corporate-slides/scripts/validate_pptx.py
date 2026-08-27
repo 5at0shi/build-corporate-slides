@@ -154,8 +154,17 @@ def _check_table(shape, slide_no, issues, warnings):
     をここで別途確認する。
     """
     table = shape.table
+    # 行ごとに「最も高さを要するセル」を求め、表全体の実際の高さを見積もる。
+    # PowerPointは行の高さを内容に合わせて自動的に広げる（縮めない）ため、
+    # python-pptxが持つ宣言上の高さが枠内でも、描画時には下へ伸びて後続の
+    # 行がページ外へ押し出され、そのまま見えなくなる。宣言値だけを見る
+    # スライド外チェックでは検出できないので、ここで推定して確かめる。
+    declared_pt = 0.0
+    estimated_total_pt = 0.0
     for row_index in range(len(table.rows)):
         row_height_pt = Emu(table.rows[row_index].height).pt
+        declared_pt += row_height_pt
+        tallest_pt = row_height_pt
         for col_index in range(len(table.columns)):
             cell = table.cell(row_index, col_index)
             text = cell.text_frame.text
@@ -170,11 +179,25 @@ def _check_table(shape, slide_no, issues, warnings):
             estimated = _estimate_text_height_pt(cell.text_frame, col_width_pt)
             if estimated is None:
                 continue
+            tallest_pt = max(tallest_pt, estimated)
             if estimated > row_height_pt * 1.15:
                 snippet = text.strip().replace("\n", " ")[:24]
                 warnings.append(
                     f"slide {slide_no}: 表のセルが行の高さからはみ出す可能性 "
                     f"'{snippet}' (推定{estimated:.0f}pt / 行{row_height_pt:.0f}pt)")
+        estimated_total_pt += tallest_pt
+
+    # 表全体が確保した高さを超えると、はみ出した分だけ後ろの行が下へ押し出され、
+    # ページ下端の結論やスライド外へ隠れて読めなくなる（データが消える）。
+    # 見た目が窮屈になるだけの個別セルの警告とは重大度が違うためissueにする。
+    if declared_pt > 0 and estimated_total_pt > declared_pt * 1.05:
+        overflow_pt = estimated_total_pt - declared_pt
+        lost_rows = max(1, int(overflow_pt / (declared_pt / len(table.rows))))
+        issues.append(
+            f"slide {slide_no}: 表が確保した高さに収まりません "
+            f"(推定{estimated_total_pt:.0f}pt / 確保{declared_pt:.0f}pt)。"
+            f"末尾およそ{lost_rows}行がページ下端へ押し出されて見えなくなります。"
+            "行数を減らすか、セルの文言を短くするか、ページを分割してください")
 
 
 def _check_text_overflow(slide, slide_no, warnings):

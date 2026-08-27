@@ -232,7 +232,11 @@ for i, tone in enumerate(tones):
 # ============================================ 5. Components: テキスト・リスト
 slide, area = builder.add_slide("コンポーネント（テキスト・リスト）",
                                 kicker="COMPONENTS.PY", page=5)
-block5 = centered_block(area, Inches(4.0), top_offset=Inches(0.15))
+caption(slide, area.x, area.y, area.w,
+       "同じ意味のまとまりは、行ごとに別shapeへ分割せず一つの複数段落"
+       "textboxにまとめる。選択・移動・順序の入れ替えを一つの操作で"
+       "行えるようにするための編集性への配慮。", size=12)
+block5 = centered_block(area, Inches(3.75), top_offset=Inches(0.55))
 row5 = block5.rows([2.5, 1.1], gap=Inches(0.4))
 top = row5[0]
 lead_col, list_col, icon_col = top.columns([0.8, 1, 1], gap="wide")
@@ -328,10 +332,11 @@ for row_index, row in enumerate(chart_grid):
                color=PALETTE.text_primary, align=PP_ALIGN.CENTER)
 
 
-# =================================================== 8-21. Renderer Catalog
-# renderer-catalog.mdの「使う状況」列と同じ文言を使い、ドキュメントと
-# 実物を対応させる。1ページのcontent_region()内に収まる、控えめな
-# 現実的な分量で作る（stress-test用の極端な分量ではない）。
+# =================================================== 8-26. Renderer Catalog
+# renderer-catalog.mdの表と同じ順序で並べ、ドキュメントと実物の並び順を
+# 揃える。variant違いは各typeの基本例の直後に置く（末尾にまとめない）。
+# 「使う状況」列と同じ文言を使い、1ページのcontent_region()内に収まる、
+# 控えめな現実的な分量で作る（stress-test用の極端な分量ではない）。
 FOOTER_Y = Inches(7.5) - Inches(0.32)
 
 
@@ -342,8 +347,9 @@ def renderer_footer(type_name, desc):
            italic=True)
 
 
-renderer_specs = [
-    ("comparison", "二つの観点、価値とリスク、現状と将来", {
+# (renderer_type, footerラベル, footer説明, spec) を表示順に並べる。
+catalog = [
+    ("comparison", "comparison", "二つの観点、価値とリスク、現状と将来", {
         "title": "comparison: 二つの観点を公平に比較する", "density": "standard",
         "primary_message": "balancedは対等な2列、asymmetricは片側を補助情報として弱める",
         "left": {"heading": "向いている場面", "items": [
@@ -353,7 +359,7 @@ renderer_specs = [
             {"title": "列ごとに1つのtextbox", "body": "項目を行ごとに別shapeへ分割しない"},
             {"title": "balanced / asymmetric", "body": "片側を弱めたい場合はasymmetricを選ぶ"}]},
     }),
-    ("evidence_and_decision", "根拠から一つの推奨判断を導く", {
+    ("evidence_and_decision", "evidence_and_decision", "根拠から一つの推奨判断を導く", {
         "title": "evidence_and_decision: 根拠から一つの結論を導く", "density": "standard",
         "primary_message": "結論は1文に絞り、根拠は独立した領域で支える",
         "evidence_heading": "使う場面", "evidence": [
@@ -362,7 +368,7 @@ renderer_specs = [
         "decision_heading": "推奨する使い方",
         "decision_detail": "evidenceは箇条書きの根拠群、decisionは結論文。結論を薄めないよう1文に絞る。",
     }),
-    ("scope_and_exclusions", "対象範囲と対象外を同時に示す", {
+    ("scope_and_exclusions", "scope_and_exclusions", "対象範囲と対象外を同時に示す", {
         "title": "scope_and_exclusions: 対象と対象外を同時に示す", "density": "dense",
         "primary_message": "対象範囲と除外範囲を1ページで誤解なく伝える",
         "scope_heading": "対象に含めるもの（scope）", "scope": [
@@ -373,7 +379,7 @@ renderer_specs = [
         "exclusions": ["除外項目は配列でまとめて一括表示する", "個別のcard化はしない",
                        "対象と対象外は必ず両方示す"],
     }),
-    ("process_with_gates", "フェーズ、作業、判断時点", {
+    ("process_with_gates", "process_with_gates", "フェーズ、作業、判断時点", {
         "title": "process_with_gates: フェーズと承認ゲートを分けて描く", "density": "dense",
         "primary_message": "フェーズは横並びのレーン、ゲートは別レイヤーの時系列軸",
         "phases": [
@@ -384,18 +390,43 @@ renderer_specs = [
         "gates": [{"title": "ゲート1", "position": 0.3},
                   {"title": "ゲート2", "position": 1.0}],
     }),
-    ("table_with_conclusion", "条件、比較、評価を表で読む", {
+    ("table_with_conclusion", "table_with_conclusion",
+     "条件、比較、評価を表で読む。ネイティブtableのため件数が増えても行を足すだけ", {
         "title": "table_with_conclusion: 表と結論をセットで示す", "density": "dense",
-        "primary_message": "結論は表の外に独立させ、表はネイティブPowerPoint tableで作る",
-        "columns": [{"key": "col", "label": "columns配列", "weight": 1.6},
-                    {"key": "desc", "label": "説明", "weight": 2.5},
-                    {"key": "note", "label": "備考", "weight": 1, "align": "center"}],
+        "primary_message": "結論は表の外に独立させ、表そのものは常にネイティブPowerPoint tableで作る",
+        "columns": [{"key": "item", "label": "項目", "weight": 1.3},
+                    {"key": "desc", "label": "編集性の工夫", "weight": 3.3},
+                    {"key": "note", "label": "備考", "weight": 0.9, "align": "center"}],
         "rows": [
-            {"col": "_highlight", "desc": "行に_highlight:Trueを付けると強調表示",
+            {"item": "ネイティブtable", "desc": "PowerPointの表機能で作るため、画像化せずセルの文字を直接クリックして編集できる", "note": "必須"},
+            {"item": "縦線なし", "desc": "列の区切りは余白だけで示す。全辺に線を引くと構造がのっぺりして見える", "note": "任意"},
+            {"item": "ヘッダー下だけ強罫線", "desc": "本文行は薄い横線のみ。ヘッダーと本文の境界だけを強く見せる", "note": "任意"},
+            {"item": "_highlight: true", "desc": "行に付けると太字＋淡色背景で強調表示。装飾用の追加shapeは不要",
              "note": "任意", "_highlight": True},
-            {"col": "rows配列", "desc": "各要素がテーブルの1行になる", "note": "必須"}],
+            {"item": "rows配列", "desc": "各要素が1行になる。件数の増減はrows配列を増減するだけでレイアウト再設計は不要", "note": "必須"}],
     }),
-    ("org_layers", "意思決定・運営など縦の責任階層と、横に並ぶ実行部門", {
+    ("chart_with_insight", "chart_with_insight (standard)", "グラフ全体を公平に読む", {
+        "title": "chart_with_insight (standard): グラフと読み取りを公平に示す",
+        "density": "standard", "variant": "standard",
+        "primary_message": "グラフ全体を公平に読ませたいときはstandardを選ぶ",
+        "insight_heading": "使う場面",
+        "insights": ["グラフの全体像を偏りなく見せたいとき",
+                     "column/stacked_column/bar/line/pie/scatterに対応",
+                     "chartを指定すると数値をPowerPoint上で直接編集できる"],
+        "chart": {"type": "column", "categories": ["項目1", "項目2", "項目3"],
+                 "series": [{"name": "系列A", "values": [12, 38, 42]}]},
+    }),
+    ("chart_with_insight", "chart_with_insight (conclusion-led)", "一つの主張を強く伝える", {
+        "title": "chart_with_insight (conclusion-led): 一つの主張を強く伝える",
+        "density": "standard", "variant": "conclusion-led",
+        "primary_message": "1つの主張を強く伝えたいときはconclusion-ledを選ぶ",
+        "insight_heading": "使う場面",
+        "insights": ["グラフから読み取れる主張が1つに絞れるとき",
+                     "primary_messageで結論を先に示し、グラフで裏付ける"],
+        "chart": {"type": "line", "categories": ["項目1", "項目2", "項目3", "項目4"],
+                 "series": [{"name": "系列A", "values": [5, 22, 38, 42]}]},
+    }),
+    ("org_layers", "org_layers", "意思決定・運営など縦の責任階層と、横に並ぶ実行部門", {
         "title": "org_layers: 縦の階層と横の実行部門を分けて描く", "density": "standard",
         "primary_message": "layersは2件までを目安にする（本文がはみ出さないように）",
         "layers": [
@@ -405,7 +436,7 @@ renderer_specs = [
         "execution": [{"title": "横に並ぶCard", "body": "execution配列の各要素が1枚のCardになる"},
                       {"title": "部門数に応じ自動分割", "body": "列数は要素数に合わせて均等割りする"}],
     }),
-    ("priority_actions", "優先度付きの課題と、対応する方針", {
+    ("priority_actions", "priority_actions", "優先度付きの課題と、対応する方針", {
         "title": "priority_actions: 優先度付きの課題と対応策を並べる", "density": "standard",
         "primary_message": "issuesは優先度ラベル付き、actionsは対応方針の一括リスト",
         "issues": [
@@ -414,7 +445,7 @@ renderer_specs = [
         "actions": ["actionsは対応方針の一括リスト", "淡色パネルの中に箇条書きで表示する",
                     "issuesとは別領域で独立して読める"],
     }),
-    ("stage_track", "現在から将来への段階的な進行（ロードマップ等）", {
+    ("stage_track", "stage_track", "現在から将来への段階的な進行（ロードマップ等）", {
         "title": "stage_track: 段階的な進行を同格のCardで示す", "density": "standard",
         "primary_message": "stagesは配列の順に横並びの同格Cardになる",
         "connectors": False,
@@ -423,7 +454,18 @@ renderer_specs = [
             {"label": "STEP2", "title": "同格のCard", "body": "各段階は優劣なく並列に見せる"},
             {"label": "STEP3", "title": "ロードマップに最適", "body": "現在から将来への広がりを示したいときに使う"}],
     }),
-    ("numbered_list", "アジェンダ、依頼事項など番号付きの単列項目", {
+    ("stage_track", "stage_track (connectors: true)",
+     "矢印表現はここだけの限定的なオプション。cycleの円周矢印は構造上必須のため別枠", {
+        "title": "stage_track (connectors: true): 矢印で順序を明示する",
+        "density": "standard",
+        "connectors": True,
+        "primary_message": "段階の間に順序・因果があることを強調したい場合だけconnectors:trueにする",
+        "stages": [
+            {"label": "STEP1", "title": "既定はconnectors: false", "body": "他の型の基本例と同じ矢印なしの見た目"},
+            {"label": "STEP2", "title": "矢印はここでだけ使う", "body": "この構造図に限り、順序性を強めたいときに選べるオプション"},
+            {"label": "STEP3", "title": "太さ・矢じりは固定", "body": "Atom層のConnectorが一貫した太さで描く"}],
+    }),
+    ("numbered_list", "numbered_list", "アジェンダ、依頼事項など番号付きの単列項目", {
         "title": "numbered_list: 番号付きの単列項目を並べる", "density": "standard",
         "primary_message": "message_positionでtop/bottomの導入文・結論の位置を選べる",
         "message_position": "bottom",
@@ -432,7 +474,7 @@ renderer_specs = [
             {"title": "アジェンダやNext Stepに最適", "body": "単列の番号付き項目だけで構成されるページに使う"},
             {"title": "row_hは項目数で自動調整", "body": "項目が少ないほど各行の余白が広がる"}],
     }),
-    ("matrix", "2軸で選択肢を4象限に整理する（ポートフォリオ分析等）", {
+    ("matrix", "matrix", "2軸で選択肢を4象限に整理する（ポートフォリオ分析等）", {
         "title": "matrix: 2軸で4象限に整理する", "density": "standard",
         "primary_message": "軸上の正確な数値でなく、象限のどれに属するかが要点のときに使う",
         "x_axis": {"low": "x_axis.low", "high": "x_axis.high"},
@@ -443,7 +485,17 @@ renderer_specs = [
             {"label": "補足", "title": "正確な座標が要点なら", "body": "chart_with_insightのscatterを使う"},
             {"label": "補足", "title": "背景はBackground Zone", "body": "マスごとに独立した面として描く"}],
     }),
-    ("stat_highlight", "単一の実績数値を主役に、補足指標と結論を示す", {
+    ("matrix", "matrix (x_axis/y_axis省略)",
+     "SWOT等、軸のない固定カテゴリの整理。rows/colsを指定すれば2x2を超えるマトリクスも同じ構造で作れる", {
+        "title": "matrix (x_axis/y_axis省略): 軸のない4カテゴリで示す", "density": "standard",
+        "primary_message": "SWOT等、連続軸を持たない固定4カテゴリはx_axis/y_axisを省略すると軸ラベル分の余白を返す",
+        "cells": [
+            {"label": "S", "title": "強み", "body": "x_axis/y_axisを省くと軸キャプション行を省く"},
+            {"label": "W", "title": "弱み", "body": "cellsの構造は軸ありと同じ"},
+            {"label": "O", "title": "機会", "body": "SWOT等、固定4カテゴリの整理に使う"},
+            {"label": "T", "title": "脅威", "body": "連続軸上の位置づけが要点ならx_axis/y_axisを指定"}],
+    }),
+    ("stat_highlight", "stat_highlight", "単一の実績数値を主役に、補足指標と結論を示す", {
         "title": "stat_highlight: 単一の実績数値を主役にする", "density": "standard",
         "primary_message": "stat.valueが主指標、supportingは補足指標のCard群",
         "stat": {"value": "1", "label": "主役にする数値は1つだけ",
@@ -451,7 +503,18 @@ renderer_specs = [
         "supporting": [{"value": "N件", "label": "supportingは補足指標"},
                        {"value": "任意", "label": "複数観点の対等比較はtable_with_conclusionを優先"}],
     }),
-    ("funnel", "順を追って絞り込まれていく推移（ファネル分析等）", {
+    ("stat_highlight", "stat_highlight (KPI dashboard)",
+     "toneは数値の符号でなく意味で指定する（-42%でもtone: positiveになり得る）", {
+        "title": "stat_highlight (stat省略): KPIダッシュボードとして一覧する",
+        "density": "standard",
+        "primary_message": "statを省略すると、supportingが均等グリッドのKPIダッシュボードになる",
+        "supporting": [
+            {"value": "94%", "label": "満足度"},
+            {"value": "-42%", "label": "作業時間削減率（削減=良い結果）", "tone": "positive"},
+            {"value": "+8%", "label": "解約率（増加=悪い結果）", "tone": "negative"},
+            {"value": "12", "label": "導入部署数"}],
+    }),
+    ("funnel", "funnel", "順を追って絞り込まれていく推移（ファネル分析等）", {
         "title": "funnel: 絞り込みの推移を帯の幅で示す", "density": "standard",
         "primary_message": "stagesは値の大きい順に並べる。帯の幅はおおよその絞り込み具合を示す",
         "stages": [
@@ -461,7 +524,7 @@ renderer_specs = [
             {"title": "正確な比率が要点なら", "value": 12,
              "value_label": "chart_with_insightの棒グラフを使う"}],
     }),
-    ("cycle", "繰り返し・循環するプロセス（PDCA等）", {
+    ("cycle", "cycle", "繰り返し・循環するプロセス（PDCA等）", {
         "title": "cycle: 繰り返すプロセスを円周上のCard群で示す", "density": "standard",
         "primary_message": "stepsを時計回りに配置し、最後尾から先頭へも矢印で結んで輪にする",
         "steps": [
@@ -481,100 +544,10 @@ RENDERERS["section_divider"](builder, {
 renderer_footer("section_divider", "複数テーマを扱う資料の章区切り")
 page += 1
 
-for type_name, desc, spec in renderer_specs:
-    RENDERERS[type_name](builder, spec, page)
-    renderer_footer(type_name, desc)
+for renderer_type, label, desc, spec in catalog:
+    RENDERERS[renderer_type](builder, spec, page)
+    renderer_footer(label, desc)
     page += 1
-
-# chart_with_insightは2 variantあるため2枚見せる
-chart_with_insight_specs = [
-    ("standard", "グラフ全体を公平に読む", {
-        "title": "chart_with_insight (standard): グラフと読み取りを公平に示す",
-        "density": "standard", "variant": "standard",
-        "primary_message": "グラフ全体を公平に読ませたいときはstandardを選ぶ",
-        "insight_heading": "使う場面",
-        "insights": ["グラフの全体像を偏りなく見せたいとき",
-                     "column/stacked_column/bar/line/pie/scatterに対応",
-                     "chartを指定すると数値をPowerPoint上で直接編集できる"],
-        "chart": {"type": "column", "categories": ["項目1", "項目2", "項目3"],
-                 "series": [{"name": "系列A", "values": [12, 38, 42]}]},
-    }),
-    ("conclusion-led", "一つの主張を強く伝える", {
-        "title": "chart_with_insight (conclusion-led): 一つの主張を強く伝える",
-        "density": "standard", "variant": "conclusion-led",
-        "primary_message": "1つの主張を強く伝えたいときはconclusion-ledを選ぶ",
-        "insight_heading": "使う場面",
-        "insights": ["グラフから読み取れる主張が1つに絞れるとき",
-                     "primary_messageで結論を先に示し、グラフで裏付ける"],
-        "chart": {"type": "line", "categories": ["項目1", "項目2", "項目3", "項目4"],
-                 "series": [{"name": "系列A", "values": [5, 22, 38, 42]}]},
-    }),
-]
-for variant, desc, spec in chart_with_insight_specs:
-    RENDERERS["chart_with_insight"](builder, spec, page)
-    renderer_footer(f"chart_with_insight ({variant})", desc)
-    page += 1
-
-# matrixとstat_highlightは、新しい構造を増やさずパラメータの違いだけで
-# 別用途に対応する追加variantを持つため、それぞれ見せる。
-RENDERERS["matrix"](builder, {
-    "title": "matrix (x_axis/y_axis省略): 軸のない4カテゴリで示す", "density": "standard",
-    "primary_message": "SWOT等、連続軸を持たない固定4カテゴリはx_axis/y_axisを省略すると軸ラベル分の余白を返す",
-    "cells": [
-        {"label": "S", "title": "強み", "body": "x_axis/y_axisを省くと軸キャプション行を省く"},
-        {"label": "W", "title": "弱み", "body": "cellsの構造は軸ありと同じ"},
-        {"label": "O", "title": "機会", "body": "SWOT等、固定4カテゴリの整理に使う"},
-        {"label": "T", "title": "脅威", "body": "連続軸上の位置づけが要点ならx_axis/y_axisを指定"}],
-}, page)
-renderer_footer("matrix (軸なし)", "SWOT等、軸のない固定4カテゴリの整理")
-page += 1
-
-RENDERERS["matrix"](builder, {
-    "title": "matrix (rows: 3, cols: 3): 2x2を超えるマトリクスも同じ構造で",
-    "density": "dense",
-    "rows": 3, "cols": 3,
-    "primary_message": "GE-McKinseyの9マス等、rows/colsを指定するだけで2x2を超える構造にも対応する",
-    "x_axis": {"low": "競争力: 弱", "high": "競争力: 強"},
-    "y_axis": {"low": "市場魅力度: 低", "high": "市場魅力度: 高"},
-    "cells": [
-        {"label": "撤退", "title": "低×弱"}, {"label": "選別", "title": "低×中"},
-        {"label": "選別", "title": "低×強"},
-        {"label": "選別", "title": "中×弱"}, {"label": "選別", "title": "中×中", "emphasis": True},
-        {"label": "投資", "title": "中×強"},
-        {"label": "選別", "title": "高×弱"}, {"label": "投資", "title": "高×中"},
-        {"label": "投資", "title": "高×強"}],
-}, page)
-renderer_footer("matrix (rows: 3, cols: 3)", "GE-McKinsey等、2x2を超えるマトリクスの整理")
-page += 1
-
-RENDERERS["stat_highlight"](builder, {
-    "title": "stat_highlight (stat省略): KPIダッシュボードとして一覧する",
-    "density": "standard",
-    "primary_message": "statを省略すると、supportingが均等グリッドのKPIダッシュボードになる",
-    "supporting": [
-        {"value": "94%", "label": "満足度"},
-        {"value": "-42%", "label": "作業時間削減率（削減=良い結果）", "tone": "positive"},
-        {"value": "+8%", "label": "解約率（増加=悪い結果）", "tone": "negative"},
-        {"value": "12", "label": "導入部署数"}],
-}, page)
-renderer_footer("stat_highlight (KPI dashboard)", "toneは数値の符号でなく意味で指定する（-42%でもtone: positiveになり得る）")
-page += 1
-
-# stage_trackの矢印（Connector）はconnectors:trueの時だけ現れるオプションの
-# 見た目であり、他15種の基本例では使っていない（矢印が既定の見た目だと
-# 誤解させないため）。矢印そのものの見本はここで独立して見せる。
-RENDERERS["stage_track"](builder, {
-    "title": "stage_track (connectors: true): 矢印で順序を明示する",
-    "density": "standard",
-    "connectors": True,
-    "primary_message": "段階の間に順序・因果があることを強調したい場合だけconnectors:trueにする",
-    "stages": [
-        {"label": "STEP1", "title": "既定はconnectors: false", "body": "他の15種のカタログ例と同じ矢印なしの見た目"},
-        {"label": "STEP2", "title": "矢印はここでだけ使う", "body": "この構造図に限り、順序性を強めたいときに選べるオプション"},
-        {"label": "STEP3", "title": "太さ・矢じりは固定", "body": "Atom層のConnectorが一貫した太さで描く"}],
-}, page)
-renderer_footer("stage_track (connectors: true)", "矢印表現はここだけの限定的なオプション。cycleの円周矢印は構造上必須のため別枠")
-page += 1
 
 output = builder.save(SKILL / "user-guide" / "capability-showcase.pptx")
 print("PPTX:", output)

@@ -170,10 +170,19 @@ def _draw_calendar(slide, x, y, size, color):
                   fill=_WHITE, rounding=0.14)
     _rounded_rect(slide, 0.22, 0.26, 0.78, 0.4, x=x, y=y, size=size,
                   fill=color, rounding=0.05)
+    # リング（背景円・ヘッダー帯のどちらの上にもまたがる）はcolorのままだと
+    # 同じ色の上に重なって同化し見えなくなるため、白で塗り両方の上で視認
+    # できるようにする。
     _rounded_rect(slide, 0.32, 0.16, 0.4, 0.32, x=x, y=y, size=size,
-                  fill=color, rounding=0.5)
+                  fill=_WHITE, rounding=0.5)
     _rounded_rect(slide, 0.6, 0.16, 0.68, 0.32, x=x, y=y, size=size,
-                  fill=color, rounding=0.5)
+                  fill=_WHITE, rounding=0.5)
+    # 白い本体だけだと単なるカードに見えるため、日付の格子（2行×3列）を
+    # 足してカレンダーだと一目でわかるようにする。
+    for row_y in (0.5, 0.64):
+        for col_x in (0.3, 0.45, 0.6):
+            _rounded_rect(slide, col_x, row_y, col_x + 0.1, row_y + 0.08,
+                         x=x, y=y, size=size, fill=color, rounding=0.3)
 
 
 def _draw_idea(slide, x, y, size, color):

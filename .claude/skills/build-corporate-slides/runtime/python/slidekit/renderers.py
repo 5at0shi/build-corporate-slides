@@ -1092,10 +1092,13 @@ def render_issue_tree(builder, spec, page):
                           root_inner.h, root_paragraphs,
                           vertical_anchor=MSO_ANCHOR.MIDDLE)
 
-    branch_gap = Inches(0.16)
+    # BoxGridが返すのは内側の余白を差し引いたRegionのため、Cardの外形
+    # （＝線を結ぶ位置）はinsetを足し戻して求める。両者がズレると線が
+    # Cardの縁から浮くので、insetは変数を共有して同じ値から導く。
+    branch_inset_x, branch_inset_y = Inches(0.22), Inches(0.16)
     contents = BoxGrid(slide, branch_col, branches, rows=max(1, len(branches)),
-                       cols=1, gap=branch_gap, inset_x=Inches(0.22),
-                       inset_y=Inches(0.16))
+                       cols=1, gap=Inches(0.16), inset_x=branch_inset_x,
+                       inset_y=branch_inset_y)
     root_center_y = root_y + root_h // 2
     leaf_bands = None
     if leaf_col is not None:
@@ -1105,11 +1108,9 @@ def render_issue_tree(builder, spec, page):
             [max(1, len(branch.get("items", []))) for branch in branches],
             gap=Inches(0.18))
     for index, (branch, inner) in enumerate(zip(branches, contents)):
-        card_y = inner.y - Inches(0.16)
-        card_h = inner.h + Inches(0.32)
-        center_y = card_y + card_h // 2
+        center_y = (inner.y - branch_inset_y) + (inner.h + 2 * branch_inset_y) // 2
         Connector(slide, root_col.x + root_col.w, root_center_y,
-                  inner.x - Inches(0.22), center_y, style="elbow",
+                  inner.x - branch_inset_x, center_y, style="elbow",
                   arrow="none", color=PALETTE.grey_500, width=Pt(1.25))
         paragraphs = [{"segments": [(branch.get("title", ""), {
             "size": typography.body, "color": PALETTE.text_primary,
@@ -1131,7 +1132,7 @@ def render_issue_tree(builder, spec, page):
         for item, leaf in zip(items, leaf_rows):
             add_background_zone(slide, leaf.x, leaf.y, leaf.w, leaf.h,
                                 tone="neutral", rounded=True)
-            Connector(slide, inner.x + inner.w + Inches(0.22), center_y,
+            Connector(slide, inner.x + inner.w + branch_inset_x, center_y,
                       leaf.x, leaf.y + leaf.h // 2, style="elbow",
                       arrow="none", color=PALETTE.line_neutral, width=Pt(1))
             add_paragraph_textbox(slide, leaf.x + Inches(0.18), leaf.y,

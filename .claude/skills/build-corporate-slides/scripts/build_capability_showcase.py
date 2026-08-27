@@ -532,18 +532,19 @@ catalog = [
             {"value": "+8%", "label": "解約率（増加=悪い結果）", "tone": "negative"},
             {"value": "12", "label": "導入部署数"}],
     }),
-    ("funnel", "funnel", "順を追って絞り込まれていく推移（営業パイプライン、TAM/SAM/SOM等）。insights指定で気づきを併記できる", {
-        "title": "funnel: 営業パイプラインの絞り込みと、そこから読み取れることを示す",
+    ("funnel", "funnel", "順を追って絞り込まれていく推移（営業パイプライン、市場規模のTAM/SAM/SOM等）。insights指定で使用ケースや気づきを併記できる", {
+        "title": "funnel: 絞り込みの推移を帯の幅で示す",
         "density": "standard",
-        "primary_message": "次四半期は商談化率の改善を最優先指標に据える",
-        "insight_heading": "読み取れること",
+        "primary_message": "stagesは値の大きい順に並べる。帯の幅はおおよその絞り込み具合を示す構造表現で、正確な比率が要点ならchart_with_insightの棒グラフを使う",
+        "insight_heading": "使う場面",
         "insights": [
-            "問い合わせ→商談の転換率が23%と、他の段階（40%前後）より明らかに低い",
-            "提案後の受注率（32%）自体は業界平均並みで、後工程に大きな問題はない",
-            "最大のボトルネックは初期対応。営業担当への一次対応の割り振り速度を見直す"],
+            "リード獲得の営業パイプライン（問い合わせ→商談→提案→受注等、下図は例）",
+            "市場規模の絞り込み（TAM→SAM→SOM）",
+            "帯の幅は値に比例するのではなく、平方根で圧縮したおおよその縮み具合を表す",
+            "insights省略時はこの箇条書きをやめ、帯が全幅を使う標準の見た目になる"],
         "stages": [
             {"title": "問い合わせ", "value": 420, "value_label": "420件"},
-            {"title": "商談", "value": 95, "value_label": "95件（転換率 23%）"},
+            {"title": "商談", "value": 95, "value_label": "95件"},
             {"title": "提案", "value": 38, "value_label": "38件"},
             {"title": "受注", "value": 12, "value_label": "12件"}],
     }),

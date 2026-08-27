@@ -15,7 +15,12 @@ description: 社内向けPowerPoint資料の構成設計、作成、レビュー
 
 設定済みの `python.executable` がある場合は必ずそれを優先する。別のvenvを作成・選択したり、依存関係を勝手にインストールしたりしない。不足時は [`runtime/python/requirements.txt`](runtime/python/requirements.txt) と照合して報告する。標準利用環境は個人PCでの閲覧、事前配布、オンライン会議の画面共有であり、遠距離投影を暗黙に想定しない。
 
-CREATE前に、設定されたPythonで [`scripts/check_config.py`](scripts/check_config.py) と [`scripts/check_environment.py`](scripts/check_environment.py) を実行する。不足設定・依存があれば生成を始めず、差分を報告する。
+CREATE前に、設定されたPythonで次を実行する。不足設定・依存があれば生成を始めず、差分を報告する。`check_config.py` は検証するconfigのパスを引数に取る。
+
+```bash
+<python> .claude/skills/build-corporate-slides/scripts/check_config.py .slide-skill-config.yaml
+<python> .claude/skills/build-corporate-slides/scripts/check_environment.py
+```
 
 ## Workspace Contract
 

@@ -73,11 +73,30 @@
 | Background Zone | 範囲、まとまり、フェーズ | 原則なし。影なし |
 | Card | 独立した情報単位 | 細線または軽い影 |
 | Focus Panel | ページ内の重点対象 | 色・線・サイズで明確化 |
-| Key Message | ページの結論 | 内容に応じ4スタイル |
+| Key Message | ページの結論 | 内容に応じ5スタイル（下記） |
 | Section Lead | セクション内の見出し | 短いブランド線＋文字 |
 | Cover Brand Field | 表紙のブランド面 | 情報を詰め込まない |
 | Tag | ステータス・分類の小さなラベル | 常に丸薬型。枠線のみ／単色塗りの2種 |
 | Stat | 数値を主役にする表現の最小単位 | 面（Card/Zone）は別途組み合わせる |
+
+`add_background_zone(tone=...)` と、Fragmentへ `tones=[...]` として渡す面の色は次の6種。並列する複数のZoneを区別する場合は `neutral` / `brand-soft` / `teal-soft` を使い、符号・重大度を示す場合だけ後半3種を使う。
+
+| tone | 用途 |
+|---|---|
+| `neutral` | ニュートラルな補助面（既定的な選択） |
+| `brand-soft` | 青系のまとまり・選択範囲 |
+| `teal-soft` | 異なる構造の補助系列 |
+| `positive-soft` / `negative-soft` / `warning-soft` | 良い/悪い/注意の意味を持つ面（下記「符号・重大度の色」） |
+
+`add_key_message(style=...)` は次の5種。
+
+| style | 見た目 | 使いどころ |
+|---|---|---|
+| `editorial` | 左に短い青線＋太字 | 通常のページ結論（多くのrendererの既定） |
+| `subtle` | 淡いグレーの面 | 表・グラフの下に添える控えめな結論 |
+| `solid` | 濃紺の面に白文字 | 最も強く言い切るとき。1デッキで多用しない |
+| `card` | 枠線付きの面 | 周囲にもCardが並ぶページで揃えるとき |
+| `plain` | 装飾なし | ページタイトル直下の導入文など、罫線を重ねたくない位置 |
 
 ## Common Structural Choices
 

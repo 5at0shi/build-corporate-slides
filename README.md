@@ -26,7 +26,7 @@
 ./.venv/bin/python .claude/skills/build-corporate-slides/scripts/self_test.py
 
 # 過去の不具合を再現する回帰確認デッキを生成し、検証・レンダリングする例
-./.venv/bin/python build_slides/work/skill-regression-check/generate_pptx.py
+./.venv/bin/python .claude/skills/build-corporate-slides/scripts/build_regression_check.py
 ./.venv/bin/python .claude/skills/build-corporate-slides/scripts/validate_pptx.py build_slides/output/skill-regression-check.pptx
 ./.venv/bin/python .claude/skills/build-corporate-slides/scripts/render_and_check.py build_slides/output/skill-regression-check.pptx
 

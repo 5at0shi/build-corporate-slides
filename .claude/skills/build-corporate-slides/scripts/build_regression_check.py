@@ -9,22 +9,21 @@ renderer/componentの不具合を1件直すたびに、その不具合を再現�
 （レビュー用のPDFだけを見て、コードを読まなくても確認できるように）。
 
 使い方（ワークスペース直下から）:
-    ./.venv/bin/python build_slides/work/skill-regression-check/generate_pptx.py
-    ./.claude/skills/build-corporate-slides/scripts/render_and_check.py \\
+    ./.venv/bin/python .claude/skills/build-corporate-slides/scripts/build_regression_check.py
+    ./.venv/bin/python .claude/skills/build-corporate-slides/scripts/render_and_check.py \\
         build_slides/output/skill-regression-check.pptx \\
         --pdf build_slides/work/skill-regression-check/render/deck.pdf
 """
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[3]
-SKILL = ROOT / ".claude" / "skills" / "build-corporate-slides"
+SKILL = Path(__file__).resolve().parents[1]
+WORKSPACE_ROOT = Path.cwd()
 sys.path.insert(0, str(SKILL / "runtime" / "python"))
 
-from pptx.enum.text import MSO_ANCHOR  # noqa: E402
 from pptx.util import Inches, Pt  # noqa: E402
 
-from slidekit import DeckBuilder, LAYOUT, PALETTE  # noqa: E402
+from slidekit import DeckBuilder, PALETTE  # noqa: E402
 from slidekit.components import add_background_zone, add_card  # noqa: E402
 from slidekit.renderers import RENDERERS  # noqa: E402
 from slidekit.typography import add_textbox  # noqa: E402
@@ -179,7 +178,7 @@ def build_numbered_list_page(builder, page):
     RENDERERS["numbered_list"](builder, spec, page)
 
 
-builder = DeckBuilder.from_workspace(ROOT)
+builder = DeckBuilder.from_workspace(WORKSPACE_ROOT)
 builder.add_cover(
     "スキル回帰確認デッキ",
     subtitle="build-corporate-slidesスキルの修正のたびに1枚追加し、"

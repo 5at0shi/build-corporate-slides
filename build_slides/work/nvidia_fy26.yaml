@@ -1,0 +1,186 @@
+deck:
+  title: "NVIDIA 直近3期の業績と要因分析"
+  mode: business
+
+slides:
+  - id: cover
+    type: cover
+    title: "NVIDIA 直近3期の業績と要因分析"
+    subtitle: "FY2024〜FY2026の推移、増収の要因分解、粗利率の変動要因と持続性の論点"
+    eyebrow: "COMPANY ANALYSIS"
+    brand_side: right
+    brand_shape: diagonal
+
+  - id: summary
+    type: table_with_conclusion
+    density: dense
+    title: "3期で売上は3.5倍、利益は4.0倍になった"
+    primary_message: "成長率は+126%→+114%→+65%と鈍化したが、増加額は毎期拡大している。率の鈍化は分母の拡大によるもので、需要の減速ではない"
+    columns:
+      - key: item
+        label: "主要指標（GAAP）"
+        weight: 1.9
+      - key: fy24
+        label: "FY2024"
+        weight: 1
+        align: center
+      - key: fy25
+        label: "FY2025"
+        weight: 1
+        align: center
+      - key: fy26
+        label: "FY2026"
+        weight: 1
+        align: center
+      - key: note
+        label: "3期の変化"
+        weight: 2.1
+    rows:
+      - item: "売上高"
+        fy24: "609億ドル"
+        fy25: "1,305億ドル"
+        fy26: "2,159億ドル"
+        note: "3.5倍。増加額は年+339億→+696億→+854億と拡大"
+        _highlight: true
+      - item: "　うちデータセンター"
+        fy24: "475億ドル"
+        fy25: "1,152億ドル"
+        fy26: "1,937億ドル"
+        note: "売上構成比は78%→88%→90%へ上昇"
+      - item: "　うちゲーミング"
+        fy24: "104億ドル"
+        fy25: "114億ドル"
+        fy26: "160億ドル"
+        note: "FY2026は+41%だが、構成比は7%へ低下"
+      - item: "粗利率"
+        fy24: "72.7%"
+        fy25: "75.0%"
+        fy26: "71.1%"
+        note: "FY2026のみ低下。Q1の一時費用が主因（次頁以降）"
+      - item: "純利益"
+        fy24: "298億ドル"
+        fy25: "729億ドル"
+        fy26: "1,201億ドル"
+        note: "4.0倍。純利益率は49%→56%→56%"
+      - item: "希薄化後EPS"
+        fy24: "1.19ドル"
+        fy25: "2.94ドル"
+        fy26: "4.90ドル"
+        note: "FY2024は10対1株式分割の調整後"
+
+  - id: bridge
+    type: waterfall
+    density: dense
+    title: "増収854億ドルのうち92%はデータセンターが占める"
+    primary_message: "成長要因は事実上1つに集中している。ゲーミング等の回復は寄与するが、全体の趨勢を左右する規模ではない"
+    bars:
+      - label: "FY2025 売上高"
+        value: 1305
+        kind: total
+        value_label: "1,305億"
+      - label: "DC コンピュート"
+        value: 601
+        value_label: "+601億"
+      - label: "DC ネットワーキング"
+        value: 184
+        value_label: "+184億"
+      - label: "ゲーミング"
+        value: 47
+        value_label: "+47億"
+      - label: "ProViz・自動車ほか"
+        value: 22
+        value_label: "+22億"
+      - label: "FY2026 売上高"
+        value: 2159
+        kind: total
+        value_label: "2,159億"
+
+  - id: quarterly
+    type: chart_with_insight
+    density: dense
+    variant: standard
+    title: "FY2026は四半期ごとに増収し、粗利率はQ1の落ち込みから回復した"
+    primary_message: "通期粗利率71.1%はQ1の一時費用による押し下げであり、Q4時点の実力値は75.0%とみるのが妥当"
+    chart:
+      type: column
+      categories: ["Q1", "Q2", "Q3", "Q4"]
+      series:
+        - name: "売上高（億ドル）"
+          values: [441, 467, 570, 681]
+    insight_heading: "四半期推移から読み取れること"
+    insights:
+      - "売上は4四半期連続で増加し、Q4は前年同期比+73%・前四半期比+20%"
+      - "粗利率は60.5%→72.4%→73.4%→75.0%と回復。Q1はH20関連の在庫・購入義務で45億ドルの評価損を計上"
+      - "Q1はさらに25億ドル分のH20を出荷できず、売上と利益の両方を押し下げた"
+      - "Q4のデータセンター売上は623億ドル、ネットワーキングは前四半期比3.5倍"
+
+  - id: drivers
+    type: comparison
+    density: dense
+    variant: balanced
+    title: "利益を押し上げた要因と、押し下げた要因"
+    primary_message: "押し上げ要因は構造的（需要とシステム単価）、押し下げ要因は一時的または外生的で、性質が異なる"
+    left:
+      heading: "押し上げた要因"
+      items:
+        - title: "ラック単位への販売単位の移行"
+          body: "GPU単体でなくシステム一式で売れるため、1案件あたりの金額が大きい"
+        - title: "ネットワーキングの同時搭載"
+          body: "NVLink・Spectrum-X等が314億ドル（+142%）まで拡大し、DC売上の16%を占めた"
+        - title: "Q4に向けた稼働率の改善"
+          body: "粗利率はQ2以降3四半期連続で改善し、Q4は75.0%まで戻った"
+        - title: "需要の裾野の広がり"
+          body: "ProVizが+70%、自動車が+39%と、DC以外も二桁成長へ転じた"
+    right:
+      heading: "押し下げた要因"
+      items:
+        - title: "対中輸出規制"
+          body: "Q1にH20関連で45億ドルの評価損。以降は中国向けデータセンター売上をゼロとして計画している"
+        - title: "顧客の集中"
+          body: "FY2026は売上の10%以上を占める直接顧客が4社で合計61%、最大顧客は22%"
+        - title: "供給側の制約"
+          body: "需要ではなく供給が出荷量の上限を決める局面が続いている"
+
+  - id: sustainability
+    type: issue_tree
+    density: dense
+    title: "この成長が続くかは、3つの論点に分解できる"
+    primary_message: "需要の可視性は高い一方、リスクは需要側ではなく供給と地政学に偏っている"
+    root:
+      label: "論点"
+      title: "FY2027以降も成長は続くか"
+      body: "需要・供給・外部環境の3方向へ分解する"
+    branches:
+      - title: "需要は積み上がっているか"
+        body: "受注の可視性で判断する"
+        items:
+          - "GTC 2026でBlackwell＋Vera Rubinの受注を2027年までで1兆ドルと提示（前年の5,000億ドルから倍増）"
+          - "Q1 FY2027の見通しは780億ドル±2%、粗利率は約74.9%"
+      - title: "供給は追いつくか"
+        body: "出荷量の制約は供給側にある"
+        items:
+          - "Rubinは6チップ構成で、推論のトークン単価をBlackwell比で最大1/10へ下げる設計"
+          - "Rubinは2026年後半に一般提供、FY2027 Q1から売上寄与が始まる"
+      - title: "外部環境は悪化しないか"
+        body: "規制と顧客構成"
+        items:
+          - "中国向けデータセンター売上はゼロ前提のため、規制強化の追加打撃は限定的"
+          - "上位4社への61%集中は、1社の設備投資計画の変更が業績へ直結することを意味する"
+
+  - id: conclusion
+    type: evidence_and_decision
+    density: dense
+    title: "分析の結論"
+    primary_message: "FY2026の粗利率低下は一時要因であり、事業の収益構造は毀損していない。注視すべきは需要ではなく供給と顧客集中"
+    evidence_heading: "この結論を支える事実"
+    evidence:
+      - title: "粗利率の低下は単一四半期に起因する"
+        body: "通期71.1%に対しQ4は75.0%。Q1のH20評価損45億ドルを除けば例年並みの水準にある"
+      - title: "増収の質は落ちていない"
+        body: "純利益率はFY2025・FY2026とも56%で横ばい。増収がそのまま利益へ落ちる構造は維持されている"
+      - title: "成長の源泉が1つに集中している"
+        body: "増収854億ドルの92%がデータセンター。この分野の設備投資が鈍れば代替の成長源はない"
+      - title: "需要より供給が制約になっている"
+        body: "受注の可視性は1兆ドル規模まで示されており、実績を決めるのは作れる量の側にある"
+    decision_heading: "示唆"
+    decision_detail: "業績のモニタリング指標は売上成長率ではなく、(1)四半期の粗利率、(2)上位顧客の設備投資計画、(3)Rubinの立ち上がり時期の3点に置くべきである。中国市場は既に計画から外れているため、規制報道への反応は限定的に評価してよい。"

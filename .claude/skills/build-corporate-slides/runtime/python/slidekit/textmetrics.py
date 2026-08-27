@@ -47,8 +47,14 @@ def adaptive_gap_pt(content_pt: float, item_count: int, available_pt: float, *,
     return base_gap + extra
 
 
-def estimate_item_list_height_pt(typography, items, width_pt, *, body_gap=3) -> float:
-    """add_item_listが描く内容のおおよその高さ(pt)。レイアウト判断用の概算。"""
+def estimate_item_list_height_pt(typography, items, width_pt, *, body_gap=3,
+                                 title_prefix="") -> float:
+    """add_item_listが描く内容のおおよその高さ(pt)。レイアウト判断用の概算。
+
+    title_prefixには行頭記号（"・  "、"01   "等）を渡す。実際の描画は記号を
+    titleの先頭へ付けた文字列を折り返すため、記号を含めずに見積もると、
+    狭い段組みで1行と2行の境目を読み違えて高さを過小評価する。
+    """
     total = 0.0
     for index, item in enumerate(items):
         if isinstance(item, str):
@@ -56,7 +62,7 @@ def estimate_item_list_height_pt(typography, items, width_pt, *, body_gap=3) -> 
         else:
             title, body = item.get("title", ""), item.get("body")
         total += estimate_paragraph_height_pt(
-            title, typography.body.pt, width_pt, line_spacing=1.08)
+            title_prefix + title, typography.body.pt, width_pt, line_spacing=1.08)
         if body:
             # add_item_listは実際には本文の前に "    "（4スペース）の字下げを
             # 付けて描画するため、折り返し推定もそれを含めないと実際より

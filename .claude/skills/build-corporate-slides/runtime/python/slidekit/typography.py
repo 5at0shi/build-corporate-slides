@@ -269,7 +269,10 @@ def add_text_list(slide, x, y, w, h, items, *, marker="bullet", bullet_char="・
 
     body_gap = gap
     if adaptive and items:
-        content_pt = estimate_item_list_height_pt(typography, items, w / 12700, body_gap=0)
+        content_pt = estimate_item_list_height_pt(
+            typography, items, w / 12700, body_gap=0,
+            title_prefix=(f"{bullet_char}  " if marker == "bullet" else
+                          "00   " if marker == "number" else ""))
         body_gap = int(adaptive_gap_pt(content_pt, len(items), h / 12700, base_gap=gap))
     paragraphs = []
     for index, (title, body) in enumerate(normalized):

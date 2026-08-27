@@ -1,0 +1,184 @@
+deck:
+  title: "AIエージェントの社内活用"
+  mode: business
+
+slides:
+  - id: cover
+    type: cover
+    title: "SkillsとSubagentsを社内でどう使うか"
+    subtitle: "属人化した手順を配布可能な資産へ変える。適用領域、体制、展開計画"
+    eyebrow: "AI ENABLEMENT"
+    brand_side: right
+    brand_shape: diagonal
+
+  - id: problem
+    type: stat_highlight
+    density: standard
+    title: "いま起きていること"
+    primary_message: "AIの使い方が個人に閉じている。同じ指示を毎回書き直す状態が、部門をまたいで並行して起きている"
+    stat:
+      value: "個人単位"
+      label: "AI活用のノウハウが留まっている単位"
+      detail: "「うまく使える人」の手順が共有されず、同じ試行錯誤が部門ごとに繰り返されている"
+      tone: negative
+    supporting:
+      - value: "毎回"
+        label: "同じ前提・作法を書き直している頻度"
+      - value: "0件"
+        label: "組織として配布されている標準手順"
+      - value: "不明"
+        label: "誰がどう使っているかの可視性"
+
+  - id: mechanism
+    type: table_with_insight
+    density: dense
+    title: "SkillsとSubagentsは、解く問題が違う"
+    primary_message: "手順を配るのがSkills、作業を切り離すのがSubagents。混同すると、どちらも中途半端な使い方になる"
+    columns:
+      - key: axis
+        label: "比較軸"
+        weight: 1.2
+      - key: skill
+        label: "Skills"
+        weight: 2.3
+      - key: agent
+        label: "Subagents"
+        weight: 2.3
+    rows:
+      - axis: "解く問題"
+        skill: "毎回同じ指示を書いている状態をなくす"
+        agent: "長い作業の途中経過で会話が埋まる状態をなくす"
+        _highlight: true
+      - axis: "実体"
+        skill: "SKILL.mdという1つのMarkdownファイルと、付随する資料・スクリプト"
+        agent: "システムプロンプトと、使えるツール・モデル・権限の定義"
+      - axis: "読み込み"
+        skill: "必要と判断されたときだけ本文が読み込まれる"
+        agent: "独立した文脈で起動し、結果の要約だけを返す"
+      - axis: "配布"
+        skill: "個人・プロジェクト・プラグイン・組織配布の4階層"
+        agent: "同様に4階層。プロジェクト分はGitで共有する"
+      - axis: "向く用途"
+        skill: "レビュー基準、資料の作法、定型の申請手順、社内ツールの使い方"
+        agent: "調査、テスト実行、大量の出力を伴う確認作業"
+    insight_heading: "実務上の要点"
+    insights:
+      - "Skillsは使われるまで文脈を消費しないため、量を増やしても常時のコストにならない"
+      - "SubagentsはツールとモデルをMarkdownの数行で絞れる。読み取り専用の担当を作れる"
+      - "両者は組み合わせられる。Subagentへ参照用のSkillsを事前読み込みできる"
+
+  - id: where
+    type: issue_tree
+    density: dense
+    title: "社内のどこに効くかを分解する"
+    primary_message: "開発部門だけの話ではない。手順が文書化されている業務はすべて対象になりうる"
+    root:
+      label: "問い"
+      title: "どの業務から着手するか"
+      body: "手順の型と、成果物の型で分ける"
+    branches:
+      - title: "手順が決まっている作業"
+        body: "文書化済みの作法をそのまま載せる"
+        items:
+          - "コードレビューの観点と指摘の書き方"
+          - "社内資料の体裁・用語・開示区分の付け方"
+          - "申請・稟議の記載要件チェック"
+      - title: "調査・確認が中心の作業"
+        body: "独立した文脈で任せる"
+        items:
+          - "仕様や過去資料の横断調査"
+          - "テスト実行と失敗箇所の切り分け"
+      - title: "成果物の型が決まっている作業"
+        body: "スクリプトを同梱して品質を固定する"
+        items:
+          - "定型帳票・議事録・報告書の生成"
+          - "データ整形と検証"
+
+  - id: rollout
+    type: timeline
+    density: standard
+    title: "展開の進め方"
+    primary_message: "作法の整備を先行させ、統制が整った四半期から対象部門を広げる"
+    periods: ["Q1", "Q2", "Q3", "Q4"]
+    rows:
+      - label: "作法の整備"
+        title: "既存の手順書からSkillsへの移植"
+        start: 1
+        end: 2
+      - label: "統制"
+        title: "権限・監査・配布方式の確定"
+        start: 1
+        end: 2
+        tone: warning
+      - label: "先行部門"
+        title: "2部門で実運用し、改善点を回収"
+        start: 2
+        end: 3
+        tone: teal
+      - label: "全社展開"
+        title: "組織配布へ切り替え"
+        start: 3
+        end: 4
+        tone: brand
+
+  - id: risks
+    type: priority_actions
+    density: dense
+    title: "先に手当てすべき論点"
+    primary_message: "最大の論点は権限。Skillsは実行するスクリプトを同梱できるため、配布の承認経路を先に決める"
+    issues_heading: "想定される課題"
+    issues:
+      - priority: "最優先"
+        title: "配布物が実行権限を持つ"
+        body: "Skillsは任意の言語のスクリプトを同梱して実行できる。レビューなしの配布は、承認されていないコードを全社の端末で走らせることになる"
+      - priority: "高"
+        title: "作法が古くなる"
+        body: "手順書と同じく、更新されないSkillは誤った作法を配り続ける。所有者と見直し周期を決めておく必要がある"
+      - priority: "高"
+        title: "名前の衝突と優先順位"
+        body: "組織配布・個人・プロジェクトで同名の場合、上位が優先される。意図せず個人の定義が組織の標準を上書きしうる"
+      - priority: "中"
+        title: "使われないまま増える"
+        body: "説明文が曖昧だと呼び出されない。数だけ増えて実効性がない状態になりやすい"
+    actions_heading: "対応方針"
+    actions:
+      - "スクリプトを同梱するSkillは、コードと同じレビュー経路を必須にする"
+      - "Skillごとに所有部署と半年ごとの見直し期限を明記する"
+      - "組織配布はmanaged settingsに一本化し、個人定義での上書きを禁止する"
+      - "説明文は「いつ使うか」を具体的に書き、呼び出し実績を四半期で確認する"
+      - "権限設定で、許可するSkillを明示的に列挙する方式を既定にする"
+
+  - id: org
+    type: org_layers
+    density: standard
+    title: "推進体制"
+    primary_message: "作法の中身は現場が持ち、配布と統制だけを情報システム部門へ集約する"
+    layers:
+      - heading: "方針決定"
+        title: "AI活用推進委員会"
+        body: "配布の承認基準、権限方針、対象部門の拡大判断を決める"
+      - heading: "配布・統制"
+        title: "情報システム部門"
+        body: "組織配布の仕組みを運用し、権限設定と監査を担当する"
+    execution_heading: "各部門の役割"
+    execution:
+      - title: "開発部門"
+        body: "レビュー・テストの作法"
+      - title: "管理部門"
+        body: "申請・帳票の作法"
+      - title: "各部門の担当者"
+        body: "自部門の手順の移植"
+
+  - id: next
+    type: numbered_list
+    density: standard
+    message_position: bottom
+    title: "次のステップ"
+    primary_message: "上記3点について、次回の委員会でご判断をお願いします"
+    items:
+      - title: "先行2部門の選定"
+        body: "手順書が整備済みで、成果を測りやすい業務を持つ部門を選ぶ"
+      - title: "配布承認の経路の確定"
+        body: "スクリプトを含むSkillのレビュー体制をどこに置くかを決める"
+      - title: "評価指標の合意"
+        body: "呼び出し実績と、対象業務の所要時間を測る仕組みを先に用意する"

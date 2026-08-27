@@ -174,7 +174,7 @@ def render_evidence_and_decision(builder, spec, page):
                            left.w + Inches(0.24), left.h + Inches(0.12),
                            tone="neutral")
     list_pt = estimate_item_list_height_pt(
-        typography, evidence, left_inner.w / 12700)
+        typography, evidence, left_inner.w / 12700, title_prefix="•  ")
     block_h = HEADING_BLOCK_H + int(list_pt * 12700)
     top = left_inner.y + max(0, (left_inner.h - block_h) // 2)
     add_section_lead(slide, left_inner.x, top, left_inner.w,
@@ -573,7 +573,8 @@ def render_stage_track(builder, spec, page):
                 body_text, typography.small.pt, width_pt, line_spacing=1.15,
                 space_after=6)
         list_pt = (estimate_item_list_height_pt(typography, items, width_pt,
-                                                body_gap=4) if items else 0.0)
+                                                body_gap=4, title_prefix="・  ")
+                   if items else 0.0)
         blocks.append({"items": items, "paragraphs": paragraphs,
                        "head_pt": head_pt, "list_pt": list_pt})
 

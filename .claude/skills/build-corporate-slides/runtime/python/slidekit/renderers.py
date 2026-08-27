@@ -357,11 +357,17 @@ def render_org_layers(builder, spec, page):
             # マーカーが本文へ被らないことを構造的に保証する（マーカーだけ
             # 固定のまま offset だけ縮めると、マーカーが本文へ被る）。
             marker_h = min(Inches(0.38), max(Inches(0.22), int(inner.h * 0.34)))
+            # 下限(0.22in)がinner.hを上回ると本文の高さが負になり、
+            # python-pptxがValueErrorで落ちる（layers 7件以上で発生していた）。
+            # マーカーと余白の合計が行の高さを超えないよう上限も掛ける。
+            # marker_hとheader_offsetは同じ値から導くため、切り詰めても
+            # マーカーが本文へ被らない関係は保たれる。
+            marker_h = min(marker_h, max(0, inner.h - SECTION_LEAD_GAP))
             add_section_lead(slide, inner.x, inner.y, inner.w,
                              layer.get("heading", ""), marker_h=marker_h)
             header_offset = marker_h + SECTION_LEAD_GAP
             add_paragraph_textbox(slide, inner.x, inner.y + header_offset,
-                                  inner.w, inner.h - header_offset, [
+                                  inner.w, max(0, inner.h - header_offset), [
                 {"segments": [(layer.get("title", ""), {
                     "size": typography.body, "color": PALETTE.text_primary,
                     "bold": True, "font": typography.body_font,

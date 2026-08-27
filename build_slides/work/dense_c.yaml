@@ -1,0 +1,142 @@
+deck:
+  title: "人事制度改定"
+  mode: business
+
+slides:
+  - id: cover
+    type: cover
+    title: "人事制度改定 最終答申"
+    subtitle: "等級・報酬・評価の3制度の同時改定と、移行期間の激変緩和措置"
+    eyebrow: "HR TRANSFORMATION"
+    brand_side: right
+    brand_shape: diagonal
+
+  # scope 4件（label+title+body）＋ period ＋ exclusions 6件。denseの上限に近い
+  - id: scope
+    type: scope_and_exclusions
+    density: dense
+    title: "今回の改定で扱う範囲"
+    primary_message: "等級・報酬・評価の3制度を同時に改定する。退職金と福利厚生は影響が大きく、次期改定へ切り離す"
+    scope_heading: "今回改定する制度"
+    scope:
+      - label: "等級"
+        title: "職能等級から役割等級へ"
+        body: "9等級を6等級へ再編し、等級ごとに期待役割を文書で定義する"
+      - label: "報酬"
+        title: "年功要素の縮小"
+        body: "基本給に占める年齢給を段階的に廃止し、役割給と成果給の比率を高める"
+      - label: "評価"
+        title: "絶対評価と目標連動"
+        body: "相対分布の強制を廃止し、期初に合意した目標に対する達成度で評価する"
+      - label: "移行"
+        title: "3年間の激変緩和"
+        body: "現給保障を3年間設け、年間の減額幅を5%以内に制限する"
+    period: "期間：制度設計6か月｜労使協議4か月｜周知・研修3か月｜翌年度4月施行（計13か月）"
+    exclusions_heading: "今回の対象外"
+    exclusions:
+      - "退職金・企業年金制度（積立不足の解消を優先し次期改定へ）"
+      - "福利厚生制度（住宅補助・カフェテリアプラン）"
+      - "経営層（執行役員以上）の報酬体系"
+      - "海外現地採用者の処遇（各国法制の確認が必要）"
+      - "定年再雇用者の賃金テーブル"
+      - "時間外労働の割増率と裁量労働制の適用範囲"
+
+  # 2階層（各長文）＋ 実行部門5件。org_layersの上限
+  - id: governance
+    type: org_layers
+    density: dense
+    title: "改定の推進体制と責任分担"
+    primary_message: "制度設計は人事部が担うが、等級ごとの期待役割の定義は各事業部門が責任を持つ"
+    layers:
+      - heading: "意思決定"
+        title: "人事制度委員会（社長・各本部長・人事担当役員）"
+        body: "制度の基本方針、移行措置の水準、労使協議の妥結ラインを決定する。月1回開催し、施行判断は委員会の全会一致とする"
+      - heading: "設計・調整"
+        title: "人事部 制度企画課（専任5名）"
+        body: "等級定義・賃金テーブル・評価様式を作成し、労働組合との協議を担当する。各部門への説明会運営と問い合わせ対応も所管する"
+    execution_heading: "各部門の役割"
+    execution:
+      - title: "営業本部"
+        body: "営業職の役割定義"
+      - title: "製造本部"
+        body: "技能職の役割定義"
+      - title: "開発本部"
+        body: "技術職の役割定義"
+      - title: "管理本部"
+        body: "間接職の役割定義"
+      - title: "労働組合"
+        body: "組合員への説明"
+
+  # 課題4件（長文）＋ 対応方針5件。priority_actionsの上限
+  - id: issues
+    type: priority_actions
+    density: dense
+    title: "労使協議で論点になる項目"
+    primary_message: "年齢給の廃止が最大の論点。3年間の現給保障に加え、40代以上への移行加算を用意して臨む"
+    issues_heading: "組合が反発を示している項目"
+    issues:
+      - priority: "最優先"
+        title: "年齢給の廃止"
+        body: "45〜55歳層の約320名で基本給が平均7%下がる試算。組合は段階廃止でなく凍結を主張している"
+      - priority: "高"
+        title: "評価の絶対評価化"
+        body: "相対分布の廃止で原資が読めなくなることを会社側が懸念。組合は運用での恣意性を懸念しており、論点が逆になっている"
+      - priority: "中"
+        title: "等級の統合による降格"
+        body: "9等級を6等級へ再編する際、現4等級の一部が実質的な降格と受け取られる可能性がある"
+      - priority: "中"
+        title: "移行期間の長さ"
+        body: "会社案の3年に対し、組合は5年を要求している。1年延長ごとに人件費が年0.6億増える"
+    actions_heading: "会社側の対応方針"
+    actions:
+      - "年齢給は3年かけて段階的に廃止し、その間は現給を保障する"
+      - "40代以上には移行加算を最大3年間支給し、減額幅を年5%以内に抑える"
+      - "絶対評価の運用ルールと評価者研修を制度施行前に完了させる"
+      - "等級再編では呼称を変更し、旧等級との対応表を公開して降格の誤解を防ぐ"
+      - "移行期間は4年を妥結ラインとし、5年要求には応じない"
+
+  # hero + supporting 5件。stat_highlightの上限に近い
+  - id: impact
+    type: stat_highlight
+    density: dense
+    title: "改定による人件費と処遇への影響"
+    primary_message: "総人件費は3年間ほぼ横ばいだが、配分は大きく変わる。上位評価者への還元原資を年2.8億確保する"
+    stat:
+      value: "+0.4%"
+      label: "3年後の総人件費（現行制度比）"
+      detail: "年齢給廃止による減 -6.2億 / 役割給・成果給の増 +5.4億 / 移行加算 +1.2億"
+      tone: positive
+    supporting:
+      - value: "320名"
+        label: "基本給が下がる対象者（全体の11%）"
+        tone: negative
+      - value: "-7%"
+        label: "対象者の平均減額率（保障後）"
+        tone: negative
+      - value: "2.8億"
+        label: "上位評価者への還元原資"
+        tone: positive
+      - value: "1,180名"
+        label: "基本給が上がる対象者"
+        tone: positive
+      - value: "13か月"
+        label: "施行までの所要期間"
+
+  # 根拠4件（長文）＋ 長い決定文。evidence_and_decisionの上限
+  - id: decision
+    type: evidence_and_decision
+    density: dense
+    title: "答申する改定案"
+    primary_message: "3制度の同時改定を、移行期間4年・現給保障つきで来年度4月に施行することを答申する"
+    evidence_heading: "この結論に至った根拠"
+    evidence:
+      - title: "段階改定では効果が出ない"
+        body: "等級だけを先に変えても報酬と評価が旧制度のままでは、役割に応じた処遇という目的が達成できない。3制度は相互に依存しており、同時改定が必要"
+      - title: "人件費は中期計画の範囲に収まる"
+        body: "3年後の総人件費増は+0.4%で、中期計画が織り込む+2%の枠内。移行加算を含めても追加の原資調達は不要"
+      - title: "移行4年なら組合と妥結できる見込み"
+        body: "組合の5年要求との差は1年。現給保障と移行加算を合わせれば受け入れ可能との感触を非公式に得ている"
+      - title: "採用競争力の低下が既に表れている"
+        body: "直近2年の中途採用の内定辞退率が38%へ上昇し、辞退理由の最多が報酬水準。改定の先送りは採用難を深刻化させる"
+    decision_heading: "答申内容"
+    decision_detail: "等級・報酬・評価の3制度を来年度4月に同時施行する。移行期間は4年とし、期間中は現給保障と40代以上への移行加算を適用する。労使協議は今期中に妥結を目指し、妥結できない場合は施行を半年延期する。"

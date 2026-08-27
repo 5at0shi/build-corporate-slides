@@ -1,0 +1,176 @@
+deck:
+  title: "全社DX推進 年度総括"
+  mode: business
+
+slides:
+  - id: cover
+    type: cover
+    title: "全社DX推進 年度総括と次年度計画"
+    subtitle: "12部門・38施策の進捗、投資対効果、次年度の重点配分"
+    eyebrow: "ANNUAL REVIEW"
+    brand_side: right
+    brand_shape: diagonal
+
+  # 6列×10行。セル内に長めの文言を入れ、表の限界に近い密度にする
+  - id: portfolio
+    type: table_with_conclusion
+    density: dense
+    title: "施策別の投資額・効果・進捗（主要8施策）"
+    primary_message: "投資額上位3施策で全体の58%を占めるが、効果が確認できているのは経費精算自動化のみ。次年度は効果検証を条件に段階投資へ切り替える"
+    columns:
+      - key: name
+        label: "施策"
+        weight: 2.0
+      - key: dept
+        label: "主管部門"
+        weight: 1.2
+      - key: cost
+        label: "投資額"
+        weight: 0.9
+        align: center
+      - key: effect
+        label: "年間効果"
+        weight: 0.9
+        align: center
+      - key: progress
+        label: "進捗"
+        weight: 0.8
+        align: center
+      - key: note
+        label: "評価と次年度方針"
+        weight: 2.6
+    rows:
+      - name: "経費精算の自動化"
+        dept: "経理部"
+        cost: "3,200万"
+        effect: "4,100万"
+        progress: "完了"
+        note: "唯一効果が実測できた施策。他部門への横展開を次年度の最優先とする"
+        _highlight: true
+      - name: "受発注EDI連携"
+        dept: "営業管理部"
+        cost: "5,800万"
+        effect: "測定中"
+        progress: "82%"
+        note: "取引先40社中28社が接続済。残12社の接続完了まで効果測定を保留"
+      - name: "生産実績の自動収集"
+        dept: "製造部"
+        cost: "4,400万"
+        effect: "測定中"
+        progress: "65%"
+        note: "第3工場の設備が旧型で接続不可。改修費2,000万の追加要否を要判断"
+      - name: "在庫最適化"
+        dept: "SCM部"
+        cost: "2,900万"
+        effect: "1,800万"
+        progress: "完了"
+        note: "在庫回転率は改善したが欠品率が悪化。閾値の再調整が必要"
+      - name: "採用管理システム"
+        dept: "人事部"
+        cost: "1,100万"
+        effect: "600万"
+        progress: "完了"
+        note: "工数削減は限定的。次年度の追加投資は見送る"
+      - name: "問い合わせ一次対応"
+        dept: "カスタマーサポート"
+        cost: "1,800万"
+        effect: "測定中"
+        progress: "45%"
+        note: "回答精度が目標78%に対し61%。学習データの拡充で第2四半期に再評価"
+      - name: "契約書レビュー支援"
+        dept: "法務部"
+        cost: "900万"
+        effect: "未測定"
+        progress: "30%"
+        note: "最終確認は必ず人が行う運用のため、効果は時間短縮に限定される"
+      - name: "経営ダッシュボード"
+        dept: "経営企画部"
+        cost: "2,600万"
+        effect: "未測定"
+        progress: "70%"
+        note: "データ定義が部門で不統一。定義統一を先に完了させる"
+
+
+
+  # 左右それぞれ5項目、各項目に長めのbody。comparisonの限界に近い密度
+  - id: gap
+    type: comparison
+    density: dense
+    variant: balanced
+    title: "計画と実績の乖離要因"
+    primary_message: "遅延の主因は技術ではなく、部門をまたぐ意思決定と現場の受け入れ体制にある。次年度は推進体制の設計から着手する"
+    left:
+      heading: "計画どおり進んだ要因"
+      items:
+        - title: "主管部門が単独で完結する施策"
+          body: "経費精算・採用管理は経理部・人事部で意思決定が完結し、他部門調整が不要だった"
+        - title: "既存業務フローを変えない設計"
+          body: "現場の作業手順を変えずにシステムだけ置き換えた施策は、教育コストがほぼ発生しなかった"
+        - title: "効果指標を着手前に定義"
+          body: "何をもって成功とするかを先に決めた施策は、途中での方針変更が起きなかった"
+        - title: "専任担当を1名以上配置"
+          body: "兼務のみの体制では平均で計画比1.8倍の期間を要した"
+        - title: "経営層への月次報告を設定"
+          body: "報告の場があることで課題が早期に上がり、判断の遅れが生じにくかった"
+    right:
+      heading: "遅延・停滞した要因"
+      items:
+        - title: "複数部門にまたがる意思決定"
+          body: "受発注EDI・経営ダッシュボードは、部門間でデータ定義や責任範囲の合意に平均4か月を要した"
+        - title: "既存設備・システムの制約"
+          body: "生産実績収集は第3工場の設備が対応せず、追加投資の要否判断で3か月停止している"
+        - title: "現場の受け入れ体制の不足"
+          body: "文書管理は稼働したが利用率が4割にとどまり、投資効果が発現していない"
+        - title: "効果測定の設計が後回し"
+          body: "着手時に指標を決めなかった6施策は、現時点で効果を定量的に説明できない"
+        - title: "他プロジェクトとの時期重複"
+          body: "予実管理は会計システム更改と重なり、要員を確保できず停滞した"
+
+  # 4フェーズ×各4項目＋ゲート4本。process_with_gatesの限界に近い密度
+  - id: next_plan
+    type: process_with_gates
+    density: dense
+    title: "次年度の進め方と判断ポイント"
+    primary_message: "効果検証を通過した施策だけに追加投資する。各ゲートで継続・縮小・中止を判断し、年度途中でも配分を組み替える"
+    phases:
+      - title: "体制設計"
+        label: "Q1"
+        weight: 2
+        items:
+          - "部門横断の推進責任者を任命"
+          - "データ定義の統一ルールを策定"
+          - "効果指標を全施策で事前定義"
+          - "専任要員の配置計画を確定"
+      - title: "効果検証"
+        label: "Q2"
+        weight: 3
+        items:
+          - "測定中7施策の効果を実測"
+          - "横展開候補の業務適合性を確認"
+          - "第3工場の設備改修の要否を判断"
+          - "利用率が低い施策の定着策を試行"
+      - title: "選択と集中"
+        label: "Q3"
+        weight: 3
+        items:
+          - "継続・縮小・中止を施策ごとに決定"
+          - "経費精算の他部門展開を開始"
+          - "中止施策の要員を再配置"
+          - "次年度予算の重点配分を確定"
+      - title: "定着"
+        label: "Q4"
+        weight: 2
+        items:
+          - "継続施策の運用を現場へ移管"
+          - "効果の年間実績を確定"
+          - "推進体制の常設化を判断"
+          - "次々年度のテーマを選定"
+    gates:
+      - title: "体制承認"
+        position: 0.18
+      - title: "効果判定"
+        position: 0.46
+      - title: "投資判断"
+        position: 0.74
+      - title: "年度総括"
+        position: 1.0

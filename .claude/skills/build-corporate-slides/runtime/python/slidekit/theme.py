@@ -23,6 +23,19 @@ class Palette:
     accent_secondary: RGBColor = rgb("148C9A")
     white: RGBColor = rgb("FFFFFF")
 
+    # 符号・重大度を表す専用ロール。ブランドカラーとは独立に固定する
+    # （読み手は「赤=悪化」を慣習として読むため、ブランド色が変わっても
+    # 意味がズレてはならない）。装飾用の汎用アクセントとしては使わない。
+    positive: RGBColor = rgb("1E8A5F")
+    negative: RGBColor = rgb("C0392B")
+    warning: RGBColor = rgb("B25E09")
+    # 上記の淡色版。surface_brand_soft/surface_teal_softと同じ明度帯に揃え、
+    # 上に載せる文字はtext_primaryを使う（他の淡色面と同じ組み合わせ）。
+    # Box/Zoneの背景として使う（add_background_zoneのtone="negative-soft"等）。
+    surface_positive_soft: RGBColor = rgb("E1F4EA")
+    surface_negative_soft: RGBColor = rgb("FBE4E1")
+    surface_warning_soft: RGBColor = rgb("FCEADA")
+
     # v0.4との後方互換。新規コードではsemantic roleを使う。
     navy: RGBColor = rgb("102C49")
     blue: RGBColor = rgb("2574D9")
@@ -71,14 +84,23 @@ class LargeRoomTypography(BusinessTypography):
 
 @dataclass(frozen=True)
 class Layout:
+    """余白・角丸は4pt刻みの基準単位で揃える（デザイントークンの一貫性のため）。
+
+    角丸はスケール化する: radius_base（Card等の標準コンテナ）と
+    radius_lg（Background Zone等、画面の大部分を占める面）の2段階。
+    同じ絶対半径でも小さい面では丸すぎ、大きい面では丸みが足りなく
+    見える（知覚上のズレ）ため、役割に応じて使い分ける。完全な丸薬型
+    （Tag等）は固定値を持たず、高さ/2から都度算出する。
+    """
     slide_width = Inches(13.333333)
     slide_height = Inches(7.5)
-    margin_x = Inches(0.67)
-    margin_top = Inches(0.46)
-    margin_bottom = Inches(0.42)
-    gap_x = Inches(0.25)
-    gap_y = Inches(0.18)
-    radius = Inches(0.08)
+    margin_x = Inches(48 / 72)
+    margin_top = Inches(32 / 72)
+    margin_bottom = Inches(32 / 72)
+    gap_x = Inches(20 / 72)
+    gap_y = Inches(16 / 72)
+    radius_base = Pt(8)
+    radius_lg = Pt(14)
 
 
 PALETTE = Palette()

@@ -19,7 +19,7 @@
 - `DeckBuilder.from_workspace()` または `render_deck()` でconfigとパスを解決する
 - `runtime/python` をimport pathへ加え、slidekitを利用する
 - 標準は `business`。ページ単位の `density: dense` は許容するが、資料全体の `large-room` は遠距離投影が明示された場合だけ使う
-- 内容と意味構造は原則 `slides/work/slide_content.yaml`、座標・配色・描画判断は `slides/work/generate_pptx.py` に置く
+- 内容と意味構造は原則 `build_slides/work/slide_content.yaml`、座標・配色・描画判断は `build_slides/work/generate_pptx.py` に置く
 - 出力先を `paths.output_dir/deck.pptx` とする
 - 再実行して同じ成果物を上書き生成できる
 - 一つの意味単位を一つの編集可能オブジェクトにする。箇条書き群や連続項目を見た目上の行ごとにboxへ分割しない

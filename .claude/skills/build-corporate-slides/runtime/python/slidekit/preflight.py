@@ -4,9 +4,9 @@ from collections import Counter
 KNOWN_TYPES = {
     "cover", "comparison", "evidence_and_decision",
     "scope_and_exclusions", "process_with_gates",
-    "table_with_conclusion", "chart_with_insight",
+    "table_with_conclusion", "table_with_insight", "chart_with_insight",
     "org_layers", "priority_actions", "stage_track", "numbered_list",
-    "section_divider", "matrix_2x2", "stat_highlight",
+    "section_divider", "matrix", "stat_highlight", "funnel", "cycle",
 }
 
 
@@ -48,7 +48,7 @@ def inspect_content(content):
         if (slide_type not in {"cover", "section_divider"} and
                 not slide.get("primary_message")):
             warnings.append(f"{label}: primary_messageがありません")
-        if slide_type == "table_with_conclusion":
+        if slide_type in ("table_with_conclusion", "table_with_insight"):
             if not slide.get("columns") or not slide.get("rows"):
                 errors.append(f"{label}: columnsとrowsが必要です")
         if slide_type == "chart_with_insight":
@@ -83,15 +83,29 @@ def inspect_content(content):
             errors.append(f"{label}: phasesが必要です")
         if slide_type == "numbered_list" and not slide.get("items"):
             errors.append(f"{label}: itemsが必要です")
-        if slide_type == "matrix_2x2":
-            quadrants = slide.get("quadrants")
-            if not quadrants or len(quadrants) != 4:
-                errors.append(f"{label}: quadrantsは4件必要です")
-            if not slide.get("x_axis") or not slide.get("y_axis"):
-                errors.append(f"{label}: x_axisとy_axisが必要です")
+        if slide_type == "matrix":
+            rows, cols = slide.get("rows", 2), slide.get("cols", 2)
+            cells = slide.get("cells")
+            if not cells or len(cells) != rows * cols:
+                errors.append(f"{label}: cellsは{rows * cols}件（rows×cols）必要です")
+            if bool(slide.get("x_axis")) != bool(slide.get("y_axis")):
+                errors.append(f"{label}: x_axisとy_axisは両方指定するか両方省略します"
+                              "（片方だけでは軸を描けません）")
         if slide_type == "stat_highlight":
-            if not slide.get("stat") or not slide["stat"].get("value"):
+            if not slide.get("stat") and not slide.get("supporting"):
+                errors.append(f"{label}: statまたはsupportingが必要です")
+            elif slide.get("stat") and not slide["stat"].get("value"):
                 errors.append(f"{label}: stat.valueが必要です")
+        if slide_type == "funnel" and not slide.get("stages"):
+            errors.append(f"{label}: stagesが必要です")
+        if slide_type == "cycle":
+            steps = slide.get("steps")
+            if not steps or len(steps) < 2:
+                errors.append(f"{label}: stepsは2件以上必要です")
+            elif len(steps) > 6:
+                warnings.append(
+                    f"{label}: stepsが多く({len(steps)}件)、隣接するCard同士の"
+                    "間隔が狭くなる可能性があります。6件以下を目安にしてください")
 
         text_values = list(_walk_text(slide))
         total_chars = sum(len(value) for value in text_values)
@@ -115,7 +129,7 @@ def inspect_content(content):
         for key in ("items", "left", "right", "scope", "exclusions",
                     "phases", "gates", "evidence", "insights", "rows",
                     "layers", "execution", "issues", "actions", "stages",
-                    "quadrants", "supporting"):
+                    "cells", "supporting", "steps"):
             value = slide.get(key)
             if isinstance(value, list):
                 item_count += len(value)

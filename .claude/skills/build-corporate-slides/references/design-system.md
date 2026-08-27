@@ -24,8 +24,29 @@
 - `surface_teal_soft`: 異なる構造の補助系列
 - `focus_primary`: 最重要項目
 - `accent_secondary`: 複数構造を区別する限定的アクセント
+- `positive`/`negative`/`warning`: 符号・重大度専用（詳細は次項）
 
 淡色面は文字色とセットで使う。`surface_brand_soft` 上では `text_primary`、濃色の `focus_primary` 上では白を使用する。
+
+### 符号・重大度の色（positive / negative / warning）
+
+- `positive`: 良い結果・改善（緑）
+- `negative`: 悪い結果・リスク（赤）
+- `warning`: 注意・要確認（オレンジ系）
+
+これらはブランドカラーとは独立に固定する。読み手は「赤＝悪化」を慣習として読むため、ブランド色を変えても意味がズレてはならない。装飾用の汎用アクセント（単に色数を増やしたい、目を引きたい）としては使わない。数値の符号（文字列が"-"で始まるか）で自動判定しない。削減率のように、マイナスの数値が良い結果を意味することがあるため、内容の意味を判断できる側（contentを書く側）が`tone`として明示する（`stat_highlight`の`stat.tone`/`supporting[].tone`が現在の実装箇所）。
+
+淡色版（`surface_positive_soft`/`surface_negative_soft`/`surface_warning_soft`）もあり、`add_background_zone(tone="positive-soft"/"negative-soft"/"warning-soft")`でBox/Zoneの背景として使える（`BoxGrid`等のFragmentへ`tones`として渡す場合も同様）。特定のrendererに紐づく機能ではなく汎用のComponent部品（`add_background_zone`）のため、リスクや悪化を示すセル・ゾーンが必要な場面であれば、どのrendererからでも使ってよい。
+
+### ブランドカラーのカスタマイズについて
+
+現状、`PALETTE`は`theme.py`に固定された値で、config経由の上書きはできない（`typography`は`config.typography`で上書きできるが、色には対応する仕組みがまだない）。これは意図的な先送りであり、「今のところ複数ブランドでの利用実績がなく、需要が無いまま自動配色の仕組みを作ると過剰設計になる」という判断による。
+
+将来、実際に別ブランドカラーでの利用需要が出た場合の実装方針は以下を推奨する。
+
+- **機械的に導出してよい部分**: ブランド色1つ（hex）を起点に、LCH/OKLCH等の知覚均等な色空間で明度を段階的に振り、WCAGコントラスト比（本文4.5:1等）を満たす階調（`line_brand`、`surface_brand_soft`等）を算出する。これは確立された手法で、自動化してよい。
+- **機械的に決めるべきでない部分**: `accent_secondary`のような「ブランドとは別の系列を区別する色」は、ブランドの世界観に関わる判断のため、自動選定はしない。configで明示指定できるようにし、未指定時は現状のteal等、実績あるフォールバックを使う。
+- `positive`/`negative`/`warning`はブランドカラーに連動させない（上記の理由）。
 
 ## Emphasis Order
 
@@ -55,6 +76,8 @@
 | Key Message | ページの結論 | 内容に応じ4スタイル |
 | Section Lead | セクション内の見出し | 短いブランド線＋文字 |
 | Cover Brand Field | 表紙のブランド面 | 情報を詰め込まない |
+| Tag | ステータス・分類の小さなラベル | 常に丸薬型。枠線のみ／単色塗りの2種 |
+| Stat | 数値を主役にする表現の最小単位 | 面（Card/Zone）は別途組み合わせる |
 
 ## Common Structural Choices
 

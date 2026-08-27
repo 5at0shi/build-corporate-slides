@@ -17,7 +17,7 @@
 - 背景透過PNGを優先する。白背景が残る場合は、権利と形状を変えず背景だけを除去する。
 - アスペクト比を維持し、幅0.35〜0.6インチ程度を基準に小さく使う。
 - ブランド面または余白の隅へ置き、タイトル、開示範囲、部署名、日付より目立たせない。
-- `enabled: true` で `branding.logo.path` が未指定なら、Skill同梱の `assets/logo-placeholder.png` を使う。正式画像が指定されたらそのパスを優先する。
+- `enabled: true` の場合、解決順は (1) `branding.logo.path` に明示指定された画像 (2) `input_dir` 直下の `company-logo.png`（configを編集せず、この決まった名前・場所に置くだけで自動的に使われる。差し替える際も同じファイル名へ上書きするだけでよい） (3) Skill同梱の `assets/logo-placeholder.png`。
 - `enabled: true` なのに解決先が存在しない場合は警告または生成停止とし、黙ってロゴなしにしない。
 
 ## PNGグラフ

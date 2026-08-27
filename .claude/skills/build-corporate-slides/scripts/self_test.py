@@ -106,8 +106,8 @@ def main() -> int:
     config = {
         "python": {"executable": sys.executable},
         "paths": {
-            "input_dir": "./slides/input", "work_dir": "./slides/work",
-            "output_dir": "./slides/output",
+            "input_dir": "./build_slides/input", "work_dir": "./build_slides/work",
+            "output_dir": "./build_slides/output",
         },
         "organization": {
             "department": "テスト部", "classification": "部外秘",
@@ -159,6 +159,12 @@ def main() -> int:
              "primary_message": "必須項目を満たす",
              "columns": [{"key": "a", "label": "項目", "weight": 1}],
              "rows": [{"a": "作業時間削減", "_highlight": True}]},
+            {"id": "table_insight", "type": "table_with_insight",
+             "title": "表から複数の気づきを示す", "density": "dense",
+             "primary_message": "気づきを踏まえた結論",
+             "columns": [{"key": "a", "label": "項目", "weight": 1}],
+             "rows": [{"a": "作業時間削減"}],
+             "insights": ["気づき1"]},
             {"id": "org", "type": "org_layers", "title": "役割を分ける",
              "density": "standard", "primary_message": "責任を明確にする",
              "layers": [{"heading": "意思決定", "title": "経営層",
@@ -180,11 +186,11 @@ def main() -> int:
              "items": [{"title": "予算承認", "body": "費用"}]},
             {"id": "divider", "type": "section_divider", "title": "体制編",
              "kicker": "SECTION 2"},
-            {"id": "matrix", "type": "matrix_2x2", "title": "施策を整理する",
+            {"id": "matrix", "type": "matrix", "title": "施策を整理する",
              "density": "standard", "primary_message": "効果が高いものから着手する",
              "x_axis": {"low": "易", "high": "難"},
              "y_axis": {"low": "小", "high": "大"},
-             "quadrants": [
+             "cells": [
                  {"label": "優先", "title": "A", "body": "詳細", "emphasis": True},
                  {"label": "検討", "title": "B", "body": "詳細"},
                  {"label": "保留", "title": "C", "body": "詳細"},
@@ -193,6 +199,17 @@ def main() -> int:
              "density": "standard", "primary_message": "本格導入を検討する",
              "stat": {"value": "-42%", "label": "作業時間削減率"},
              "supporting": [{"value": "94%", "label": "継続意向"}]},
+            {"id": "funnel", "type": "funnel", "title": "絞り込みを示す",
+             "density": "standard", "primary_message": "資料請求後の転換率を上げる",
+             "stages": [
+                 {"title": "サイト訪問", "value": 12000, "value_label": "12,000"},
+                 {"title": "資料請求", "value": 3400, "value_label": "3,400"},
+                 {"title": "成約", "value": 210, "value_label": "210"}]},
+            {"id": "cycle", "type": "cycle", "title": "繰り返しを示す",
+             "density": "standard", "primary_message": "改善を継続する",
+             "steps": [
+                 {"label": "STEP1", "title": "Plan"}, {"label": "STEP2", "title": "Do"},
+                 {"label": "STEP3", "title": "Check"}, {"label": "STEP4", "title": "Act"}]},
             {"id": "chart", "type": "chart_with_insight", "title": "結果を示す",
              "density": "standard", "primary_message": "全体像を確認する",
              "image": "chart.png", "insight_heading": "読み取れること",
@@ -215,7 +232,7 @@ def main() -> int:
         root = Path(temp)
         (root / ".slide-skill-config.yaml").write_text(
             yaml.safe_dump(config, allow_unicode=True), encoding="utf-8")
-        input_dir = root / "slides" / "input"
+        input_dir = root / "build_slides" / "input"
         input_dir.mkdir(parents=True, exist_ok=True)
         from PIL import Image
         Image.new("RGB", (400, 240), (230, 236, 245)).save(input_dir / "chart.png")
@@ -280,7 +297,7 @@ def main() -> int:
             root = Path(temp)
             (root / ".slide-skill-config.yaml").write_text(
                 yaml.safe_dump(mode_config, allow_unicode=True), encoding="utf-8")
-            mode_input_dir = root / "slides" / "input"
+            mode_input_dir = root / "build_slides" / "input"
             mode_input_dir.mkdir(parents=True, exist_ok=True)
             from PIL import Image as _Image
             _Image.new("RGB", (400, 240), (230, 236, 245)).save(

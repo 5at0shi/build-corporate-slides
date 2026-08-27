@@ -7,9 +7,9 @@ import yaml
 
 DEFAULT_CONFIG = {
     "paths": {
-        "input_dir": "./slides/input",
-        "work_dir": "./slides/work",
-        "output_dir": "./slides/output",
+        "input_dir": "./build_slides/input",
+        "work_dir": "./build_slides/work",
+        "output_dir": "./build_slides/output",
     },
     "organization": {
         "department": "",

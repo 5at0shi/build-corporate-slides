@@ -9,7 +9,7 @@ description: 社内向けPowerPoint資料の構成設計、作成、レビュー
 
 ## 最初に行うこと
 
-1. ワークスペース直下の `.slide-skill-config.yaml` を読む。なければ [`.slide-skill-config.example.yaml`](.slide-skill-config.example.yaml) を基準にし、既定値を使う。
+1. ワークスペース直下の `.slide-skill-config.yaml` を読む。なければ [`.slide-skill-config.example.yaml`](user-guide/.slide-skill-config.example.yaml) を基準にし、既定値を使う。
 2. `paths` をワークスペース基準で解決し、必要なディレクトリだけ作る。
 3. 依頼が構成検討、実制作、既存資料の修正のどれかを判断する。
 
@@ -19,16 +19,16 @@ CREATE前に、設定されたPythonで [`scripts/check_config.py`](scripts/chec
 
 ## Workspace Contract
 
-設定値の既定は `slides/input/`、`slides/work/`、`slides/output/` とする。既存プロジェクトのディレクトリ内で作業する場合でも、スライド関連一式が `slides/` 配下にまとまるため他の作業内容と混ざらない。
+設定値の既定は `build_slides/input/`、`build_slides/work/`、`build_slides/output/` とする。既存プロジェクトのディレクトリ内で作業する場合でも、スライド関連一式が `build_slides/` 配下にまとまるため他の作業内容と混ざらない。
 
-- `slides/input/`: 人間からAIへ渡されたbrief、画像、図表、参考資料
-- `slides/work/`: AIの制作コードとQA用中間成果物
-- `slides/output/`: 人間が利用する最終成果物
+- `build_slides/input/`: 人間からAIへ渡されたbrief、画像、図表、参考資料
+- `build_slides/work/`: AIの制作コードとQA用中間成果物
+- `build_slides/output/`: 人間が利用する最終成果物
 
 標準位置は次のとおり。
 
 ```text
-slides/
+build_slides/
 ├── input/
 ├── work/
 │   ├── slide_content.yaml
@@ -52,7 +52,7 @@ slides/
 
 ## CREATE
 
-1. 確定したSlide Planを基に、内容と意味構造を `slides/work/slide_content.yaml`、描画の入口を `slides/work/generate_pptx.py` に分けて維持する。新規作成では [`.slide-content.example.yaml`](.slide-content.example.yaml) と [`assets/generate_pptx.py`](assets/generate_pptx.py) を出発点にできる。
+1. 確定したSlide Planを基に、内容と意味構造を `build_slides/work/slide_content.yaml`、描画の入口を `build_slides/work/generate_pptx.py` に分けて維持する。新規作成では [`.slide-content.example.yaml`](user-guide/.slide-content.example.yaml) と [`assets/generate_pptx.py`](assets/generate_pptx.py) を出発点にできる。
 2. 各ページを [`renderer-catalog.md`](references/renderer-catalog.md) へ照合する。該当する意味ベースrendererを優先し、内容に合わないページだけ `DeckBuilder` とlayout primitivesで個別構築する。rendererへ無理に押し込まない。
 3. `DeckBuilder.from_workspace(ROOT)` を入口にし、config、パス、部署名、開示範囲、ロゴ、フォント、標準modeを自動反映する。config項目を生成コードで重複管理しない。
 4. 編集可能なテキスト、表、図形、チャートを優先し、原則としてスライド全体を画像化しない。
@@ -60,9 +60,9 @@ slides/
    - 番号・項目名・説明が一緒に動く場合は、一つの意味単位としてまとめる。
    - 見た目上の行ごとにtextboxを分けない。独立移動、別背景、別整列など具体的な理由がある場合だけ分ける。
 5. YAMLの事前診断を通し、文字縮小より先に重複削除、統合、表化、ページ分割を検討する。
-6. `slides/output/deck.pptx` を生成する。
+6. `build_slides/output/deck.pptx` を生成する。
 7. [`scripts/validate_pptx.py`](scripts/validate_pptx.py) で構造・編集性を検証する。
-8. [`scripts/render_and_check.py`](scripts/render_and_check.py) で `slides/work/render/deck.pdf` とページPNGを作る。
+8. [`scripts/render_and_check.py`](scripts/render_and_check.py) で `build_slides/work/render/deck.pdf` とページPNGを作る。
 9. 全ページを個別表示で確認し、デッキ全体の反復は一覧でも確認する。必要なら同じYAMLと生成スクリプトを修正して再生成する。
 
 生成方式の選択、依存関係、検証は [powerpoint-production.md](references/powerpoint-production.md)、YAMLの責務は [content-model.md](references/content-model.md)、renderer選択は [renderer-catalog.md](references/renderer-catalog.md)、視覚判断は [visual-quality.md](references/visual-quality.md)、色・Componentの具体的な選択は [design-system.md](references/design-system.md) を読む。
@@ -71,13 +71,13 @@ slides/
 
 ## REVISE
 
-文言、項目、数値、順序は原則として既存の `slides/work/slide_content.yaml` を修正し、配色、余白、配置、図解構造は `slides/work/generate_pptx.py` またはslidekitを修正して再生成する。別名の生成スクリプトを増やさず、履歴はGitへ任せる。既存スクリプトがない、再現不能、または直接編集の方が明らかに安全な場合だけ例外とし、その理由を伝える。
+文言、項目、数値、順序は原則として既存の `build_slides/work/slide_content.yaml` を修正し、配色、余白、配置、図解構造は `build_slides/work/generate_pptx.py` またはslidekitを修正して再生成する。別名の生成スクリプトを増やさず、履歴はGitへ任せる。既存スクリプトがない、再現不能、または直接編集の方が明らかに安全な場合だけ例外とし、その理由を伝える。
 
 指摘箇所と、それを成立させるために必要な周辺だけを変更する。再生成後はCREATEと同じvalidate・render・Visual QAを行う。関係のないページの配色、文字組み、レイアウトを刷新しない。
 
 ## 完了条件
 
-- 最終PPTXが `output_dir`（既定 `slides/output`）`/deck.pptx` にある
+- 最終PPTXが `output_dir`（既定 `build_slides/output`）`/deck.pptx` にある
 - 構造検証に重大エラーがない
 - レンダリング可能な環境では全ページを目視確認済み
 - 生成スクリプトが `work_dir/generate_pptx.py` に残る

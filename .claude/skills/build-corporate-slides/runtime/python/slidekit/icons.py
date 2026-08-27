@@ -16,6 +16,7 @@ from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.util import Pt
 
+from .atoms import _flat
 from .theme import PALETTE
 
 _WHITE = RGBColor(0xFF, 0xFF, 0xFF)
@@ -23,11 +24,6 @@ _WHITE = RGBColor(0xFF, 0xFF, 0xFF)
 ICON_NAMES = {"check", "warning", "people", "document", "clock", "target",
              "growth", "cost", "calendar", "idea", "location", "building",
              "globe", "shield"}
-
-
-def _flat(shape):
-    shape.shadow.inherit = False
-    return shape
 
 
 def _oval(slide, x0, y0, x1, y1, *, x, y, size, fill=None, line=None,
@@ -51,24 +47,23 @@ def _rounded_rect(slide, x0, y0, x1, y1, *, x, y, size, fill, rounding=0.15):
     shape = slide.shapes.add_shape(
         MSO_SHAPE.ROUNDED_RECTANGLE, x + int(x0 * size), y + int(y0 * size),
         int((x1 - x0) * size), int((y1 - y0) * size))
-    _flat(shape)
-    if len(shape.adjustments):
-        shape.adjustments[0] = rounding
+    _flat(shape, rounding=rounding)
     shape.fill.solid(); shape.fill.fore_color.rgb = fill
     shape.line.fill.background()
     return shape
 
 
-def _preset(slide, shape_type, x0, y0, x1, y1, *, x, y, size, fill):
+def _preset(slide, shape_type, x0, y0, x1, y1, *, x, y, size, fill, rounding=None):
     """OVAL/ROUNDED_RECTANGLE以外の定型オートシェイプ用（三角形・台形等）。
 
     自由形状（freeform）はこの環境のレンダリングパイプラインで意図通りに
     描画されないことがあるため、アイコンでは定型プリセットだけを使う。
+    roundingはROUND_2_SAME_RECTANGLE等、角丸系のadjustmentを持つ形状用。
     """
     shape = slide.shapes.add_shape(
         shape_type, x + int(x0 * size), y + int(y0 * size),
         int((x1 - x0) * size), int((y1 - y0) * size))
-    _flat(shape)
+    _flat(shape, rounding=rounding)
     shape.fill.solid(); shape.fill.fore_color.rgb = fill
     shape.line.fill.background()
     return shape
@@ -108,6 +103,10 @@ def _draw_check(slide, x, y, size, color):
                  x=x, y=y, size=size, color=_WHITE)
     _hand_between(slide, (0.43, 0.68), (0.77, 0.3), 0.1,
                  x=x, y=y, size=size, color=_WHITE)
+    # 2本のhand_betweenは同じ頂点(0.43, 0.68)を共有するが、回転計算の
+    # 誤差でわずかにずれて継ぎ目が荒く見えるため、同じ半径の円を重ねて
+    # 継ぎ目を確実に滑らかな丸みへ揃える。
+    _oval(slide, 0.38, 0.63, 0.48, 0.73, x=x, y=y, size=size, fill=_WHITE)
 
 
 def _draw_warning(slide, x, y, size, color):
@@ -172,14 +171,24 @@ def _draw_cost(slide, x, y, size, color):
 
 def _draw_calendar(slide, x, y, size, color):
     _oval(slide, 0, 0, 1, 1, x=x, y=y, size=size, fill=color)
-    _rounded_rect(slide, 0.22, 0.26, 0.78, 0.8, x=x, y=y, size=size,
-                  fill=_WHITE, rounding=0.14)
-    _rounded_rect(slide, 0.22, 0.26, 0.78, 0.4, x=x, y=y, size=size,
-                  fill=color, rounding=0.05)
-    _rounded_rect(slide, 0.32, 0.16, 0.4, 0.32, x=x, y=y, size=size,
+    # リング（背景円の上に重なる）を先に描き、本体で下端を隠して繋がって
+    # 見えるようにする。
+    _rounded_rect(slide, 0.32, 0.14, 0.4, 0.3, x=x, y=y, size=size,
+                  fill=_WHITE, rounding=0.5)
+    _rounded_rect(slide, 0.6, 0.14, 0.68, 0.3, x=x, y=y, size=size,
+                  fill=_WHITE, rounding=0.5)
+    # 本体は常に白一色にする。ヘッダーを背景円と同色で塗ると境界が同化
+    # して輪郭が読めなくなるため（実際に起きていた不具合）、ヘッダーは
+    # 本体内部の細い罫線として表現し、外形は必ず白のまま保つ。
+    _rounded_rect(slide, 0.2, 0.24, 0.8, 0.82, x=x, y=y, size=size,
+                  fill=_WHITE, rounding=0.12)
+    _rounded_rect(slide, 0.26, 0.36, 0.74, 0.4, x=x, y=y, size=size,
                   fill=color, rounding=0.5)
-    _rounded_rect(slide, 0.6, 0.16, 0.68, 0.32, x=x, y=y, size=size,
-                  fill=color, rounding=0.5)
+    # 日付の格子（2行×3列）を足し、単なるカードと区別できるようにする。
+    for row_y in (0.5, 0.64):
+        for col_x in (0.28, 0.44, 0.6):
+            _rounded_rect(slide, col_x, row_y, col_x + 0.12, row_y + 0.09,
+                         x=x, y=y, size=size, fill=color, rounding=0.3)
 
 
 def _draw_idea(slide, x, y, size, color):
@@ -222,14 +231,20 @@ def _draw_globe(slide, x, y, size, color):
 
 
 def _draw_shield(slide, x, y, size, color):
+    # 正五角形はキャンバス中央(0.14-0.82)に置くと、下端の尖りぶんだけ
+    # 視覚的な重心が上寄りに感じられる（先端は面積が小さく「軽い」ため）。
+    # 上下0.04ぶん下へずらし、キャンバス内でのバランスを取る。
     _oval(slide, 0, 0, 1, 1, x=x, y=y, size=size, fill=color)
-    shield = _preset(slide, MSO_SHAPE.REGULAR_PENTAGON, 0.24, 0.14, 0.76, 0.82,
+    shield = _preset(slide, MSO_SHAPE.REGULAR_PENTAGON, 0.24, 0.18, 0.76, 0.86,
                      x=x, y=y, size=size, fill=_WHITE)
     shield.rotation = 180
-    _hand_between(slide, (0.4, 0.48), (0.48, 0.58), 0.09,
+    _hand_between(slide, (0.4, 0.52), (0.48, 0.62), 0.09,
                  x=x, y=y, size=size, color=color)
-    _hand_between(slide, (0.48, 0.58), (0.64, 0.36), 0.09,
+    _hand_between(slide, (0.48, 0.62), (0.64, 0.4), 0.09,
                  x=x, y=y, size=size, color=color)
+    # 2本のhand_betweenの継ぎ目を、同半径の円で確実に滑らかにする
+    # （checkと同じ理由）。
+    _oval(slide, 0.435, 0.575, 0.525, 0.665, x=x, y=y, size=size, fill=color)
 
 
 _DRAWERS = {

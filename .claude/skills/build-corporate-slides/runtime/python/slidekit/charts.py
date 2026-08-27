@@ -28,8 +28,8 @@ def add_native_chart(slide, x, y, w, h, *, chart_type, categories=None,
     series=[{"name": ..., "values": [...]}] を組み合わせるカテゴリ型。
     scatterはcategories不要で、
     series=[{"name": ..., "points": [{"x": ..., "y": ...}, ...]}] という
-    XY座標形式を使う（ポートフォリオ分析等、4象限のどこかではなく正確な
-    座標が要点の場合。4象限の位置づけだけが要点ならmatrix_2x2を使う）。
+    XY座標形式を使う（ポートフォリオ分析等、マスのどこかではなく正確な
+    座標が要点の場合。マスの位置づけだけが要点ならmatrixを使う）。
     PNG画像と異なり、貼り付け後もPowerPoint上で数値・系列名を直接編集できる。
     """
     if chart_type == "scatter":

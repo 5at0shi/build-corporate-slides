@@ -47,6 +47,31 @@ def adaptive_gap_pt(content_pt: float, item_count: int, available_pt: float, *,
     return base_gap + extra
 
 
+def centered_gap_pt(content_pt: float, item_count: int, available_pt: float, *,
+                    margin_ratio: float = 1.4, base_gap: float = 3,
+                    max_gap: float = 26) -> float:
+    """見出し＋リストのブロックを領域内で上下中央に置くときの項目間隔(pt)。
+
+    adaptive_gap_ptとは目的が違う。あちらは「上詰めのまま下部に余る割合を
+    抑える」ためのもので、余りをすべて項目間へ配る。こちらは上下中央寄せ
+    が前提で、項目間隔と、ブロックの上下に残る余白の比を決める。
+
+    項目間隔を最小のまま中央へ置くと、周囲の余白だけが広がって項目群が
+    窮屈に固まって見える。逆に余りを全部項目間へ配ると、今度は項目群と
+    してのまとまりが失われる。visual-quality.mdの「余白:項目間隔は概ね
+    1.3〜1.5:1」を満たす間隔を解いて返す。
+
+    残り L = available - content - gap*(item_count-1) を上下2つの余白へ
+    分けるので、余白 = L/2。これが gap*margin_ratio と等しくなる gap は
+    gap = (available - content) / (item_count - 1 + 2*margin_ratio)。
+    """
+    if item_count <= 1:
+        return base_gap
+    denominator = (item_count - 1) + 2 * margin_ratio
+    gap = (available_pt - content_pt) / denominator
+    return max(base_gap, min(max_gap, gap))
+
+
 def estimate_item_list_height_pt(typography, items, width_pt, *, body_gap=3,
                                  title_prefix="") -> float:
     """add_item_listが描く内容のおおよその高さ(pt)。レイアウト判断用の概算。

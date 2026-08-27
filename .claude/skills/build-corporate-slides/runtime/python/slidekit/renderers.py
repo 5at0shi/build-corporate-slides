@@ -22,8 +22,9 @@ from .layout import Region
 from .preflight import require_valid_content
 from .images import add_image_contain
 from .tables import add_data_table
-from .textmetrics import (adaptive_gap_pt, estimate_item_list_height_pt,
-                          estimate_line_count, estimate_paragraph_height_pt)
+from .textmetrics import (adaptive_gap_pt, centered_gap_pt,
+                          estimate_item_list_height_pt, estimate_line_count,
+                          estimate_paragraph_height_pt)
 from .theme import PALETTE
 from .typography import (Stat, _type_for, add_paragraph_textbox,
                          add_text_list, add_textbox)
@@ -173,15 +174,21 @@ def render_evidence_and_decision(builder, spec, page):
     left_inner = add_panel(slide, left.x - Inches(0.12), left.y - Inches(0.06),
                            left.w + Inches(0.24), left.h + Inches(0.12),
                            tone="neutral")
-    list_pt = estimate_item_list_height_pt(
-        typography, evidence, left_inner.w / 12700, title_prefix="•  ")
-    block_h = HEADING_BLOCK_H + int(list_pt * 12700)
-    top = left_inner.y + max(0, (left_inner.h - block_h) // 2)
+    # 項目間隔を先に決めてからブロックの高さを出し、その高さで中央寄せする。
+    # 最小間隔のまま中央へ置くと、周囲の余白だけが広がって項目群が窮屈に
+    # 固まって見えるため（visual-quality.md）。
+    content_pt = estimate_item_list_height_pt(
+        typography, evidence, left_inner.w / 12700, body_gap=0,
+        title_prefix="•  ")
+    gap_pt = centered_gap_pt(content_pt, len(evidence),
+                             (left_inner.h - HEADING_BLOCK_H) / 12700)
+    list_pt = content_pt + gap_pt * max(0, len(evidence) - 1)
+    list_h = min(left_inner.h - HEADING_BLOCK_H, Inches(list_pt / 72))
+    top = left_inner.y + max(0, (left_inner.h - HEADING_BLOCK_H - list_h) // 2)
     add_section_lead(slide, left_inner.x, top, left_inner.w,
                      spec.get("evidence_heading", "判断の根拠"))
     add_item_list(slide, left_inner.x, top + HEADING_BLOCK_H, left_inner.w,
-                  left_inner.y + left_inner.h - (top + HEADING_BLOCK_H), evidence,
-                  adaptive=False)
+                  list_h, evidence, body_gap=int(gap_pt), adaptive=False)
 
     inner = add_panel(slide, right.x, right.y, right.w, right.h,
                       tone="brand-soft", inset_x=Inches(0.34), inset_y=Inches(0.3))

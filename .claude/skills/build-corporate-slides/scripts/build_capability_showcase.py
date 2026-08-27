@@ -1,7 +1,7 @@
 """スキルが標準搭載する部品を一覧できるショーケースデッキを生成する。
 
 配色・タイポグラフィ・基本コンポーネント・アイコン・ネイティブチャート・
-renderer 17種を、実際の描画関数を直接呼び出して本物の出力として並べる。
+renderer 20種を、実際の描画関数を直接呼び出して本物の出力として並べる。
 内容は常に実装と一致する（手書きの説明画像ではない）。デザインシステムや
 renderer/icon/chartを追加・変更したら、このスクリプトを再実行して
 参照を最新化する。
@@ -83,7 +83,7 @@ builder = DeckBuilder.from_workspace(WORKSPACE_ROOT)
 # ================================================================ 1. Cover
 builder.add_cover(
     "build-corporate-slidesスキル 機能一覧",
-    subtitle="配色・コンポーネント・アイコン・チャート・renderer 17種の実物見本",
+    subtitle="配色・コンポーネント・アイコン・チャート・renderer 20種の実物見本",
     eyebrow="CAPABILITY SHOWCASE",
     brand_side="right", brand_shape="diagonal")
 
@@ -463,14 +463,16 @@ catalog = [
         "actions": ["actionsは対応方針の一括リスト", "淡色パネルの中に箇条書きで表示する",
                     "issuesとは別領域で独立して読める"],
     }),
-    ("stage_track", "stage_track", "現在から将来への段階的な進行（ロードマップ等）", {
+    ("stage_track", "stage_track",
+     "段階的な進行を同格のCardで示す。各段はbody（文章）でもitems（箇条書き）でも書ける（期間の幅を示すならtimeline）", {
         "title": "stage_track: 段階的な進行を同格のCardで示す", "density": "standard",
-        "primary_message": "stagesは配列の順に横並びの同格Cardになる",
+        "primary_message": "stagesは配列の順に横並びの同格Cardになる。中身はbody（文章）とitems（箇条書き）のどちらでも書ける",
         "connectors": False,
         "stages": [
             {"label": "STEP1", "title": "stages配列", "body": "label/title/bodyを持つ段階を順に並べる"},
             {"label": "STEP2", "title": "同格のCard", "body": "各段階は優劣なく並列に見せる"},
-            {"label": "STEP3", "title": "ロードマップに最適", "body": "現在から将来への広がりを示したいときに使う"}],
+            {"label": "STEP3", "title": "itemsで箇条書き",
+             "items": ["段ごとにやることを並べる", "bodyと併用もできる"]}],
     }),
     ("stage_track", "stage_track (connectors: true)",
      "矢印表現はここだけの限定的なオプション。cycleの円周矢印は構造上必須のため別枠", {
@@ -482,6 +484,20 @@ catalog = [
             {"label": "STEP1", "title": "既定はconnectors: false", "body": "他の型の基本例と同じ矢印なしの見た目"},
             {"label": "STEP2", "title": "矢印はここでだけ使う", "body": "この構造図に限り、順序性を強めたいときに選べるオプション"},
             {"label": "STEP3", "title": "太さ・矢じりは固定", "body": "Atom層のConnectorが一貫した太さで描く"}],
+    }),
+    ("timeline", "timeline",
+     "開始と終了が異なる取り組みが並走する計画（ロードマップ、ガント）。帯の幅が期間を表す（stage_trackは順序、process_with_gatesは判断時点）", {
+        "title": "timeline: 期間ぶんの幅を持つ帯を共通の時間軸へ並べる", "density": "standard",
+        "primary_message": "periodsが時間軸の目盛り、rowsのstart/endが占める区間（1始まり・endを含む）。範囲外の値は軸の端へ丸める",
+        "periods": ["Q1", "Q2", "Q3", "Q4"],
+        "rows": [
+            {"label": "rows配列", "title": "1行が1つの取り組みになる", "start": 1, "end": 2},
+            {"label": "start / end", "title": "占める区間を期間番号で指定する", "start": 2, "end": 3,
+             "tone": "teal"},
+            {"label": "tone", "title": "帯の色は意味で選ぶ", "start": 3, "end": 4, "tone": "warning"},
+            {"label": "自動回り込み",
+             "title": "帯の中に収まらない長さのtitleは、文字が潰れないよう自動的に帯の右側へ回る",
+             "start": 1, "end": 1, "tone": "neutral"}],
     }),
     ("numbered_list", "numbered_list", "アジェンダ、依頼事項など番号付きの単列項目", {
         "title": "numbered_list: 番号付きの単列項目を並べる", "density": "standard",
@@ -513,6 +529,20 @@ catalog = [
             {"label": "O", "title": "機会", "body": "SWOT等、固定4カテゴリの整理に使う"},
             {"label": "T", "title": "脅威", "body": "連続軸上の位置づけが要点ならx_axis/y_axisを指定"}],
     }),
+    ("issue_tree", "issue_tree",
+     "論点をMECEに分解する（イシューツリー、ロジックツリー）。線に矢印は付けない（流れではなく包含関係のため）", {
+        "title": "issue_tree: 論点を3階層に分解して示す", "density": "standard",
+        "primary_message": "rootが分解する問い、branchesが第1階層、各branchのitemsが内訳。階層は3段固定で、深い分解はページを分ける",
+        "root": {"label": "root", "title": "分解する問いを置く",
+                "body": "label / title / bodyの3項目"},
+        "branches": [
+            {"title": "branches配列", "body": "第1階層の分解軸。5件までが目安",
+             "items": ["itemsが内訳になる", "1件が1行"]},
+            {"title": "itemsは合計12件まで", "body": "超えると1行の高さが狭くなり警告する",
+             "items": ["枝ごとに件数が違ってよい"]},
+            {"title": "items省略時", "body": "どの枝もitemsを持たない場合は2段のツリーになり、枝が広くなる",
+             "items": ["この例では3段"]}],
+    }),
     ("stat_highlight", "stat_highlight", "単一の実績数値を主役に、補足指標と結論を示す", {
         "title": "stat_highlight: 単一の実績数値を主役にする", "density": "standard",
         "primary_message": "stat.valueが主指標、supportingは補足指標のCard群",
@@ -531,6 +561,20 @@ catalog = [
             {"value": "-42%", "label": "作業時間削減率（削減=良い結果）", "tone": "positive"},
             {"value": "+8%", "label": "解約率（増加=悪い結果）", "tone": "negative"},
             {"value": "12", "label": "導入部署数"}],
+    }),
+    ("waterfall", "waterfall",
+     "AからBへの変化を増減要因に分解する（ブリッジ図、EBITDAウォーク、予算差異、価格/数量/構成の分解）", {
+        "title": "waterfall: 変化した理由を増減の棒へ分解する", "density": "standard",
+        "primary_message": "kind: totalの棒は基準線0からの絶対値、kindを省略した棒は直前までの累計に対する増減として宙に浮く",
+        "bars": [
+            {"label": "開始値（kind: total）", "value": 100, "kind": "total",
+             "value_label": "100"},
+            {"label": "増加要因（符号で自動着色）", "value": 34, "value_label": "+34"},
+            {"label": "減少要因", "value": -18, "value_label": "-18"},
+            {"label": "減だがtone: positive（削減=良い結果）", "value": -9,
+             "value_label": "-9", "tone": "positive"},
+            {"label": "終了値（kind: total）", "value": 107, "kind": "total",
+             "value_label": "107"}],
     }),
     ("funnel", "funnel", "順を追って絞り込まれていく推移（営業パイプライン、市場規模のTAM/SAM/SOM等）。insights指定で使用ケースや気づきを併記できる", {
         "title": "funnel: 絞り込みの推移を帯の幅で示す",
@@ -561,7 +605,7 @@ catalog = [
 
 page = 8
 RENDERERS["section_divider"](builder, {
-    "title": "renderer カタログ（17種）", "kicker": "SECTION DIVIDER",
+    "title": "renderer カタログ（20種）", "kicker": "SECTION DIVIDER",
     "subtitle": "各typeの最小構成の例。件数・文言・配色は指示に応じて自由に調整でき、"
                "これが唯一の形ではない",
 }, page)

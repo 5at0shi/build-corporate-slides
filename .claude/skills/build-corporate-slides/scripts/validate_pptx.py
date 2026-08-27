@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "runtime" / "python
 from slidekit.textmetrics import char_width_factor  # noqa: E402
 
 
+_STACK_TOLERANCE = Inches(0.06)
 _THIN_W = Inches(0.12)
 _THIN_H = Inches(0.16)
 
@@ -257,7 +258,17 @@ def validate(path: Path) -> tuple[list[str], list[str]]:
         _check_text_overflow(slide, slide_no, warnings)
         _check_decoration_overlap(slide, slide_no, warnings)
         short_shapes = [s for s in text_shapes if len(s.text.strip()) <= 24]
-        if len(text_shapes) >= 16 and len(short_shapes) / len(text_shapes) >= 0.65:
+        # 「文章の過剰分割」は、1つのtextboxで済む文章が同じ左端に縦へ
+        # 積まれる形で現れる。一方、グラフの目盛りやデータラベルのように
+        # 横へ散らばる短いtextboxは位置そのものが情報であり、分割が必要
+        # （waterfallの棒ごとの値・項目ラベル等）。左端が揃った塊の大きさ
+        # で判定し、横並びのラベル群を過剰分割と誤検知しない。
+        stacked = 0
+        for shape in short_shapes:
+            group = sum(1 for other in short_shapes
+                        if abs(other.left - shape.left) <= _STACK_TOLERANCE)
+            stacked = max(stacked, group)
+        if len(text_shapes) >= 16 and stacked / len(text_shapes) >= 0.65:
             warnings.append(
                 f"slide {slide_no}: 短いtextboxが多く、文章の過剰分割の可能性 "
                 f"({len(text_shapes)} text shapes)")

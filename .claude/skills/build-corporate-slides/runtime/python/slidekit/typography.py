@@ -6,6 +6,8 @@
 部品（Tag / Stat）が同居する。いずれもAtom層で、上下関係はない
 （テキスト処理をこのファイルへ集約する方針による分け方）。
 """
+import copy
+
 from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import PP_ALIGN, MSO_ANCHOR
 from pptx.oxml.ns import qn
@@ -120,9 +122,21 @@ def add_paragraph_textbox(slide, x, y, w, h, paragraphs, *,
             pPr.set("marL", str(int(hanging_indent)))
             pPr.set("indent", str(-int(hanging_indent)))
         for value, kwargs in spec.get("segments", []):
-            run = paragraph.add_run()
-            run.text = value
-            set_run(run, **kwargs)
+            # 段落内の改行は<a:br/>要素で表す。runのtextへ改行文字をそのまま
+            # 入れると、改行後の文字が「直前のrunの書式」で描画される
+            # （LibreOfficeで確認。項目のtitleに続くbodyが太字・タイトルの
+            # 色と大きさになり、意図した文字階層が消える）。<a:br/>には
+            # 続くrunのrPrを複製して持たせ、行の高さも続く文字に合わせる。
+            for index, part in enumerate(str(value).split("\n")):
+                run = paragraph.add_run()
+                run.text = part
+                set_run(run, **kwargs)
+                if index:
+                    line_break = OxmlElement("a:br")
+                    run_properties = run._r.find(qn("a:rPr"))
+                    if run_properties is not None:
+                        line_break.append(copy.deepcopy(run_properties))
+                    run._r.addprevious(line_break)
     return shape
 
 

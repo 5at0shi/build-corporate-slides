@@ -512,11 +512,11 @@ RENDERERS["stat_highlight"](builder, {
     "primary_message": "statを省略すると、supportingが均等グリッドのKPIダッシュボードになる",
     "supporting": [
         {"value": "94%", "label": "満足度"},
-        {"value": "-42%", "label": "作業時間削減率"},
-        {"value": "3.2x", "label": "処理件数"},
+        {"value": "-42%", "label": "作業時間削減率（削減=良い結果）", "tone": "positive"},
+        {"value": "+8%", "label": "解約率（増加=悪い結果）", "tone": "negative"},
         {"value": "12", "label": "導入部署数"}],
 }, page)
-renderer_footer("stat_highlight (KPI dashboard)", "hero無しで複数指標を均等に並べるKPIダッシュボード")
+renderer_footer("stat_highlight (KPI dashboard)", "toneは数値の符号でなく意味で指定する（-42%でもtone: positiveになり得る）")
 page += 1
 
 output = builder.save(SKILL / "user-guide" / "capability-showcase.pptx")

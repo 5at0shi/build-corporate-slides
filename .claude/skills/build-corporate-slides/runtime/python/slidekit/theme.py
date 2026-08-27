@@ -23,6 +23,13 @@ class Palette:
     accent_secondary: RGBColor = rgb("148C9A")
     white: RGBColor = rgb("FFFFFF")
 
+    # 符号・重大度を表す専用ロール。ブランドカラーとは独立に固定する
+    # （読み手は「赤=悪化」を慣習として読むため、ブランド色が変わっても
+    # 意味がズレてはならない）。装飾用の汎用アクセントとしては使わない。
+    positive: RGBColor = rgb("1E8A5F")
+    negative: RGBColor = rgb("C0392B")
+    warning: RGBColor = rgb("B25E09")
+
     # v0.4との後方互換。新規コードではsemantic roleを使う。
     navy: RGBColor = rgb("102C49")
     blue: RGBColor = rgb("2574D9")

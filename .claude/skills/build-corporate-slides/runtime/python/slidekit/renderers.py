@@ -50,6 +50,20 @@ def _lead_list(slide, region, heading, items, *, color=PALETTE.line_brand,
                   region.h - HEADING_BLOCK_H - bottom_pad, items, bullet=bullet)
 
 
+_TONE_COLORS = {"positive": PALETTE.positive, "negative": PALETTE.negative,
+                "warning": PALETTE.warning}
+
+
+def _tone_color(item, default):
+    """item["tone"]（positive/negative/warning）を符号専用の色へ変換する。
+
+    数値の先頭が"-"かどうかでは判定しない（削減率のように、マイナスの
+    数値が良い結果を意味することがあるため）。toneは呼び出し側（content）
+    が意味を判断して明示する。
+    """
+    return _TONE_COLORS.get(item.get("tone"), default)
+
+
 def _conclude(slide, conclusion, spec, *, default_style="subtle"):
     """rendererの末尾で結論(primary_message)を示す定型パターン。
     add_key_messageへ橋渡しするだけで、renderer固有の意味は持たない。
@@ -556,6 +570,12 @@ def render_stat_highlight(builder, spec, page):
     見せる1指標）の有無だけが違う。パラメータ差で別rendererに分けない
     という方針（BandStack/BoxGridの統合と同じ理由）で、1つのrenderer
     が両方を担う。
+
+    stat/supportingの各項目に"tone": "positive"/"negative"/"warning"を
+    指定すると、数値の色が符号専用のセマンティックカラーになる（数値
+    文字列の先頭が"-"かどうかでは自動判定しない。削減率のように、
+    マイナスの数値が良い結果を意味することがあるため、toneは呼び出し側
+    が意味を判断して明示する）。
     """
     slide, area = builder.add_slide(
         spec["title"], density=spec.get("density", "standard"), page=page)
@@ -575,8 +595,8 @@ def render_stat_highlight(builder, spec, page):
         inner = hero_row.inset(Inches(0.5), Inches(0.3))
         Stat(slide, inner.x, inner.y, inner.w, inner.h,
             stat.get("value", ""), stat.get("label", ""), detail=stat.get("detail"),
-            value_size=Pt(56), label_size=typography.section,
-            vertical_anchor=MSO_ANCHOR.MIDDLE)
+            value_size=Pt(56), value_color=_tone_color(stat, PALETTE.navy),
+            label_size=typography.section, vertical_anchor=MSO_ANCHOR.MIDDLE)
     else:
         supporting_row, conclusion = area.rows([4.7, 0.62], gap=Inches(0.24))
 
@@ -588,7 +608,7 @@ def render_stat_highlight(builder, spec, page):
         for item, inner in zip(supporting, contents):
             Stat(slide, inner.x, inner.y, inner.w, inner.h,
                 item.get("value", ""), item.get("label", ""),
-                value_size=value_size, value_color=PALETTE.blue,
+                value_size=value_size, value_color=_tone_color(item, PALETTE.blue),
                 label_size=typography.small, label_color=PALETTE.text_secondary,
                 label_bold=False, vertical_anchor=MSO_ANCHOR.MIDDLE)
 

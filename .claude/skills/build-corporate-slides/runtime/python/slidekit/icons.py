@@ -53,16 +53,17 @@ def _rounded_rect(slide, x0, y0, x1, y1, *, x, y, size, fill, rounding=0.15):
     return shape
 
 
-def _preset(slide, shape_type, x0, y0, x1, y1, *, x, y, size, fill):
+def _preset(slide, shape_type, x0, y0, x1, y1, *, x, y, size, fill, rounding=None):
     """OVAL/ROUNDED_RECTANGLE以外の定型オートシェイプ用（三角形・台形等）。
 
     自由形状（freeform）はこの環境のレンダリングパイプラインで意図通りに
     描画されないことがあるため、アイコンでは定型プリセットだけを使う。
+    roundingはROUND_2_SAME_RECTANGLE等、角丸系のadjustmentを持つ形状用。
     """
     shape = slide.shapes.add_shape(
         shape_type, x + int(x0 * size), y + int(y0 * size),
         int((x1 - x0) * size), int((y1 - y0) * size))
-    _flat(shape)
+    _flat(shape, rounding=rounding)
     shape.fill.solid(); shape.fill.fore_color.rgb = fill
     shape.line.fill.background()
     return shape
@@ -102,6 +103,10 @@ def _draw_check(slide, x, y, size, color):
                  x=x, y=y, size=size, color=_WHITE)
     _hand_between(slide, (0.43, 0.68), (0.77, 0.3), 0.1,
                  x=x, y=y, size=size, color=_WHITE)
+    # 2本のhand_betweenは同じ頂点(0.43, 0.68)を共有するが、回転計算の
+    # 誤差でわずかにずれて継ぎ目が荒く見えるため、同じ半径の円を重ねて
+    # 継ぎ目を確実に滑らかな丸みへ揃える。
+    _oval(slide, 0.38, 0.63, 0.48, 0.73, x=x, y=y, size=size, fill=_WHITE)
 
 
 def _draw_warning(slide, x, y, size, color):
@@ -166,22 +171,23 @@ def _draw_cost(slide, x, y, size, color):
 
 def _draw_calendar(slide, x, y, size, color):
     _oval(slide, 0, 0, 1, 1, x=x, y=y, size=size, fill=color)
-    _rounded_rect(slide, 0.22, 0.26, 0.78, 0.8, x=x, y=y, size=size,
-                  fill=_WHITE, rounding=0.14)
-    _rounded_rect(slide, 0.22, 0.26, 0.78, 0.4, x=x, y=y, size=size,
-                  fill=color, rounding=0.05)
-    # リング（背景円・ヘッダー帯のどちらの上にもまたがる）はcolorのままだと
-    # 同じ色の上に重なって同化し見えなくなるため、白で塗り両方の上で視認
-    # できるようにする。
-    _rounded_rect(slide, 0.32, 0.16, 0.4, 0.32, x=x, y=y, size=size,
+    # リング（背景円の上に重なる）を先に描き、本体で下端を隠して繋がって
+    # 見えるようにする。
+    _rounded_rect(slide, 0.32, 0.14, 0.4, 0.3, x=x, y=y, size=size,
                   fill=_WHITE, rounding=0.5)
-    _rounded_rect(slide, 0.6, 0.16, 0.68, 0.32, x=x, y=y, size=size,
+    _rounded_rect(slide, 0.6, 0.14, 0.68, 0.3, x=x, y=y, size=size,
                   fill=_WHITE, rounding=0.5)
-    # 白い本体だけだと単なるカードに見えるため、日付の格子（2行×3列）を
-    # 足してカレンダーだと一目でわかるようにする。
+    # 本体は常に白一色にする。ヘッダーを背景円と同色で塗ると境界が同化
+    # して輪郭が読めなくなるため（実際に起きていた不具合）、ヘッダーは
+    # 本体内部の細い罫線として表現し、外形は必ず白のまま保つ。
+    _rounded_rect(slide, 0.2, 0.24, 0.8, 0.82, x=x, y=y, size=size,
+                  fill=_WHITE, rounding=0.12)
+    _rounded_rect(slide, 0.26, 0.36, 0.74, 0.4, x=x, y=y, size=size,
+                  fill=color, rounding=0.5)
+    # 日付の格子（2行×3列）を足し、単なるカードと区別できるようにする。
     for row_y in (0.5, 0.64):
-        for col_x in (0.3, 0.45, 0.6):
-            _rounded_rect(slide, col_x, row_y, col_x + 0.1, row_y + 0.08,
+        for col_x in (0.28, 0.44, 0.6):
+            _rounded_rect(slide, col_x, row_y, col_x + 0.12, row_y + 0.09,
                          x=x, y=y, size=size, fill=color, rounding=0.3)
 
 
@@ -225,14 +231,21 @@ def _draw_globe(slide, x, y, size, color):
 
 
 def _draw_shield(slide, x, y, size, color):
+    # REGULAR_PENTAGON（正五角形）は先端の内角が広く鈍いため盾に見えず、
+    # 上の角も鋭く尖って見えた。ROUND_2_SAME_RECTANGLE（上2角を丸めた
+    # 矩形）とISOSCELES_TRIANGLE（下端の尖り）を継ぎ目なく重ね、丸い肩と
+    # 鋭い先端を持つ盾らしいシルエットにする（location pinと同じ、複数の
+    # 定型プリセットを重ねて複合形状を作る手法）。
     _oval(slide, 0, 0, 1, 1, x=x, y=y, size=size, fill=color)
-    shield = _preset(slide, MSO_SHAPE.REGULAR_PENTAGON, 0.24, 0.14, 0.76, 0.82,
-                     x=x, y=y, size=size, fill=_WHITE)
-    shield.rotation = 180
-    _hand_between(slide, (0.4, 0.48), (0.48, 0.58), 0.09,
+    _preset(slide, MSO_SHAPE.ROUND_2_SAME_RECTANGLE, 0.27, 0.14, 0.73, 0.46,
+           x=x, y=y, size=size, fill=_WHITE, rounding=0.35)
+    _preset(slide, MSO_SHAPE.ISOSCELES_TRIANGLE, 0.27, 0.46, 0.73, 0.84,
+           x=x, y=y, size=size, fill=_WHITE)
+    _hand_between(slide, (0.35, 0.3), (0.43, 0.38), 0.085,
                  x=x, y=y, size=size, color=color)
-    _hand_between(slide, (0.48, 0.58), (0.64, 0.36), 0.09,
+    _hand_between(slide, (0.43, 0.38), (0.61, 0.22), 0.085,
                  x=x, y=y, size=size, color=color)
+    _oval(slide, 0.3875, 0.3375, 0.4725, 0.4225, x=x, y=y, size=size, fill=color)
 
 
 _DRAWERS = {

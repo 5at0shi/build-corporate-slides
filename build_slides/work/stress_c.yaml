@@ -1,0 +1,139 @@
+deck:
+  title: "品質管理体制の再構築"
+  mode: business
+
+slides:
+  - id: cover
+    type: cover
+    title: "品質管理体制の再構築"
+    subtitle: "重大不具合の再発防止と、恒常的な運用への移行"
+    eyebrow: "QUALITY ASSURANCE"
+    brand_side: right
+    brand_shape: diagonal
+
+  - id: scope
+    type: scope_and_exclusions
+    density: dense
+    title: "今回の対策で扱う範囲"
+    primary_message: "出荷前検査と工程内検査を対象とし、設計段階の品質作り込みは次期テーマとする"
+    scope_heading: "今回の対象範囲"
+    scope:
+      - label: "工程内"
+        title: "3ラインの工程内検査"
+        body: "検査基準・記録方法・逸脱時の報告経路を統一する"
+      - label: "出荷前"
+        title: "全数検査への切替"
+        body: "対象品番を抜取から全数へ変更し、判定を自動記録する"
+      - label: "教育"
+        title: "検査員の力量認定"
+        body: "認定制度を新設し、未認定者の単独検査を禁止する"
+    period: "期間：現状分析4週｜基準整備6週｜試行8週｜本運用移行4週（計22週）"
+    exclusions_heading: "今回の対象外"
+    exclusions:
+      - "設計段階での品質作り込み（次期テーマ）"
+      - "仕入先の受入検査基準の見直し"
+      - "検査設備の更新投資"
+      - "海外拠点への展開"
+
+  - id: governance
+    type: org_layers
+    density: dense
+    title: "再構築後の品質管理体制"
+    primary_message: "判定権限を製造ラインから独立させ、品質保証部が最終判定を持つ形に変更する"
+    layers:
+      - heading: "意思決定"
+        title: "品質委員会（月次）"
+        body: "出荷可否の最終判断、重大逸脱の是正方針の決定、体制変更の承認を行う"
+      - heading: "運営"
+        title: "品質保証部"
+        body: "検査基準の管理、力量認定の運用、逸脱記録の一元管理と月次報告を担う"
+    execution_heading: "現場実行"
+    execution:
+      - title: "第1製造ライン"
+        body: "工程内検査と記録"
+      - title: "第2製造ライン"
+        body: "工程内検査と記録"
+      - title: "第3製造ライン"
+        body: "工程内検査と記録"
+      - title: "出荷検査課"
+        body: "全数検査と最終判定"
+
+  - id: roadmap
+    type: stage_track
+    density: dense
+    connectors: true
+    title: "22週間の移行ステップ"
+    primary_message: "各段階の完了条件を満たしてから次へ進み、試行期間中は旧体制を並行維持する"
+    stages:
+      - label: "STEP 1"
+        title: "現状分析"
+        body: "過去2年の逸脱記録を分類し、発生工程と原因を特定する（4週）"
+      - label: "STEP 2"
+        title: "基準整備"
+        body: "検査基準書を3ライン共通で作り直し、判定のばらつきをなくす（6週）"
+      - label: "STEP 3"
+        title: "試行運用"
+        body: "第1ラインで先行実施。旧体制と並行し、判定差異を検証する（8週）"
+      - label: "STEP 4"
+        title: "本運用移行"
+        body: "全ラインへ展開し、旧体制を停止する（4週）"
+    note: "試行運用中に判定差異が5%を超えた場合は、基準整備へ戻して見直す"
+
+  - id: improvement
+    type: cycle
+    density: standard
+    title: "本運用移行後の改善サイクル"
+    primary_message: "月次の品質委員会を起点に、逸脱の再発防止を回し続ける"
+    steps:
+      - label: "STEP 1"
+        title: "逸脱記録の集計"
+      - label: "STEP 2"
+        title: "原因の分類と分析"
+      - label: "STEP 3"
+        title: "基準・手順の改訂"
+      - label: "STEP 4"
+        title: "検査員への再教育"
+      - label: "STEP 5"
+        title: "効果の確認"
+
+  - id: metrics
+    type: chart_with_insight
+    variant: standard
+    density: standard
+    title: "四半期別の重大不具合件数"
+    primary_message: "第3四半期の増加は工程変更に伴う一時的なもので、恒常的な悪化ではないと判断する"
+    chart:
+      type: column
+      categories: ["Q1", "Q2", "Q3", "Q4"]
+      series:
+        - name: "重大不具合（件）"
+          values: [3, 2, 9, 4]
+        - name: "軽微な逸脱（件）"
+          values: [14, 11, 28, 17]
+    insight_heading: "読み取れること"
+    insights:
+      - "Q3の急増は第2ラインの工程変更と時期が一致している"
+      - "Q4は工程変更前の水準へ戻りきっておらず、対策の定着が不十分"
+      - "軽微な逸脱は重大不具合に先行して増える傾向があり、先行指標として使える"
+
+  - id: actions
+    type: numbered_list
+    density: dense
+    message_position: top
+    title: "本運用移行までの実施事項"
+    primary_message: "以下を22週間で完了させ、第2四半期から新体制へ移行する"
+    items:
+      - title: "過去2年の逸脱記録を工程別に分類する"
+        body: "発生件数の多い上位3工程を特定し、基準整備の優先順位を決める"
+      - title: "3ライン共通の検査基準書を作成する"
+        body: "現行のライン別基準を統合し、判定のばらつきをなくす"
+      - title: "検査員の力量認定制度を新設する"
+        body: "認定試験と再認定の周期を定め、未認定者の単独検査を禁止する"
+      - title: "第1ラインで8週間の試行運用を行う"
+        body: "旧体制と並行し、新旧の判定差異を全件記録して比較する"
+      - title: "逸脱記録の一元管理システムを導入する"
+        body: "紙の記録を廃止し、報告から是正完了までを追跡できるようにする"
+      - title: "品質委員会の運営ルールを定める"
+        body: "月次開催、出荷可否の判断基準、エスカレーション経路を明文化する"
+      - title: "全ラインへ展開し旧体制を停止する"
+        body: "移行完了後3か月は週次でモニタリングし、問題があれば即時に戻す"

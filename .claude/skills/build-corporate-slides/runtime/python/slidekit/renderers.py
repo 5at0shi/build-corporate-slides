@@ -549,6 +549,10 @@ def render_matrix(builder, spec, page):
     4象限フレームワークに合わせた既定）。GE-McKinseyの3x3のような
     2x2を超えるマトリクスも、同じ構造でrows/colsを指定するだけで
     作れる（次元数はBoxGridと同じく1つの操作のパラメータに過ぎない）。
+
+    cellsの並び順は左上から右へ、次の行へ、という読み順。先頭の行が
+    y_axis.high側（上）、左の列がx_axis.low側になる。上下を取り違えると
+    象限の意味が反転するため注意する（renderer-catalog.mdにも明記）。
     """
     slide, area = builder.add_slide(
         spec["title"], density=spec.get("density", "standard"), page=page)

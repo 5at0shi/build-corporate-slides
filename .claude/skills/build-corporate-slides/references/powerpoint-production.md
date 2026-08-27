@@ -35,7 +35,7 @@ deck = DeckBuilder.from_workspace(workspace_root)
 deck.add_cover(title, subtitle=subtitle)
 ```
 
-`branding.logo.enabled: true` かつ `path` 未指定なら、Skill同梱の仮ロゴを使う。
+`branding.logo.enabled: true` の場合の解決順は (1) `branding.logo.path` の明示指定 (2) `input_dir` 直下の `company-logo.png`（configを編集せずこの名前で置くだけで自動的に使われる） (3) Skill同梱の仮ロゴ。詳細は [image-handling.md](image-handling.md) を読む。
 
 ## 検証とレンダリング
 

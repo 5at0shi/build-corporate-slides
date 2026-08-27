@@ -77,10 +77,13 @@ def _tone_color(item, default):
 def _conclude(slide, conclusion, spec, *, default_style="subtle"):
     """rendererの末尾で結論(primary_message)を示す定型パターン。
     add_key_messageへ橋渡しするだけで、renderer固有の意味は持たない。
+
+    見た目の指定はmessage_style（primary_messageの見た目を決めるため、
+    numbered_listのtop位置=導入文でも同じ名前で通るこの名前に統一する）。
     """
     return add_key_message(slide, conclusion.x, conclusion.y, conclusion.w,
                            spec["primary_message"],
-                           style=spec.get("conclusion_style", default_style))
+                           style=spec.get("message_style", default_style))
 
 
 def render_cover(builder, spec, page):

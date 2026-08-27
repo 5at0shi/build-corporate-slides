@@ -44,6 +44,39 @@ rendererは完成テンプレートではなく、頻出する意味構造を編
 - 順を追って絞り込まれていく推移（リード獲得のファネル、市場規模のTAM/SAM/SOM等）を示すなら `funnel`。`stages`は値の大きい順に並べる。帯の幅はおおよその絞り込み具合を示す構造表現で、正確な比率を厳密に伝えたい場合は`chart_with_insight`の棒グラフを使う。段の値だけでなく、そこから読み取れる複数の気づきも合わせて示したい場合は`insights`を指定する（帯が右側の箇条書き分だけ幅を譲る。table_with_insight/chart_with_insightと同じ骨格）。`insights`を省略すると帯が全幅を使う。
 - 一方向に進むのではなく繰り返し・循環するプロセス（PDCA、OODAループ等）を示すなら `cycle`。`steps`を円周上に時計回りで配置し、最後尾から先頭へも矢印で結んで輪にする（`stage_track`は一方向の進行、`cycle`は繰り返しが要点、という使い分け）。矢印は直線のみ（曲線の弧は環境間で見え方がぶれやすいため使わない）。`steps`は4〜6件を目安にする（多いと隣接するCard同士の間隔が狭くなり、preflightが警告する）。
 
+## 共通フィールド
+
+全typeで使える。個別typeのフィールドは[`.slide-content.example.yaml`](../user-guide/.slide-content.example.yaml)に全17型の実例がある。
+
+| フィールド | 意味 | 既定 |
+|---|---|---|
+| `type` | renderer type（上表のいずれか） | 必須 |
+| `title` | ページタイトル | 必須 |
+| `primary_message` | そのページの中心メッセージ。`cover`と`section_divider`以外は**必須**（結論用の領域を常に確保するため、欠けているとpreflightがエラーで止める） | 必須 |
+| `density` | `standard` / `dense` | `standard` |
+| `id` | YAML上の識別子。描画には使わない | 任意 |
+| `message_style` | `primary_message`の見た目。`editorial`（左に短い青線）/ `subtle`（淡いグレー面）/ `solid`（濃紺の面）/ `card`（枠線付き）/ `plain`（装飾なし） | typeごとの既定 |
+
+`cover`のみ次も使える。通常はconfigの値が自動で入るため、そのページだけ変えたい場合に指定する。
+
+| フィールド | 意味 |
+|---|---|
+| `classification` | 開示区分。configの`organization.classification`を上書きする（空文字でバッジ非表示） |
+| `created` | 表紙の日付。省略時は生成日 |
+| `eyebrow` / `subtitle` / `brand_side` / `brand_shape` / `brand_width` | 表紙の見出し上ラベル・副題・ブランド面の位置と形状 |
+
+見出しラベルは各typeで上書きできる（省略時は括弧内の既定値）。
+
+| type | フィールド（既定値） |
+|---|---|
+| `evidence_and_decision` | `evidence_heading`（`判断の根拠`）/ `decision_heading`（`推奨方針`）/ `decision_detail`（判断の補足文） |
+| `scope_and_exclusions` | `scope_heading`（`対象範囲`）/ `exclusions_heading`（`対象外`）/ `period`（期間などの補足を1行で添える） |
+| `org_layers` | `execution_heading`（`業務実行`） |
+| `priority_actions` | `issues_heading`（`想定される課題`）/ `actions_heading`（`対応方針`）/ `top_priority`（`最優先`。この文字列と一致する`priority`を持つ項目を強調色にする） |
+| `chart_with_insight` / `table_with_insight` / `funnel` | `insight_heading`（`読み取れること`） |
+| `numbered_list` | `message_position`（`top`。`primary_message`を導入文として上に置くか、`bottom`で結論として下に置くか） |
+| `stage_track` | `connectors`（`true`。段の間を矢印で結ぶ。`false`で矢印なしのCard群になる）/ `note`（帯の下に添える注記） |
+
 ## Escape Hatch
 
 一致するrendererがない場合は無理に近い型へ入れない。`DeckBuilder.add_slide()` と `Region.columns()` / `rows()` を使って個別構築し、既存のtypography、semantic color、余白、編集性規則は維持する。新しいrendererを追加するのは、同じ意味構造が複数回現れ、決定論的な実装が再利用できる場合だけとする。slidekit内部のLayout/Atom/Fragment/Rendererという層構成は[`runtime/python/slidekit/ARCHITECTURE.md`](../runtime/python/slidekit/ARCHITECTURE.md)を参照。

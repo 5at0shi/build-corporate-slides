@@ -45,9 +45,12 @@ def inspect_content(content):
         density = slide.get("density", "standard")
         if density not in {"standard", "dense"}:
             errors.append(f"{label}: densityはstandardまたはdenseです")
+        # cover/section_divider以外の全rendererは spec["primary_message"] を
+        # 直接参照する（結論用の領域を必ず確保するため）。欠けたまま描画へ
+        # 進むとKeyErrorで落ちるので、警告ではなくerrorとして生成前に止める。
         if (slide_type not in {"cover", "section_divider"} and
                 not slide.get("primary_message")):
-            warnings.append(f"{label}: primary_messageがありません")
+            errors.append(f"{label}: primary_messageがありません")
         if slide_type in ("table_with_conclusion", "table_with_insight"):
             if not slide.get("columns") or not slide.get("rows"):
                 errors.append(f"{label}: columnsとrowsが必要です")

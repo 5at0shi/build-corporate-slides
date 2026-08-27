@@ -67,7 +67,7 @@ build_slides/
 
 生成方式の選択、依存関係、検証は [powerpoint-production.md](references/powerpoint-production.md)、YAMLの責務は [content-model.md](references/content-model.md)、renderer選択は [renderer-catalog.md](references/renderer-catalog.md)、視覚判断は [visual-quality.md](references/visual-quality.md)、色・Componentの具体的な選択は [design-system.md](references/design-system.md) を読む。
 
-レイアウトを決める前に、内容に該当する場合だけ [layout-patterns.md](references/examples/layout-patterns.md) を読む。例は完成テンプレートではなく、選択基準とDesign DNAを示す。表紙やセクション見出しは既存の個別例も確認する。画像、ロゴ、PNGグラフを使う場合は [image-handling.md](references/image-handling.md) も読む。
+レイアウトを決める前に、内容に該当する場合だけ [layout-patterns.md](references/examples/layout-patterns.md) を読む。例は完成テンプレートではなく、選択基準とDesign DNAを示す。表紙を作る場合は [cover-modern-brand-field.md](references/examples/cover-modern-brand-field.md)、セクション見出しとグラフを組む場合は [section-lead-chart.md](references/examples/section-lead-chart.md) も読む。画像、ロゴ、PNGグラフを使う場合は [image-handling.md](references/image-handling.md) も読む。
 
 ## REVISE
 

@@ -228,6 +228,19 @@ def main() -> int:
         f"{KNOWN_TYPES - set(s['type'] for s in content['slides'])}")
     assert logo_path_from_config(config, Path.cwd()).is_file()
 
+    # cover/section_divider以外の全rendererは spec["primary_message"] を直接
+    # 参照するため、欠けたまま描画へ進むとKeyErrorで落ちる。preflightが必ず
+    # errorで止める（＝警告どまりにしない）ことを型ごとに確認する。
+    for slide in content["slides"]:
+        if slide["type"] in {"cover", "section_divider"}:
+            continue
+        without_message = {k: v for k, v in slide.items() if k != "primary_message"}
+        missing_errors, _ = inspect_content(
+            {"deck": content["deck"], "slides": [without_message]})
+        assert any("primary_message" in e for e in missing_errors), (
+            f"{slide['type']}: primary_message欠落がerrorになっていません "
+            "(描画時にKeyErrorで落ちます)")
+
     with tempfile.TemporaryDirectory(prefix="slidekit-test-") as temp:
         root = Path(temp)
         (root / ".slide-skill-config.yaml").write_text(

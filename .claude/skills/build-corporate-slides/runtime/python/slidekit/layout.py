@@ -1,3 +1,11 @@
+"""Layout層: 矩形領域(Region)の分割・inset計算のみを行う、最下層の
+純粋な幾何層。描画は一切行わない（塗り・線・文字を持たない）。
+
+Atom以上のすべての層はRegionを受け取って初めて描画位置を持てる。
+Regionを直接ユーザー/AIへ公開することはなく、renderer層がcontent_region()
+を起点に内部でだけ使う。層構成の全体像はruntime/python/slidekit/
+ARCHITECTURE.mdを参照。
+"""
 from dataclasses import dataclass
 
 from pptx.util import Inches

@@ -1,5 +1,6 @@
 """Component層: Atom層のプリミティブ（主にBox）を、人が指示に使える
-意味の通る名前でラップした部品群。
+意味の通る名前でラップした部品群。層構成の全体像はruntime/python/
+slidekit/ARCHITECTURE.mdを参照。
 
 add_card/add_background_zone/add_focus_panel等はいずれも内部的には
 atoms.pyのBoxへ薄く委譲する（見た目=skinが違うだけ）。Atom層自体は
@@ -8,6 +9,11 @@ atoms.pyのBoxへ薄く委譲する（見た目=skinが違うだけ）。Atom層
 想定）。一方Componentはユーザーやrenderer-catalog.md等が「部位」として
 名指しする対象であり、capability-showcaseに実物を載せて公開する層は
 常にこちら（Atomではない）。
+
+add_item_list/add_icon_listは実体をtypography.pyのadd_text_listへ
+委譲する。typography.pyはAtom層の最小プリミティブ（add_textbox等）と
+このComponent層寄りの複合処理が同居しており、ファイル境界がレイヤーと
+完全には一致しない（詳細はARCHITECTURE.md）。
 """
 from datetime import date
 

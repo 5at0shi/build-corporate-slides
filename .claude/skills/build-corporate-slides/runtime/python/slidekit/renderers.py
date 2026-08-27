@@ -1,3 +1,11 @@
+"""Renderer層: Layout/Atom/Component/Fragmentを組み合わせ、意味を持った
+1ページを完成させる最上層。
+
+ここで初めてビジネス語彙（「比較」「結論」「ゲート」等）が現れる。1関数=
+1renderer type=YAMLのtype:フィールド1つに対応し、これがユーザー/AIが
+実際にcontent-authoringで触るインターフェース（renderer-catalog.md）。
+層構成の全体像はruntime/python/slidekit/ARCHITECTURE.mdを参照。
+"""
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Inches, Pt
 

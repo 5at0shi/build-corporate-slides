@@ -1,4 +1,5 @@
-"""Atom層: これ以上分解できない描画の最小単位。
+"""Atom層: これ以上分解できない描画の最小単位。層構成の全体像は
+runtime/python/slidekit/ARCHITECTURE.mdを参照。
 
 Boxは「矩形領域＋見た目（塗り・枠線・角丸・影）」という1つの構造を
 表す。Card / Background Zone / Focus Panelは、この構造の見た目が違う

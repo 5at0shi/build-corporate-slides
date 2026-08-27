@@ -1,5 +1,11 @@
-"""Fragment層: AtomとLayoutを組み合わせた、意味的にはまだ完結しない
-再利用可能な構造パターン。層構成の全体像はARCHITECTURE.mdを参照。
+"""Fragment層: 1つのRegionと項目リストを受け取り、N個の配置を計算して
+「中身を埋めるためのRegion」を複数返す。層構成の全体像はARCHITECTURE.md
+を参照。
+
+配置だけを担当し、各項目の中身は書かない（書くのはrenderer）。この
+「Region＋リスト → 複数のRegion」というシグネチャがAtom層との境界その
+もので、1つの位置(x, y, w, h)を受け取って完成した部品を返すもの
+（components.pyのadd_card等）はAtom層に属する。
 
 BoxGrid（regionをR×Cのグリッドに分割しBoxを並べる）、ProportionalStack
 （値に比例した幅の帯を積む）、RadialLayout（円周上に配置し矢印で結ぶ）、

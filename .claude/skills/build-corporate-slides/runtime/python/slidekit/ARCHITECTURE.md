@@ -8,7 +8,7 @@
 |---|---|---|---|
 | **Layout** | 矩形領域(`Region`)の分割・余白計算。描画は一切しない | 持たない | `layout.py` |
 | **Atom** | 1ページを構成する部品。単独の図形・文字・アイコン・グラフ・表・画像と、それらの名前付きプリセット・定型的な組み合わせ | 持たない（`add_key_message`等の部品名のみ） | `atoms.py` `typography.py` `icons.py` `charts.py` `tables.py` `images.py` `components.py` |
-| **Fragment** | AtomとLayoutを組み合わせた、意味的にはまだ完結しない再利用可能な構造パターン | 持たない | `fragments.py` |
+| **Fragment** | Region＋項目リストからN個の配置を計算し、中身を埋めるためのRegionを複数返す（中身は書かない） | 持たない | `fragments.py` |
 | **Renderer** | 上記すべてを組み合わせ、意味を持った1ページを完成させる | **持つ**（「比較」「結論」「ゲート」等） | `renderers.py` `pageframe.py` |
 
 ### Layout
@@ -27,7 +27,22 @@
 
 ### Fragment
 
-AtomとLayoutを組み合わせた、意味的にはまだ完結しない再利用可能な構造パターン（`BoxGrid` `ProportionalStack` `RadialLayout` `MarkerOverlay`）。複数のrendererで同じ形が繰り返し必要になった構造をここへ集約する。命名にビジネス用語を使わない（「階層」「ゲート」等はrenderer側の語彙）。形だけで再利用できることがこの層の価値。
+**1つのRegionと項目リストを受け取り、N個の配置を計算して「中身を埋めるためのRegion」を複数返す**層（`BoxGrid` `ProportionalStack` `RadialLayout` `MarkerOverlay`）。配置だけを担当し、各項目の中身は書かない（書くのはrenderer）。複数のrendererで同じ配置の計算が必要になったものをここへ集約する。
+
+AtomとFragmentの境界は、次の一点だけで判定する。
+
+| | 引数 | 戻り値 | 例 |
+|---|---|---|---|
+| **Atom** | 1つの位置 `(x, y, w, h)` | 完成した部品（図形など） | `add_card` `add_key_message` |
+| **Fragment** | Region＋項目リスト | 配置後のRegion **複数** | `BoxGrid` `ProportionalStack` |
+
+Atom層の`add_card`と`Box`が同じ層なのは「引数を変えて委譲するだけで操作が同一」だから。対してFragmentは「N個の配置を計算する」という別種の操作なので層が分かれる（`fragments.py`は`components.py`をimportするが逆はない）。
+
+判定が紛らわしい例:
+- `add_panel`はRegionを返すがFragmentではない。1つしか返さず、項目リストも取らない（1:1であって1:Nではない）。
+- `add_item_list` / `add_icon_list`は項目リストを取るがFragmentではない。中身を自分で描き切り、Regionを返さない。
+
+命名にビジネス用語を使わない（「階層」「ゲート」等はrenderer側の語彙）。形だけで再利用できることがこの層の価値。
 
 ### Renderer
 

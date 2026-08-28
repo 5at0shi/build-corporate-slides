@@ -1,6 +1,20 @@
 from collections import Counter
 
 
+class ContentError(ValueError):
+    """contentの事前診断(preflight)で見つかった問題。
+
+    描画中のValueError（slidekitの引数違反、python-pptxの範囲外の値、
+    個別構築ページのコードの誤り等）と区別するために分ける。生成
+    スクリプトがValueErrorをまとめて捕まえると、コードの誤りまで
+    「内容の検証で問題が見つかりました」と報告され、tracebackも失われて
+    原因にたどり着けなくなる。
+
+    ValueErrorを継承しているため、ValueErrorを捕まえる既存のコードは
+    そのまま動く。
+    """
+
+
 KNOWN_TYPES = {
     "cover", "comparison", "evidence_and_decision",
     "scope_and_exclusions", "process_with_gates",
@@ -191,5 +205,5 @@ def inspect_content(content, *, extra_types=()):
 def require_valid_content(content, *, extra_types=()):
     errors, warnings = inspect_content(content, extra_types=extra_types)
     if errors:
-        raise ValueError("\n".join(errors))
+        raise ContentError("\n".join(errors))
     return warnings

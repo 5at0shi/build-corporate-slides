@@ -175,7 +175,8 @@ def main() -> int:
     skill_root = Path(__file__).resolve().parents[1]
     sys.path.insert(0, str(skill_root / "runtime" / "python"))
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-    from slidekit import add_icon_list, inspect_content, logo_path_from_config, render_deck
+    from slidekit import (add_icon_list, inspect_content, logo_path_from_config,
+                          render_deck, require_valid_content)
     from slidekit.charts import add_native_chart
     from slidekit.icons import ICON_NAMES, add_icon
     from slidekit.preflight import KNOWN_TYPES
@@ -372,6 +373,37 @@ def main() -> int:
         pass
     else:
         raise AssertionError("既存typeと重複するextra_renderersが拒否されていません")
+
+    # preflightの失敗だけがContentErrorになること。描画中のValueError（自作
+    # rendererのコードの誤り等）まで同じ例外にすると、生成スクリプトが
+    # 「内容の検証で問題が見つかりました」と誤って報告し、tracebackも失われる。
+    from slidekit import ContentError
+    try:
+        require_valid_content({"deck": {"mode": "business"},
+                               "slides": [{"type": "nope", "title": "x"}]})
+    except ContentError as error:
+        assert isinstance(error, ValueError), (
+            "ContentErrorがValueErrorを継承していません（既存の捕捉が壊れます）")
+    else:
+        raise AssertionError("preflightの失敗がContentErrorになっていません")
+
+    def broken_renderer(builder, spec, page):
+        raise ValueError("描画中の失敗")
+
+    try:
+        render_deck(custom_content, Path.cwd(),
+                    extra_renderers={"broken_page": broken_renderer})
+    except ContentError:
+        pass  # custom_pageが未対応typeになるため、ここはpreflightで止まる
+    broken_content = {"deck": {"mode": "business"}, "slides": [
+        {"id": "b", "type": "broken_page", "title": "T", "primary_message": "M"}]}
+    try:
+        render_deck(broken_content, Path.cwd(),
+                    extra_renderers={"broken_page": broken_renderer})
+    except ContentError:
+        raise AssertionError("描画中のValueErrorがContentErrorとして扱われています")
+    except ValueError:
+        pass
 
     with tempfile.TemporaryDirectory(prefix="slidekit-test-") as temp:
         root = Path(temp)

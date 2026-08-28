@@ -65,7 +65,7 @@ from .config import load_workspace_config, workspace_paths  # noqa: E402
 from .icons import ICON_NAMES, add_icon  # noqa: E402
 from .layout import Region, content_region  # noqa: E402
 from .images import add_image_contain  # noqa: E402
-from .preflight import inspect_content, require_valid_content  # noqa: E402
+from .preflight import ContentError, inspect_content, require_valid_content  # noqa: E402
 from .renderers import RENDERERS, render_deck  # noqa: E402
 from .tables import add_data_table  # noqa: E402
 
@@ -81,7 +81,7 @@ __all__ = [
     "add_paragraph_textbox", "add_section_lead", "add_slide_title",
     "add_textbox", "new_presentation", "rgb", "set_run",
     "style_text_frame", "typography_for", "logo_path_from_config",
-    "DeckBuilder", "Region", "content_region", "inspect_content",
+    "ContentError", "DeckBuilder", "Region", "content_region", "inspect_content",
     "load_workspace_config", "workspace_paths", "require_valid_content",
     "RENDERERS", "render_deck",
     "add_data_table", "add_image_contain",

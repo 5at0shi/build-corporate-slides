@@ -164,15 +164,32 @@ def RadialLayout(slide, region, items, *, box_w=Inches(1.5), box_h=Inches(0.9),
     n = max(1, len(items))
     cx = region.x + region.w // 2
     cy = region.y + region.h // 2
-    radius = min(region.w, region.h) // 2 - max(box_w, box_h) // 2
-    half_w, half_h = box_w / 2, box_h / 2
     direction = 1 if clockwise else -1
 
-    centers = []
-    for index in range(n):
-        angle = math.radians(start_angle + direction * index * 360 / n)
-        centers.append((cx + int(radius * math.cos(angle)),
-                        cy + int(radius * math.sin(angle))))
+    def centers_for(width):
+        radius = min(region.w, region.h) // 2 - max(width, box_h) // 2
+        points = []
+        for index in range(n):
+            angle = math.radians(start_angle + direction * index * 360 / n)
+            points.append((cx + int(radius * math.cos(angle)),
+                           cy + int(radius * math.sin(angle))))
+        return points
+
+    # box_wは「置きたい幅」として受け取り、実際に置ける幅はここで決める。
+    # 2つの矩形は |dx| >= box_w または |dy| >= box_h のどちらかを満たせば
+    # 重ならないので、縦に十分離れている隣接ペアは幅を制約しない。
+    # （中心間の距離＝弦の長さで一律に抑えると、上下左右に置く4件のような
+    # 縦に離れた配置でも不必要に幅が狭まり、見出しが語中で折り返す。）
+    centers = centers_for(box_w)
+    limits = [abs(x2 - x1)
+              for (x1, y1), (x2, y2) in zip(centers, centers[1:] + centers[:1])
+              if abs(y2 - y1) < box_h]
+    if limits and min(limits) < box_w:
+        # 幅を縮めると半径が広がり中心同士がさらに離れるため、この
+        # 上限を適用した配置は必ず重ならない。
+        box_w = max(Inches(0.9), min(limits))
+        centers = centers_for(box_w)
+    half_w, half_h = box_w / 2, box_h / 2
 
     if n >= 2:
         for index in range(n):

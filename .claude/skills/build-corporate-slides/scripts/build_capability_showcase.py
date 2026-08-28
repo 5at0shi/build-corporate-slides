@@ -262,15 +262,18 @@ caption(slide, icon_col.x, icon_col.y + Inches(1.9), icon_col.w,
        "add_icon_list()", size=10, bold=True, color=PALETTE.text_primary)
 
 msg_row = row5[1]
-msg_cols = msg_row.columns([1, 1, 1, 1], gap="standard")
+msg_cols = msg_row.columns([1, 1, 1, 1, 1], gap="standard")
 for (style, label), region in zip(
         [("editorial", "editorial"), ("subtle", "subtle"),
-         ("solid", "solid"), ("card", "card")], msg_cols):
+         ("solid", "solid"), ("card", "card"), ("plain", "plain")], msg_cols):
     h = Inches(0.82)
     add_key_message(slide, region.x, region.y, region.w,
                     f"Key Message: {label}", style=style)
+    # 5列に分けると関数名まで入れた注記は折り返すため、関数名は先頭の列
+    # だけに付け、以降はstyle名だけにする。
     caption(slide, region.x, region.y + h + Inches(0.08), region.w,
-           f'add_key_message(style="{style}")', size=9.5)
+           (f'add_key_message(style="{style}")' if style == "editorial"
+            else f'style="{style}"'), size=9.5)
 
 # ==================================================================== 6. Icons
 slide, area = builder.add_slide("アイコン（14種）", kicker="ICONS.PY: add_icon()",
@@ -429,7 +432,7 @@ catalog = [
         "primary_message": "グラフ全体を公平に読ませたいときはstandardを選ぶ",
         "insight_heading": "使う場面",
         "insights": ["グラフの全体像を偏りなく見せたいとき",
-                     "column/stacked_column/bar/line/pie/scatterに対応",
+                     "棒・積み上げ棒・横棒・折れ線・円・散布図に対応",
                      "chartを指定すると数値をPowerPoint上で直接編集できる"],
         "chart": {"type": "column", "categories": ["項目1", "項目2", "項目3"],
                  "series": [{"name": "系列A", "values": [12, 38, 42]}]},

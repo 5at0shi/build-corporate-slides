@@ -162,6 +162,14 @@ def _style_category_chart(chart, chart_type, font, small, value_format,
     category_axis.format.line.color.rgb = PALETTE.line_neutral
 
     value_axis = chart.value_axis
+    # 棒・列グラフは「棒の長さ」が量を表すため、軸の下限を0に固定する。
+    # 自動スケールに任せると、値が0から離れているほど下限が持ち上がり、
+    # 例えば[42, 35, 38]で下限30が選ばれて1.2倍の差が3倍に見える。
+    # 折れ線・散布図は位置で読む図法なので0起点を強制しない（変化の幅を
+    # 見せるために0を含めないことが正当な場面がある）。
+    # 負の値を含む場合は下限を触らない。0より下を切り落としてしまうため。
+    if chart_type in ("column", "stacked_column", "bar") and not has_negative:
+        value_axis.minimum_scale = 0
     value_axis.format.line.fill.background()
     value_axis.has_major_gridlines = True
     value_axis.major_gridlines.format.line.color.rgb = PALETTE.line_neutral

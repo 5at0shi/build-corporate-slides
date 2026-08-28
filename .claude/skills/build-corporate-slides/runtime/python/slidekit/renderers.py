@@ -23,6 +23,7 @@ from .preflight import require_valid_content
 from .images import add_image_contain
 from .tables import add_data_table
 from .textmetrics import (adaptive_gap_pt, centered_gap_pt,
+                          char_width_factor,
                           estimate_item_list_height_pt, estimate_line_count,
                           estimate_paragraph_height_pt)
 from .theme import PALETTE
@@ -589,21 +590,16 @@ def render_stage_track(builder, spec, page):
     # 組むと記号の幅ぶんの字下げが失われ、2行目が記号に埋もれる）。そのぶん
     # 見出しブロックとは別のtextboxになるため、両方の高さを見積もって
     # 1つの塊として置く。塊の開始位置は全ステージ共通にし、高さは最も高い
-    # ステージに合わせる（カードごとに中央へ置くと、項目数の違いでSTEPの
-    # ラベルが数ミリずつズレて並び、横並びのカードとして揃って見えない）。
-    # itemsを1つも使わないページは従来どおりカードの中央へ置く。
-    if blocks and any(block["items"] for block in blocks):
+    # ステージに合わせる。カードごとに中央へ置くと、本文の行数や項目数の
+    # 違いでSTEPのラベルが数ミリずつズレて並び、横並びの同格Cardとして
+    # 揃って見えない（bodyだけを使うページでも同じズレが出る）。
+    if not blocks:
+        top = None
+    else:
         block_pt = max(block["head_pt"] + block["list_pt"] for block in blocks)
         block_h = min(contents[0].h, Inches(block_pt / 72))
         top = contents[0].y + max(0, (contents[0].h - block_h) // 2)
-    else:
-        top = None
     for block, inner in zip(blocks, contents):
-        if top is None:
-            add_paragraph_textbox(slide, inner.x, inner.y, inner.w, inner.h,
-                                  block["paragraphs"],
-                                  vertical_anchor=MSO_ANCHOR.MIDDLE)
-            continue
         bottom = inner.y + inner.h
         head_h = min(bottom - top, Inches(block["head_pt"] / 72))
         add_paragraph_textbox(slide, inner.x, top, inner.w, head_h,
@@ -829,6 +825,26 @@ def render_funnel(builder, spec, page):
         _conclude(slide, conclusion, spec)
 
 
+def _cycle_box_w(steps, square, typography):
+    """cycleのCard幅を、最も長いtitleが1行に収まる幅へ広げる。
+
+    固定幅のままだと「ガイドライン改善」が「ガイドライン改／善」のように
+    語の途中で折り返す。一方で広げすぎると円周上の隣接Card同士が接触する
+    ため、隣り合う中心間の距離から上限を決める（半径は概ね外接正方形の
+    1/4なので、中心間距離は 2*r*sin(pi/n)）。
+    """
+    if not steps:
+        return Inches(1.5)
+    longest = max((str(step.get("title", "")) for step in steps), key=len,
+                  default="")
+    # 最も長いtitleが1行に収まる幅（pt）＋左右のinsetぶん。実際に置ける
+    # 幅の上限はRadialLayoutが配置から決めるため、ここでは要望値だけ返す。
+    needed_pt = sum(char_width_factor(ch) for ch in longest) * typography.body.pt
+    needed = Inches(needed_pt / 72) + Inches(0.36)
+    # 上限は正方形の半分。これを超えると円というより横並びに見えるため。
+    return int(max(Inches(1.5), min(needed, square.w // 2)))
+
+
 def render_cycle(builder, spec, page):
     """繰り返し・循環するプロセス（PDCA等）を、円周上に並べた同格のCard群
     と、隣接する項目を結ぶ矢印で示す（最後尾から先頭へも矢印で結び輪に
@@ -845,7 +861,8 @@ def render_cycle(builder, spec, page):
                     circle_row.y + (circle_row.h - size) // 2, size, size)
     steps = spec.get("steps", [])
     tones = ["brand-soft", "teal-soft", "neutral", "brand-soft", "teal-soft", "neutral"]
-    contents = RadialLayout(slide, square, steps, tones=tones)
+    contents = RadialLayout(slide, square, steps, tones=tones,
+                            box_w=_cycle_box_w(steps, square, typography))
     for index, (step, inner) in enumerate(zip(steps, contents)):
         add_paragraph_textbox(slide, inner.x, inner.y, inner.w, inner.h, [
             {"segments": [(step.get("label", f"STEP {index + 1}"), {

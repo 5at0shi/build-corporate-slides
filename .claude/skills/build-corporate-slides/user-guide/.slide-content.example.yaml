@@ -276,20 +276,23 @@ slides:
     y_axis:
       low: "期待効果: 小"
       high: "期待効果: 大"
+    # cellsは左上から右へ、次の行へ、という読み順。先頭の行がy_axis.high側
+    # （期待効果:大）、左の列がx_axis.low側（着手しやすさ:低）になる。
+    # 「効果が大きく着手しやすい」最優先の象限は右上＝cells[1]。
     cells:
+      - label: "検討"
+        title: "議事録の要約"
+        body: "効果は大きいが、機密区分の整理に時間がかかる"
       - label: "優先"
         title: "問い合わせ対応の下書き"
         body: "定型的な回答が多く、効果を測定しやすい"
         emphasis: true
-      - label: "検討"
-        title: "議事録の要約"
-        body: "効果は大きいが、機密区分の整理に時間がかかる"
-      - label: "保留"
-        title: "資料の多言語翻訳"
-        body: "対象業務が限られ、優先度は相対的に低い"
       - label: "対象外"
         title: "契約書のレビュー"
         body: "法務判断を伴うため、当面は対象外とする"
+      - label: "保留"
+        title: "資料の多言語翻訳"
+        body: "対象業務が限られ、優先度は相対的に低い"
 
   - id: rollout_section
     type: section_divider

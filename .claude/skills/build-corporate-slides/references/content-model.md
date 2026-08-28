@@ -35,4 +35,4 @@ slides:
 - 標準構造に合わない図解はPythonで個別構築できる。すべてを固定スキーマへ押し込まない。
 - REVISEでは文言・数値・項目順をYAML、レイアウトとDesign DNAをPythonまたはslidekitで修正する。
 - `type` は見た目ではなく、伝える関係から選ぶ。対応typeとvariantは [renderer-catalog.md](renderer-catalog.md) を読む。
-- renderer固有フィールドを使わない特殊ページはPythonで構築してよいが、YAMLには少なくともtitle、primary_message、density、主要データを残す。
+- renderer固有フィールドを使わない特殊ページはPythonで構築してよいが、YAMLには少なくともtitle、primary_message、density、主要データを残す。描画関数を`render_deck`の`extra_renderers`へ渡せば、YAMLに書いたまま他のページと一緒に生成できる（手順は[renderer-catalog.md](renderer-catalog.md)の「個別構築ページをYAMLと同居させる」）。

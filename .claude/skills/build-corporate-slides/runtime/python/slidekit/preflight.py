@@ -22,7 +22,16 @@ def _walk_text(value):
             yield from _walk_text(child)
 
 
-def inspect_content(content):
+def inspect_content(content, *, extra_types=()):
+    """contentを事前診断する。
+
+    extra_typesには、生成スクリプト側で個別構築するページのtype名を渡す
+    （renderer-catalog.mdのEscape Hatch）。そのtypeは未対応として弾かず、
+    共通の検査（title・primary_message・density・文字量・項目数）だけを
+    適用する。個別構築ページも、内容はYAMLへ残すのがcontent-model.mdの
+    方針であり、共通の契約はrendererのページと同じだけ効かせる。
+    """
+    known_types = KNOWN_TYPES | set(extra_types)
     errors, warnings = [], []
     deck = content.get("deck", {})
     if deck.get("mode", "business") not in {"business", "dense", "large-room"}:
@@ -38,7 +47,7 @@ def inspect_content(content):
     for index, slide in enumerate(slides, 1):
         label = f"slide {index} ({slide.get('id', 'idなし')})"
         slide_type = slide.get("type")
-        if slide_type not in KNOWN_TYPES:
+        if slide_type not in known_types:
             errors.append(f"{label}: 未対応typeです: {slide_type}")
             continue
         if not slide.get("title"):
@@ -179,8 +188,8 @@ def inspect_content(content):
     return errors, warnings
 
 
-def require_valid_content(content):
-    errors, warnings = inspect_content(content)
+def require_valid_content(content, *, extra_types=()):
+    errors, warnings = inspect_content(content, extra_types=extra_types)
     if errors:
         raise ValueError("\n".join(errors))
     return warnings

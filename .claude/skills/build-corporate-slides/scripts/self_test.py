@@ -343,6 +343,36 @@ def main() -> int:
             f"{slide['type']}: primary_message欠落がerrorになっていません "
             "(描画時にKeyErrorで落ちます)")
 
+    # Escape Hatch（renderer-catalog.md）: 該当rendererが無いページを生成
+    # スクリプト側で個別構築する経路。content-model.mdは「特殊ページも
+    # YAMLへ内容を残す」としているため、独自typeでもpreflightを通せること、
+    # かつ共通の契約は他のページと同じだけ効くことの両方を確認する。
+    def custom_renderer(builder, spec, page):
+        builder.add_slide(spec["title"], density=spec.get("density", "standard"),
+                          page=page)
+
+    extra = {"custom_page": custom_renderer}
+    custom_content = {"deck": {"mode": "business"}, "slides": [
+        {"id": "c", "type": "custom_page", "title": "独自構築ページ",
+         "primary_message": "rendererに該当しない構造"}]}
+    assert not inspect_content(custom_content, extra_types=extra.keys())[0], (
+        "extra_typesを渡した独自typeがpreflightで弾かれています")
+    assert inspect_content(custom_content)[0], (
+        "extra_types無しの未対応typeが素通りしています")
+    without_message = {"deck": custom_content["deck"], "slides": [
+        {k: v for k, v in custom_content["slides"][0].items()
+         if k != "primary_message"}]}
+    assert any("primary_message" in error for error in
+               inspect_content(without_message, extra_types=extra.keys())[0]), (
+        "独自typeで共通の契約(primary_message)が効いていません")
+    try:
+        render_deck(custom_content, Path.cwd(),
+                    extra_renderers={"comparison": custom_renderer})
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("既存typeと重複するextra_renderersが拒否されていません")
+
     with tempfile.TemporaryDirectory(prefix="slidekit-test-") as temp:
         root = Path(temp)
         (root / ".slide-skill-config.yaml").write_text(
@@ -354,6 +384,11 @@ def main() -> int:
 
         output, render_warnings = render_deck(content, root)
         assert not render_warnings, render_warnings
+
+        custom_output, _ = render_deck(custom_content, root,
+                                       root / "custom.pptx",
+                                       extra_renderers=extra)
+        assert Presentation(custom_output).slides, "独自構築ページが描画されていません"
         presentation = Presentation(output)
         assert len(presentation.slides) == len(content["slides"])
         cover_text = [shape.text for shape in presentation.slides[0].shapes

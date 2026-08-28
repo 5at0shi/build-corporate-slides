@@ -11,6 +11,7 @@ __pycache__/
 build_slides/output/*
 build_slides/work/render/
 build_slides/work/*.yaml
+build_slides/work/*.py
 build_slides/work/*/render/
 
 # Human-provided input material (photos, maps, etc.) — workspace-specific,

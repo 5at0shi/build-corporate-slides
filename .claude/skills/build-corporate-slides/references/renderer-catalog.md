@@ -91,3 +91,33 @@ rendererは完成テンプレートではなく、頻出する意味構造を編
 一致するrendererがない場合は無理に近い型へ入れない。`DeckBuilder.add_slide()` と `Region.columns()` / `rows()` を使って個別構築し、既存のtypography、semantic color、余白、編集性規則は維持する。新しいrendererを追加するのは、同じ意味構造が複数回現れ、決定論的な実装が再利用できる場合だけとする。slidekit内部のLayout/Atom/Fragment/Rendererという層構成は[`runtime/python/slidekit/ARCHITECTURE.md`](../runtime/python/slidekit/ARCHITECTURE.md)を参照。
 
 項目数が少ないページを個別構築する場合は、`add_item_list` や `add_paragraph_textbox(vertical_anchor=...)` を使い、上詰めで余白が偏らないよう領域内で縦方向に配置を検討する。
+
+### 個別構築ページをYAMLと同居させる
+
+個別構築するページも、内容はYAMLへ残す（[content-model.md](content-model.md)）。生成スクリプトで描画関数を定義し、`render_deck`の`extra_renderers`へ渡す。
+
+```python
+def render_custom_diagram(builder, spec, page):
+    slide, area = builder.add_slide(spec["title"], density=spec.get("density"), page=page)
+    body, conclusion = area.rows([4.7, 0.62], gap=Inches(0.24))
+    ...  # Region.columns()/rows()とadd_*で組み立てる
+    add_key_message(slide, conclusion.x, conclusion.y, conclusion.w,
+                    spec["primary_message"], style="subtle")
+
+output, warnings = render_deck(content, ROOT,
+                               extra_renderers={"custom_diagram": render_custom_diagram})
+```
+
+YAML側は他のページと同じ形で書く。
+
+```yaml
+  - id: special
+    type: custom_diagram
+    title: "独自の図解"
+    primary_message: "このページの中心メッセージ"
+    nodes: ["入力", "処理", "出力"]
+```
+
+渡したtypeはpreflightでも許容され、共通の契約（`title`・`primary_message`・`density`・文字量・項目数）は他のページと同じだけ検査される。個別構築ページのためにpreflightごと外す必要はない。
+
+既存typeと同じ名前は受け付けない（`ValueError`になる）。デッキ単位で標準rendererの意味が黙って差し替わると、同じtypeが資料によって別の見た目になるため。renderer自体を変えたい場合はslidekit側を直す。

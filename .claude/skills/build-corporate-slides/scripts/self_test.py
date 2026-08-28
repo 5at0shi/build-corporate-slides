@@ -175,7 +175,8 @@ def main() -> int:
     skill_root = Path(__file__).resolve().parents[1]
     sys.path.insert(0, str(skill_root / "runtime" / "python"))
     sys.path.insert(0, str(Path(__file__).resolve().parent))
-    from slidekit import add_icon_list, inspect_content, logo_path_from_config, render_deck
+    from slidekit import (add_icon_list, inspect_content, logo_path_from_config,
+                          render_deck, require_valid_content)
     from slidekit.charts import add_native_chart
     from slidekit.icons import ICON_NAMES, add_icon
     from slidekit.preflight import KNOWN_TYPES
@@ -343,6 +344,67 @@ def main() -> int:
             f"{slide['type']}: primary_message欠落がerrorになっていません "
             "(描画時にKeyErrorで落ちます)")
 
+    # Escape Hatch（renderer-catalog.md）: 該当rendererが無いページを生成
+    # スクリプト側で個別構築する経路。content-model.mdは「特殊ページも
+    # YAMLへ内容を残す」としているため、独自typeでもpreflightを通せること、
+    # かつ共通の契約は他のページと同じだけ効くことの両方を確認する。
+    def custom_renderer(builder, spec, page):
+        builder.add_slide(spec["title"], density=spec.get("density", "standard"),
+                          page=page)
+
+    extra = {"custom_page": custom_renderer}
+    custom_content = {"deck": {"mode": "business"}, "slides": [
+        {"id": "c", "type": "custom_page", "title": "独自構築ページ",
+         "primary_message": "rendererに該当しない構造"}]}
+    assert not inspect_content(custom_content, extra_types=extra.keys())[0], (
+        "extra_typesを渡した独自typeがpreflightで弾かれています")
+    assert inspect_content(custom_content)[0], (
+        "extra_types無しの未対応typeが素通りしています")
+    without_message = {"deck": custom_content["deck"], "slides": [
+        {k: v for k, v in custom_content["slides"][0].items()
+         if k != "primary_message"}]}
+    assert any("primary_message" in error for error in
+               inspect_content(without_message, extra_types=extra.keys())[0]), (
+        "独自typeで共通の契約(primary_message)が効いていません")
+    try:
+        render_deck(custom_content, Path.cwd(),
+                    extra_renderers={"comparison": custom_renderer})
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("既存typeと重複するextra_renderersが拒否されていません")
+
+    # preflightの失敗だけがContentErrorになること。描画中のValueError（自作
+    # rendererのコードの誤り等）まで同じ例外にすると、生成スクリプトが
+    # 「内容の検証で問題が見つかりました」と誤って報告し、tracebackも失われる。
+    from slidekit import ContentError
+    try:
+        require_valid_content({"deck": {"mode": "business"},
+                               "slides": [{"type": "nope", "title": "x"}]})
+    except ContentError as error:
+        assert isinstance(error, ValueError), (
+            "ContentErrorがValueErrorを継承していません（既存の捕捉が壊れます）")
+    else:
+        raise AssertionError("preflightの失敗がContentErrorになっていません")
+
+    def broken_renderer(builder, spec, page):
+        raise ValueError("描画中の失敗")
+
+    try:
+        render_deck(custom_content, Path.cwd(),
+                    extra_renderers={"broken_page": broken_renderer})
+    except ContentError:
+        pass  # custom_pageが未対応typeになるため、ここはpreflightで止まる
+    broken_content = {"deck": {"mode": "business"}, "slides": [
+        {"id": "b", "type": "broken_page", "title": "T", "primary_message": "M"}]}
+    try:
+        render_deck(broken_content, Path.cwd(),
+                    extra_renderers={"broken_page": broken_renderer})
+    except ContentError:
+        raise AssertionError("描画中のValueErrorがContentErrorとして扱われています")
+    except ValueError:
+        pass
+
     with tempfile.TemporaryDirectory(prefix="slidekit-test-") as temp:
         root = Path(temp)
         (root / ".slide-skill-config.yaml").write_text(
@@ -354,6 +416,11 @@ def main() -> int:
 
         output, render_warnings = render_deck(content, root)
         assert not render_warnings, render_warnings
+
+        custom_output, _ = render_deck(custom_content, root,
+                                       root / "custom.pptx",
+                                       extra_renderers=extra)
+        assert Presentation(custom_output).slides, "独自構築ページが描画されていません"
         presentation = Presentation(output)
         assert len(presentation.slides) == len(content["slides"])
         cover_text = [shape.text for shape in presentation.slides[0].shapes

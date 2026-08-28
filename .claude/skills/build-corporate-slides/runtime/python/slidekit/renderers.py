@@ -1179,9 +1179,30 @@ RENDERERS = {
 }
 
 
-def render_deck(content, root, output_path=None):
-    warnings = require_valid_content(content)
+def render_deck(content, root, output_path=None, *, extra_renderers=None):
+    """contentからデッキを生成する。
+
+    extra_renderersは {type名: 関数(builder, spec, page)} の辞書。該当する
+    rendererが無いページを生成スクリプト側で個別構築する場合に渡す
+    （renderer-catalog.mdのEscape Hatch）。渡したtypeはpreflightでも
+    許容され、共通の契約（title・primary_message・density・文字量・項目数）
+    は他のページと同じように検査される。個別構築ページのためだけに
+    preflightごと外す必要はない。
+
+    既存typeと同じ名前は受け付けない。デッキ単位で標準rendererの意味が
+    黙って差し替わると、同じtypeが資料によって別の見た目になるため。
+    rendererそのものを変えたい場合はslidekit側を直す（SKILL.mdのREVISE）。
+    """
+    extra_renderers = extra_renderers or {}
+    collisions = sorted(set(extra_renderers) & set(RENDERERS))
+    if collisions:
+        raise ValueError(
+            "extra_renderersが既存のtypeと重複しています: "
+            + ", ".join(collisions)
+            + "（別の名前にするか、slidekit側のrendererを修正してください）")
+    warnings = require_valid_content(content, extra_types=extra_renderers.keys())
     builder = DeckBuilder(root, mode=content.get("deck", {}).get("mode"))
+    renderers = {**RENDERERS, **extra_renderers}
     for page, spec in enumerate(content["slides"], 1):
-        RENDERERS[spec["type"]](builder, spec, page)
+        renderers[spec["type"]](builder, spec, page)
     return builder.save(output_path), warnings

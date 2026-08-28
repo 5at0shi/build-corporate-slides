@@ -49,6 +49,10 @@ build_slides/
 
 `render_dir` や `script_dir` はconfigに増やさず、常に `work_dir` から導出する。PDFが納品物として明示された場合のみ `output_dir` にも出力する。
 
+1ワークスペース＝1デッキを既定とする。同じワークスペースで複数のデッキを扱う場合は、内容・生成スクリプト・成果物の3つに同じ識別子を付けて対応を保つ（例: `work/pricing.yaml`、`work/pricing.generate.py`、`output/pricing.pptx`）。どれか一つだけ名前を変えると、どのスクリプトがどの成果物を作ったのかが追えなくなる。
+
+生成は必ず `work_dir` に残るスクリプトから行う。その場限りのコマンドやインラインのスクリプトで生成すると、再現も引き継ぎもできない状態になり、完了条件を満たさない。
+
 ## PLAN
 
 すぐにPPTXを作らず、資料の目的、読み手、意思決定、ストーリーを整理する。各スライドについて、タイトル、中心メッセージ、主な内容、最適な表現・レイアウトを示す。タイトルと箇条書きだけの計画にしない。
@@ -58,7 +62,7 @@ build_slides/
 ## CREATE
 
 1. 確定したSlide Planを基に、内容と意味構造を `build_slides/work/slide_content.yaml`、描画の入口を `build_slides/work/generate_pptx.py` に分けて維持する。新規作成では [`.slide-content.example.yaml`](user-guide/.slide-content.example.yaml) と [`assets/generate_pptx.py`](assets/generate_pptx.py) を出発点にできる。
-2. 各ページを [`renderer-catalog.md`](references/renderer-catalog.md) へ照合する。該当する意味ベースrendererを優先し、内容に合わないページだけ `DeckBuilder` とlayout primitivesで個別構築する。rendererへ無理に押し込まない。
+2. 各ページを [`renderer-catalog.md`](references/renderer-catalog.md) へ照合する。該当する意味ベースrendererを優先し、内容に合わないページだけ `DeckBuilder` とlayout primitivesで個別構築する。rendererへ無理に押し込まない。個別構築したページは、描画関数を `generate_pptx.py` に置き `render_deck(..., extra_renderers={...})` へ渡して同じデッキに含める。内容は他のページと同じくYAMLへ残す（[renderer-catalog.md](references/renderer-catalog.md)の「個別構築ページをYAMLと同居させる」）。
 3. `DeckBuilder.from_workspace(ROOT)` を入口にし、config、パス、部署名、開示範囲、ロゴ、フォント、標準modeを自動反映する。config項目を生成コードで重複管理しない。
 4. 編集可能なテキスト、表、図形、チャートを優先し、原則としてスライド全体を画像化しない。
    - 同じ見出し配下の箇条書きは、複数段落を持つ一つのtextboxへまとめる。

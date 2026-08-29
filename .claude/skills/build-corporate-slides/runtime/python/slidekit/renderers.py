@@ -11,7 +11,7 @@ pageframe.pyに分け、DeckBuilder経由で呼ぶ（循環importを避けるた
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Inches, Pt
 
-from .atoms import Box, Connector, add_hairline
+from .atoms import Box, Connector, ConnectorBus, add_hairline
 from .builder import DeckBuilder
 from .charts import add_native_chart
 from .components import (SECTION_LEAD_GAP, add_background_zone,
@@ -1184,11 +1184,18 @@ def render_issue_tree(builder, spec, page):
         leaf_bands = leaf_col.rows(
             [max(1, len(branch.get("items", []))) for branch in branches],
             gap=Inches(0.18))
+    # 根から枝への線は、枝の中心yをすべて集めてから1本のスパインで束ねる
+    # （枝ごとに引くと縦線が枝の数だけ重なり、木として読めなくなる）。
+    branch_centers = [(inner.y - branch_inset_y)
+                      + (inner.h + 2 * branch_inset_y) // 2
+                      for inner in contents]
+    if branch_centers:
+        ConnectorBus(slide, root_col.x + root_col.w, root_center_y,
+                     contents[0].x - branch_inset_x, branch_centers,
+                     color=PALETTE.grey_500, width=Pt(1.25))
+
     for index, (branch, inner) in enumerate(zip(branches, contents)):
-        center_y = (inner.y - branch_inset_y) + (inner.h + 2 * branch_inset_y) // 2
-        Connector(slide, root_col.x + root_col.w, root_center_y,
-                  inner.x - branch_inset_x, center_y, style="elbow",
-                  arrow="none", color=PALETTE.grey_500, width=Pt(1.25))
+        center_y = branch_centers[index]
         paragraphs = [{"segments": [(branch.get("title", ""), {
             "size": typography.body, "color": PALETTE.text_primary,
             "bold": True, "font": typography.body_font,
@@ -1206,12 +1213,15 @@ def render_issue_tree(builder, spec, page):
         items = branch.get("items", [])
         band = leaf_bands[index]
         leaf_rows = band.rows([1] * max(1, len(items)), gap=Inches(0.08))
-        for item, leaf in zip(items, leaf_rows):
+        placed = list(zip(items, leaf_rows))
+        if placed:
+            ConnectorBus(slide, inner.x + inner.w + branch_inset_x, center_y,
+                         placed[0][1].x,
+                         [leaf.y + leaf.h // 2 for _, leaf in placed],
+                         color=PALETTE.line_neutral, width=Pt(1))
+        for item, leaf in placed:
             add_background_zone(slide, leaf.x, leaf.y, leaf.w, leaf.h,
                                 tone="neutral", rounded=True)
-            Connector(slide, inner.x + inner.w + branch_inset_x, center_y,
-                      leaf.x, leaf.y + leaf.h // 2, style="elbow",
-                      arrow="none", color=PALETTE.line_neutral, width=Pt(1))
             add_paragraph_textbox(slide, leaf.x + Inches(0.18), leaf.y,
                                   leaf.w - Inches(0.32), leaf.h, [
                 {"segments": [(item if isinstance(item, str)

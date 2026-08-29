@@ -178,6 +178,40 @@ def build_numbered_list_page(builder, page):
     RENDERERS["numbered_list"](builder, spec, page)
 
 
+def build_issue_tree_page(builder, page):
+    """FIX 5: issue_treeの親子を結ぶ線が、木に見えず箱にも重なっていた不具合。
+
+    子の数だけConnector(style="elbow")を引いていた。PowerPointの自動経路は
+    レンダラーによって折れる位置が変わり、LibreOfficeでは折れ位置が箱の縁へ
+    寄って、縦線がCardの上に重なった。親子の間隔が0.42inしかないため、子ごとに
+    独立した階段が並んで木として読めない状態でもあった。
+
+    経路をPowerPointに任せず、共有の縦線1本＋横線で明示的に引く
+    ConnectorBus(atoms.py)へ置き換えた。子の中心yが親と一致する場合は
+    段差を作らず1本の直線にする。
+
+    このページは内訳が1件・2件・0件の枝を混在させ、どの分岐数でも
+    「縦線が1本にまとまり、Cardに重ならない」ことを目視で確認するためのもの。
+    """
+    spec = {
+        "title": "FIX 5: 親子を結ぶ線を共有スパインで引き直す",
+        "kicker": "ISSUE TREE",
+        "root": {"label": "確認", "title": "分岐数が変わっても線が破綻しないか",
+                 "body": "内訳1件・2件・0件を混在させている"},
+        "branches": [
+            {"title": "内訳が1件の枝", "body": "分岐しないので直線または1段",
+             "items": ["唯一の内訳"]},
+            {"title": "内訳が2件の枝", "body": "縦線が1本にまとまること",
+             "items": ["内訳A", "内訳B"]},
+            {"title": "内訳が0件の枝", "body": "右側へ線を引かないこと"},
+        ],
+        "primary_message": "縦線が枝ごとに1本だけで、Cardの上に線が乗って"
+                           "いなければOK。根から枝への線も同様に1本の縦線で"
+                           "束ねている。",
+    }
+    RENDERERS["issue_tree"](builder, spec, page)
+
+
 builder = DeckBuilder.from_workspace(WORKSPACE_ROOT)
 builder.add_cover(
     "スキル回帰確認デッキ",
@@ -189,6 +223,7 @@ build_border_radius_page(builder, page=2)
 build_process_with_gates_page(builder, page=3)
 build_org_layers_page(builder, page=4)
 build_numbered_list_page(builder, page=5)
+build_issue_tree_page(builder, page=6)
 
 output = builder.save(builder.paths.output_dir / "skill-regression-check.pptx")
 print("PPTX:", output)

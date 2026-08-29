@@ -159,6 +159,50 @@ def Connector(slide, x1, y1, x2, y2, *, style="straight", arrow="end",
     return shape
 
 
+def ConnectorBus(slide, x1, y1, x2, targets, *, color=PALETTE.line_neutral,
+                width=Pt(1)):
+    """1つの親から複数の子へ、共有の縦線1本で直角に分岐する線を描く。
+
+    親の右端(x1, y1)から子の左端xまでの間に縦線（スパイン）を1本立て、
+    親から1本、各子へ1本ずつ横線を引く。子は同じxに揃っている前提で、
+    子ごとのy（中心）だけをtargetsで受け取る。
+
+    Connector(style="elbow")を子の数だけ引く方法は使わない。PowerPointの
+    自動経路はレンダラーによって曲がる位置が変わり、実際にLibreOffice
+    では折れ位置が箱の縁に寄ってBoxへ重なった（親子の間隔が0.42in程度
+    しかない木では特に破綻する）。経路を決め打ちすれば描画側の解釈に
+    依存せず、複数の子で縦線が1本に重なるため木として読める。
+
+    子のyが親のyと一致する場合、親の横線と子の横線がつながって1本の
+    直線になる（不要な段差が出ない）。
+    """
+    targets = list(targets)
+    if not targets:
+        return []
+
+    def line(ax, ay, bx, by):
+        return Connector(slide, ax, ay, bx, by, style="straight",
+                         arrow="none", color=color, width=width)
+
+    if len(targets) == 1:
+        # 子が1つなら分岐しない。スパインを立てても意味を足さないため。
+        target = targets[0]
+        if target == y1:
+            return [line(x1, y1, x2, y1)]
+        spine_x = x1 + (x2 - x1) // 2
+        return [line(x1, y1, spine_x, y1),
+                line(spine_x, y1, spine_x, target),
+                line(spine_x, target, x2, target)]
+
+    spine_x = x1 + (x2 - x1) // 2
+    shapes = [line(x1, y1, spine_x, y1)]
+    top, bottom = min(min(targets), y1), max(max(targets), y1)
+    if bottom > top:
+        shapes.append(line(spine_x, top, spine_x, bottom))
+    shapes.extend(line(spine_x, target, x2, target) for target in targets)
+    return shapes
+
+
 def Marker(slide, x, y, w, h, *, shape="bar", fill=PALETTE.line_brand, rounding=0.16):
     """テキストを持たない小さな単色アクセント図形（縦棒・点など）を描く。
 

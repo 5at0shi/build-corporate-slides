@@ -19,7 +19,7 @@
 
 「1ページを構成する部品」の層。**この層の中に階層はない**。以下はすべて対等なAtomである。
 
-- **単独の描画**: `Box` `Connector` `Marker` `add_hairline`（`atoms.py`）、`add_textbox` `add_paragraph_textbox`（`typography.py`）、`add_icon`、`add_native_chart`、`add_data_table`、`add_image_contain`
+- **単独の描画**: `Box` `Connector` `ConnectorBus` `Marker` `add_hairline`（`atoms.py`）、`add_textbox` `add_paragraph_textbox`（`typography.py`）、`add_icon`、`add_native_chart`、`add_data_table`、`add_image_contain`
 - **Atomの名前付きプリセット**: `add_card` / `add_background_zone` / `add_focus_panel` は、いずれも`Box`へ引数を変えて委譲するだけ（`components.py`）
 - **少数のAtomの定型的な組み合わせ**: `add_section_lead`（Marker＋テキスト）、`add_key_message`（罫線またはBox＋テキスト）、`Tag`（Box＋テキスト）、`Stat`、`add_text_list`
 
@@ -41,6 +41,7 @@ Atom層の`add_card`と`Box`が同じ層なのは「引数を変えて委譲す�
 判定が紛らわしい例:
 - `add_panel`はRegionを返すがFragmentではない。1つしか返さず、項目リストも取らない（1:1であって1:Nではない）。
 - `add_item_list` / `add_icon_list`は項目リストを取るがFragmentではない。中身を自分で描き切り、Regionを返さない。
+- `ConnectorBus`も同じ理由でAtom。子のyのリストを取るが、線を自分で描き切り、Regionを返さない（配置を計算して場所を渡す層ではない）。
 
 命名にビジネス用語を使わない（「階層」「ゲート」等はrenderer側の語彙）。形だけで再利用できることがこの層の価値。
 
@@ -57,7 +58,7 @@ Layout / Atom / Fragmentを組み合わせ、意味を持った1ページを完�
 | 段 | 判定方法 | 意味 | 例 |
 |---|---|---|---|
 | モジュール内部 | `_`始まり | 同じファイルの中からのみ呼ぶ | `_filled_shape` `_flat` `_type_for` `_list_item_segments` |
-| パッケージ内部 | `_`なし・`__all__`外 | slidekit内で層をまたいで呼ぶが、外へは出さない | `Box` `Connector` `Marker` `Tag` `Stat` `BoxGrid` `ProportionalStack` |
+| パッケージ内部 | `_`なし・`__all__`外 | slidekit内で層をまたいで呼ぶが、外へは出さない | `Box` `Connector` `ConnectorBus` `Marker` `Tag` `Stat` `BoxGrid` `ProportionalStack` |
 | パッケージ公開 | `__all__`収録（44名） | 生成スクリプト（`work/generate_pptx.py`）から呼んでよい | `add_card` `add_background_zone` `add_textbox` `Region` `DeckBuilder` `RENDERERS` |
 
 renderer-catalog.mdの Escape Hatch（該当rendererが無いページを個別構築する）で使ってよいのは、最下段の`__all__`収録名だけ。`Box`や`BoxGrid`を生成スクリプトから直接呼ばないのは、この線を越えるため。

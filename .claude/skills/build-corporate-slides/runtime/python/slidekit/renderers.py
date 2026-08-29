@@ -52,15 +52,44 @@ def _adaptive_gap(items, available_h, *, base_gap, per_item_pt):
                                base_gap=base_gap))
 
 
+def _lead_list_metrics(slide, region, items, *, bullet="•",
+                       bottom_pad=Inches(0.06)):
+    """見出し＋リストの塊の高さ・項目間隔・リスト部の高さを測る（描画しない）。
+
+    横に並ぶ列で共通の開始位置を決めるために、先に高さだけを知りたい
+    場面がある（列ごとに中央寄せすると、項目数の違いで見出しの高さが
+    列で揃わなくなるため）。
+    """
+    typography = _type_for(slide)
+    room = region.h - HEADING_BLOCK_H - bottom_pad
+    content_pt = estimate_item_list_height_pt(
+        typography, items, region.w / 12700, body_gap=0,
+        title_prefix=f"{bullet}  ")
+    gap_pt = centered_gap_pt(content_pt, len(items), room / 12700)
+    list_pt = content_pt + gap_pt * max(0, len(items) - 1)
+    list_h = min(room, Inches(list_pt / 72))
+    return HEADING_BLOCK_H + list_h, gap_pt, list_h
+
+
 def _lead_list(slide, region, heading, items, *, color=PALETTE.line_brand,
-              bullet="•", bottom_pad=Inches(0.06)):
+              bullet="•", bottom_pad=Inches(0.06), top=None, gap_pt=None,
+              list_h=None):
     """見出し(add_section_lead)＋その下のリスト(add_item_list)という、
     複数rendererで繰り返される組み合わせをまとめる。リストはHEADING_BLOCK_H
     ぶん見出しの下から始まる。
+
+    top / gap_pt / list_h を渡すと、上詰めではなくその位置・間隔で描く。
+    _lead_list_metricsで測った値を横に並ぶ列どうしで共有し、塊を上下中央
+    へ置きつつ見出しの高さを揃えるために使う。
     """
-    add_section_lead(slide, region.x, region.y, region.w, heading, color=color)
-    add_item_list(slide, region.x, region.y + HEADING_BLOCK_H, region.w,
-                  region.h - HEADING_BLOCK_H - bottom_pad, items, bullet=bullet)
+    top = region.y if top is None else top
+    if list_h is None:
+        list_h = region.h - HEADING_BLOCK_H - bottom_pad
+    add_section_lead(slide, region.x, top, region.w, heading, color=color)
+    extra = ({"body_gap": int(gap_pt), "adaptive": False}
+             if gap_pt is not None else {})
+    add_item_list(slide, region.x, top + HEADING_BLOCK_H, region.w, list_h,
+                  items, bullet=bullet, **extra)
 
 
 _TONE_COLORS = {"positive": PALETTE.positive, "negative": PALETTE.negative,
@@ -155,9 +184,19 @@ def render_comparison(builder, spec, page):
         add_emphasis_zone(slide, right, tone="neutral")
     left_items = _items(spec.get("left", {}))
     right_items = _items(spec.get("right", {}))
-    _lead_list(slide, left, _heading(spec.get("left", {}), "左側"), left_items)
+    # 上詰めのままだと項目が少ないときに下部だけが大きく空き、asymmetricの
+    # 淡色の面では「途中で終わっている」ように見える。2列を1つの塊として
+    # 上下中央へ置く。開始位置は高い方の列に合わせて共通にし、見出しの
+    # 高さが列でズレないようにする（visual-quality.md）。
+    left_block, left_gap, left_list_h = _lead_list_metrics(slide, left, left_items)
+    right_block, right_gap, right_list_h = _lead_list_metrics(
+        slide, right, right_items, bullet="—")
+    top = body.y + max(0, (body.h - max(left_block, right_block)) // 2)
+    _lead_list(slide, left, _heading(spec.get("left", {}), "左側"), left_items,
+              top=top, gap_pt=left_gap, list_h=left_list_h)
     _lead_list(slide, right, _heading(spec.get("right", {}), "右側"), right_items,
-              color=PALETTE.accent_secondary, bullet="—")
+              color=PALETTE.accent_secondary, bullet="—",
+              top=top, gap_pt=right_gap, list_h=right_list_h)
     _conclude(slide, conclusion, spec)
 
 
@@ -178,18 +217,11 @@ def render_evidence_and_decision(builder, spec, page):
     # 項目間隔を先に決めてからブロックの高さを出し、その高さで中央寄せする。
     # 最小間隔のまま中央へ置くと、周囲の余白だけが広がって項目群が窮屈に
     # 固まって見えるため（visual-quality.md）。
-    content_pt = estimate_item_list_height_pt(
-        typography, evidence, left_inner.w / 12700, body_gap=0,
-        title_prefix="•  ")
-    gap_pt = centered_gap_pt(content_pt, len(evidence),
-                             (left_inner.h - HEADING_BLOCK_H) / 12700)
-    list_pt = content_pt + gap_pt * max(0, len(evidence) - 1)
-    list_h = min(left_inner.h - HEADING_BLOCK_H, Inches(list_pt / 72))
-    top = left_inner.y + max(0, (left_inner.h - HEADING_BLOCK_H - list_h) // 2)
-    add_section_lead(slide, left_inner.x, top, left_inner.w,
-                     spec.get("evidence_heading", "判断の根拠"))
-    add_item_list(slide, left_inner.x, top + HEADING_BLOCK_H, left_inner.w,
-                  list_h, evidence, body_gap=int(gap_pt), adaptive=False)
+    block_h, gap_pt, list_h = _lead_list_metrics(slide, left_inner, evidence,
+                                                 bottom_pad=0)
+    top = left_inner.y + max(0, (left_inner.h - block_h) // 2)
+    _lead_list(slide, left_inner, spec.get("evidence_heading", "判断の根拠"),
+               evidence, top=top, gap_pt=gap_pt, list_h=list_h)
 
     inner = add_panel(slide, right.x, right.y, right.w, right.h,
                       tone="brand-soft", inset_x=Inches(0.34), inset_y=Inches(0.3))
@@ -493,12 +525,30 @@ def render_priority_actions(builder, spec, page):
     issues = spec.get("issues", [])
     actions = spec.get("actions", [])
 
-    add_section_lead(slide, left.x, left.y, left.w,
-                     spec.get("issues_heading", "想定される課題"))
     top_priority = spec.get("top_priority", "最優先")
     gap = _adaptive_gap(issues, left.h - HEADING_BLOCK_H, base_gap=12,
                         per_item_pt=typography.body.pt * 1.2 +
                         typography.small.pt * 1.2 + 2)
+    # 右の対応方針は淡色の面で囲うため、上詰めのままだと面の下半分が
+    # 空いて見える。左右を1つの塊として上下中央へ置き、開始位置は高い方
+    # に合わせて共通にする（見出しの高さを列で揃えるため）。
+    left_width_pt = left.w / 12700
+    issues_pt = 0.0
+    for issue in issues:
+        issues_pt += estimate_paragraph_height_pt(
+            f"{issue.get('priority', '')}  {issue.get('title', '')}",
+            typography.body.pt, left_width_pt, space_after=2)
+        issues_pt += estimate_paragraph_height_pt(
+            f"      {issue.get('body', '')}", typography.small.pt,
+            left_width_pt, space_after=gap)
+    left_block = HEADING_BLOCK_H + min(left.h - HEADING_BLOCK_H,
+                                       Inches(issues_pt / 72))
+    right_block, right_gap, right_list_h = _lead_list_metrics(
+        slide, right, actions, bullet="—", bottom_pad=Inches(0.1))
+    top = body.y + max(0, (body.h - max(left_block, right_block)) // 2)
+
+    add_section_lead(slide, left.x, top, left.w,
+                     spec.get("issues_heading", "想定される課題"))
     paragraphs = []
     for issue in issues:
         color = (PALETTE.blue if issue.get("priority") == top_priority
@@ -519,12 +569,14 @@ def render_priority_actions(builder, spec, page):
                 "font": typography.body_font,
             }),
         ], "space_after": gap})
-    add_paragraph_textbox(slide, left.x, left.y + HEADING_BLOCK_H, left.w,
-                          left.h - HEADING_BLOCK_H - Inches(0.1), paragraphs)
+    add_paragraph_textbox(slide, left.x, top + HEADING_BLOCK_H, left.w,
+                          left.y + left.h - (top + HEADING_BLOCK_H) - Inches(0.1),
+                          paragraphs)
 
     add_emphasis_zone(slide, right, tone="neutral")
     _lead_list(slide, right, spec.get("actions_heading", "対応方針"), actions,
-              color=PALETTE.accent_secondary, bullet="—", bottom_pad=Inches(0.1))
+              color=PALETTE.accent_secondary, bullet="—", bottom_pad=Inches(0.1),
+              top=top, gap_pt=right_gap, list_h=right_list_h)
 
     _conclude(slide, conclusion, spec)
 

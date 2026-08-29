@@ -1,5 +1,7 @@
 python:
-  executable: "./.venv/bin/python" # Windows: ./.venv/Scripts/python.exe
+  # venvへのパス、またはPATH上のコマンド名（このリポジトリ自身はvenvを
+  # 作らずシステムのpython3で動かしている）。
+  executable: "python3"
 
 paths:
   input_dir: "./build_slides/input"

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import argparse
+import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -47,7 +49,11 @@ def main() -> int:
         resolved = Path(executable)
         if not resolved.is_absolute():
             resolved = args.config.resolve().parent / resolved
-        if not resolved.is_file():
+        # venvへのパスだけでなく "python3" のようなPATH上のコマンド名も
+        # 指定できる。区切り文字を含まない場合はPATHも探す。
+        on_path = (os.sep not in executable
+                   and shutil.which(executable) is not None)
+        if not resolved.is_file() and not on_path:
             print(f"警告: python.executable が見つかりません: {executable}",
                   file=sys.stderr)
             print("  別のPythonを使う場合は、どれを使ったかを必ず報告すること"

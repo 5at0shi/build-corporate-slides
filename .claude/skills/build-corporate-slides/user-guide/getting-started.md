@@ -16,7 +16,7 @@
 
 | キー | 意味 | 例 |
 |---|---|---|
-| `python.executable` | 生成に使うPythonの実行ファイル | `./.venv/bin/python`（Windowsは`./.venv/Scripts/python.exe`） |
+| `python.executable` | 生成に使うPython。venvへのパス、またはPATH上のコマンド名 | `./.venv/bin/python`（Windowsは`./.venv/Scripts/python.exe`）、`python3` |
 | `paths.input_dir` | 人間が渡す素材（グラフ画像・参考資料）の置き場所 | `./build_slides/input` |
 | `paths.work_dir` | 生成コードと中間成果物（YAML、レンダリング結果） | `./build_slides/work` |
 | `paths.output_dir` | 最終成果物（`deck.pptx`）の置き場所 | `./build_slides/output` |

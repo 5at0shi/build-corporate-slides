@@ -2,7 +2,7 @@
 
 ## 実行環境
 
-1. `.slide-skill-config.yaml` の `python.executable`
+1. `.slide-skill-config.yaml` の `python.executable`（venvへのパスのほか、`python3` のようなPATH上のコマンド名も指定できる）
 2. 設定がなければワークスペース直下の一般的なvenv
 3. 現在利用可能なPython
 

@@ -10,6 +10,12 @@
 
 スライド構成（1ページ＝1つの意味構造）の一覧と使い分けは[`renderer-catalog.md`](../references/renderer-catalog.md)を見る。「比較のページを作りたい」のような依頼はそこに載っている型に対応する。
 
+## 置き場所
+
+スキルはプロジェクト直下（`.claude/skills/build-corporate-slides/`）にも、ホーム直下（`~/.claude/skills/build-corporate-slides/`）にも置ける。後者なら全プロジェクトから使える（同名が両方にある場合はホーム側が優先される）。
+
+スキル本体の置き場所と作業領域は独立している。ホーム直下に1つ置いた場合でも、設定ファイルと`build_slides/`はプロジェクト側に作られるため、部署名・開示区分・ロゴ・生成物はプロジェクトごとに別になる。
+
 ## 設定ファイル（`.slide-skill-config.yaml`）
 
 ワークスペース直下に置く。存在しない場合は[`.slide-skill-config.example.yaml`](.slide-skill-config.example.yaml)をコピーして使う。

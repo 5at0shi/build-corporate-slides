@@ -15,11 +15,13 @@ description: 社内向けPowerPoint資料の構成設計、作成、レビュー
 
 設定済みの `python.executable` がある場合は必ずそれを優先する。別のvenvを作成・選択したり、依存関係を勝手にインストールしたりしない。不足時は [`runtime/python/requirements.txt`](runtime/python/requirements.txt) と照合して報告する。標準利用環境は個人PCでの閲覧、事前配布、オンライン会議の画面共有であり、遠距離投影を暗黙に想定しない。
 
+このスキルは、プロジェクト直下（`.claude/skills/`）にもホーム直下（`~/.claude/skills/`）にも置ける。**同梱スクリプトは必ず `${CLAUDE_SKILL_DIR}/scripts/` を基準に呼び、`.claude/skills/...` という相対パスで決め打ちしない。** 以下このドキュメント中の `scripts/...` `runtime/...` `assets/...` は、すべて `${CLAUDE_SKILL_DIR}` 配下を指す（本文中のリンクは閲覧用の相対パス）。作業領域（`build_slides/`）と設定ファイルは、スキルの置き場所とは無関係に、常にワークスペース側にある。
+
 CREATE前に、設定されたPythonで次を実行する。不足設定・依存があれば生成を始めず、差分を報告する。`check_config.py` は検証するconfigのパスを引数に取る。
 
 ```bash
-<python> .claude/skills/build-corporate-slides/scripts/check_config.py .slide-skill-config.yaml
-<python> .claude/skills/build-corporate-slides/scripts/check_environment.py
+<python> ${CLAUDE_SKILL_DIR}/scripts/check_config.py .slide-skill-config.yaml
+<python> ${CLAUDE_SKILL_DIR}/scripts/check_environment.py
 ```
 
 ## Workspace Contract

@@ -95,12 +95,19 @@ docs/images/                  # このREADMEの図
 
 ## 手元で動かす
 
-スキルは`.claude/skills/build-corporate-slides/`の中で完結している。動かして確かめる場合は、このディレクトリごとコピーする。
+スキルは`.claude/skills/build-corporate-slides/`の中で完結している。動かして確かめる場合は、このディレクトリごとコピーする。置き場所は2通りある。
 
 ```bash
+# プロジェクト単位（そのプロジェクトでだけ使う）
 mkdir -p <対象プロジェクト>/.claude/skills
 cp -r .claude/skills/build-corporate-slides <対象プロジェクト>/.claude/skills/
+
+# ホーム直下（全プロジェクトで使う）
+mkdir -p ~/.claude/skills
+cp -r .claude/skills/build-corporate-slides ~/.claude/skills/
 ```
+
+**スキル本体の置き場所と、作業領域の置き場所は独立している。** ホーム直下に1つ置いても、設定ファイル（`.slide-skill-config.yaml`）と`build_slides/`は各プロジェクト側に作られるため、部署名・開示区分・ロゴ・生成物はプロジェクトごとに別になる。同名のスキルが両方にある場合はホーム側が優先される（Claude Codeの規則）。
 
 スキルの外に必要なものは3つ。
 

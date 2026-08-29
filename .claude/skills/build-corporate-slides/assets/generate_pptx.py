@@ -1,11 +1,38 @@
-from pathlib import Path
+import os
 import sys
+from pathlib import Path
 
 import yaml
 
 
 WORKSPACE_ROOT = Path.cwd()
-SKILL = WORKSPACE_ROOT / ".claude" / "skills" / "build-corporate-slides"
+
+
+def find_skill():
+    """slidekit本体（スキル）の置き場所を探す。
+
+    スキルはプロジェクト直下（`.claude/skills/`）にもホーム直下
+    （`~/.claude/skills/`）にも置けるため、片方へ決め打ちしない。どちらでも
+    ない場所（pluginや--add-dir、シンボリックリンク先）にある場合は、
+    環境変数 BUILD_CORPORATE_SLIDES_SKILL でスキルのディレクトリを指定する。
+    """
+    override = os.environ.get("BUILD_CORPORATE_SLIDES_SKILL")
+    candidates = [Path(override)] if override else []
+    candidates += [
+        WORKSPACE_ROOT / ".claude" / "skills" / "build-corporate-slides",
+        Path.home() / ".claude" / "skills" / "build-corporate-slides",
+    ]
+    for candidate in candidates:
+        if (candidate / "runtime" / "python" / "slidekit").is_dir():
+            return candidate
+    raise SystemExit(
+        "build-corporate-slidesスキルが見つかりません。探した場所:\n"
+        + "\n".join(f"  - {candidate}" for candidate in candidates)
+        + "\n別の場所にある場合は BUILD_CORPORATE_SLIDES_SKILL に"
+          "スキルのディレクトリを指定してください。")
+
+
+SKILL = find_skill()
 sys.path.insert(0, str(SKILL / "runtime" / "python"))
 
 from slidekit import ContentError, render_deck  # noqa: E402
